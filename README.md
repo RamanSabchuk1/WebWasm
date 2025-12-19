@@ -4,7 +4,7 @@ A highly optimized Blazor WebAssembly standalone application with Progressive We
 
 ## 🎯 Optimizations Applied
 
-This project includes several optimizations that reduce the download size from **16MB to ~4.5MB** (with Brotli compression):
+This project includes several optimizations that reduce the compressed download size from **~6MB to 4.5MB** (with Brotli compression), achieving a **25% reduction** in what users actually download:
 
 ### 1. IL Trimming & Linking
 - **PublishTrimmed**: Removes unused code at publish time
