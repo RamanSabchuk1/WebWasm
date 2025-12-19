@@ -1,4 +1,0 @@
-/tmp/publish-before/wwwroot/index.html
-/tmp/publish-before/WebWasm.runtimeconfig.json
-/tmp/publish-before/dotnet.js
-/tmp/publish-before/web.config
