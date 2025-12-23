@@ -9,11 +9,12 @@
     
     <!-- Optimization settings for size reduction -->
     <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>full</TrimMode>
+    <!-- Possible values full, link, copyused, partial -->
+    <TrimMode>partial</TrimMode>
     <RunAOTCompilation>true</RunAOTCompilation>
     <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
     <!-- Keep globalization support for proper date/time and number formatting. Set to true to save ~200KB if not needed -->
-    <InvariantGlobalization>false</InvariantGlobalization>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>

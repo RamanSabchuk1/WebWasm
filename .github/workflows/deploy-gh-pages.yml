@@ -34,36 +34,28 @@ jobs:
         run: dotnet restore WebWasm/WebWasm.csproj
 
       - name: Publish
-        run: dotnet publish WebWasm/WebWasm.csproj -c Release -o dist/Web/wwwroot --nologo 
-        
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+        run: dotnet publish WebWasm/WebWasm.csproj -c Release -o publish
+
+      - name: Update base href and service worker
+        run: |
+          sed -i 's|<base href="/" />|<base href="/${{ github.event.repository.name }}/" />|g' publish/wwwroot/index.html
+          sed -i 's|const base = "/";|const base = "/${{ github.event.repository.name }}/";|g' publish/wwwroot/service-worker.js
+
+      - name: Add .nojekyll file
+        run: touch publish/wwwroot/.nojekyll
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages # The branch where the static files will be deployed
-          FOLDER: dist/Web/wwwroot # The folder with the published files
+          path: publish/wwwroot
 
-
-  #     - name: Update base href and service worker
-  #       run: |
-  #         sed -i 's|<base href="/" />|<base href="/${{ github.event.repository.name }}/" />|g' publish/wwwroot/index.html
-  #         sed -i 's|const base = "/";|const base = "/${{ github.event.repository.name }}/";|g' publish/wwwroot/service-worker.js
-
-  #     - name: Add .nojekyll file
-  #       run: touch publish/wwwroot/.nojekyll
-
-  #     - name: Upload artifact
-  #       uses: actions/upload-pages-artifact@v3
-  #       with:
-  #         path: publish/wwwroot
-
-  # deploy:
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
