@@ -38,8 +38,22 @@ jobs:
 
       - name: Update base href and service worker
         run: |
+          # 1. Modify the files
           sed -i 's|<base href="/" />|<base href="/${{ github.event.repository.name }}/" />|g' publish/wwwroot/index.html
           sed -i 's|const base = "/";|const base = "/${{ github.event.repository.name }}/";|g' publish/wwwroot/service-worker.js
+
+          # 2. Recalculate the hash for index.html
+          # We calculate the SHA256, convert it to binary, and then to Base64 to match Blazor's format
+          JS_ASSETS="publish/wwwroot/service-worker-assets.js"
+          NEW_HASH=$(sha256sum publish/wwwroot/index.html | cut -d ' ' -f 1 | xxd -r -p | base64)
+          
+          # 3. Find the old hash in service-worker-assets.js and replace it
+          # Blazor hashes are prefixed with "sha256-"
+          # We look for the line containing "index.html" and update the associated hash
+          OLD_HASH=$(grep -oP '(?<="url": "index.html", "hash": "sha256-)[^"]+' $JS_ASSETS)
+          sed -i "s|$OLD_HASH|$NEW_HASH|g" $JS_ASSETS
+          
+          echo "Updated index.html hash from $OLD_HASH to $NEW_HASH"
 
       - name: Add .nojekyll file
         run: touch publish/wwwroot/.nojekyll
