@@ -1,4 +1,4 @@
-self.importScripts('./libs/rxjs.umd.min.js'); 
+self.importScripts('./rxjs.umd.min.js'); 
 self.importScripts('./service-worker-assets.js');
 
 const { fromEvent } = rxjs;
