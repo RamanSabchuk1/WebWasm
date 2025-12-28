@@ -1,0 +1,45 @@
+﻿@inject AppJsSerrivce AppJsService
+@inject ApiClient ApiClient
+
+<h3>Push Notifications</h3>
+
+<button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribed">
+    Subscribe to Notifications
+</button>
+
+@if (!string.IsNullOrEmpty(subscriptionJson))
+{
+    <p>Subscription JSON:</p>
+    <pre><code>@subscriptionJson</code></pre>
+}
+
+@code {
+    private bool isSubscribed = false;
+    private string? subscriptionJson;
+
+    private async Task Subscribe()
+    {
+        var module = await AppJsService.GetAppJsModule();
+        var vapidPublicKey = await ApiClient.Get<PublicKeyInfo>("Notify/vapid");
+        var subscription = await module.InvokeAsync<PushSubscriptionInfo>("subscribeToPushNotifications", vapidPublicKey.Vapid);
+
+        if (subscription is not null)
+        {
+            subscriptionJson = System.Text.Json.JsonSerializer.Serialize(subscription);
+            var info = new DeviceTokenInfo(
+                DeviceToken: subscription.Endpoint,
+                Name: "WebWasm Client",
+                AdditionalData: subscription.Keys
+            );
+
+            await ApiClient.Post("DeviceTokens", info);
+            isSubscribed = true;
+            StateHasChanged();
+        }
+
+    }
+
+    public record PushSubscriptionInfo(string Endpoint, Dictionary<string, string> Keys);
+    private record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
+    private record PublicKeyInfo(string Vapid);
+}

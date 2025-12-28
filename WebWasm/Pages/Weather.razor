@@ -1,4 +1,5 @@
 ﻿@page "/weather"
+@using System.Text.Json
 @inject HttpClient Http
 
 <PageTitle>Weather</PageTitle>
@@ -7,7 +8,7 @@
 
 <p>This component demonstrates fetching data from the server.</p>
 
-@if (forecasts == null)
+@if (_forecasts == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -23,7 +24,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var forecast in _forecasts)
             {
                 <tr>
                     <td>@forecast.Date.ToShortDateString()</td>
@@ -37,11 +38,41 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+    private WeatherForecast[]? _forecasts;
+    string rawData = """
+[
+  {
+    "date": "2022-01-06",
+    "temperatureC": 1,
+    "summary": "Freezing"
+  },
+  {
+    "date": "2022-01-07",
+    "temperatureC": 14,
+    "summary": "Bracing"
+  },
+  {
+    "date": "2022-01-08",
+    "temperatureC": -13,
+    "summary": "Freezing"
+  },
+  {
+    "date": "2022-01-09",
+    "temperatureC": -16,
+    "summary": "Balmy"
+  },
+  {
+    "date": "2022-01-10",
+    "temperatureC": -2,
+    "summary": "Chilly"
+  }
+]
+""";
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        _forecasts = JsonSerializer.Deserialize<WeatherForecast[]>(rawData, _jsonSerializerOptions);
     }
 
     public class WeatherForecast
@@ -54,4 +85,6 @@ else
 
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
+
+    
 }

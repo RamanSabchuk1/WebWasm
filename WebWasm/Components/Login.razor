@@ -1,0 +1,44 @@
+﻿@inject ApiClient ApiClient
+
+<h3>Login</h3>
+
+<EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <p>Username: <InputText @bind-Value="_loginModel.Username" /></p>
+    <p>Password: <InputText @bind-Value="_loginModel.Password" type="password" /></p>
+    <button type="submit">Log In</button>
+</EditForm>
+
+@code {
+    public record LoginModel()
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public record TokenResponse(string Token);
+
+    private LoginModel _loginModel = new ();
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_loginModel.Username) || string.IsNullOrWhiteSpace(_loginModel.Password))
+            {
+                Console.WriteLine("Username and password cannot be empty.");
+                return;
+            }
+
+            await ApiClient.Login(_loginModel);
+            Console.WriteLine("Login successful.");
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Login failed: {ex.Message}");
+        }
+    }
+}
