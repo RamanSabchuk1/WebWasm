@@ -43,11 +43,22 @@ notificationClick$.subscribe(event => {
 });
 
 async function onInstall() {
-    const assetsRequests = self.assetsManifest.assets
-    .filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
-    .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)))
-    .map(asset => new Request(asset.url, { integrity: asset.hash, cache: 'no-cache' }));
-    await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
+    const assetsToCache = self.assetsManifest.assets
+        .filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
+        .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)));
+    
+    const cache = await caches.open(cacheName);
+
+    await Promise.all(assetsToCache.map(async asset => {
+        try {
+            const response = await fetch(asset.url, { cache: 'no-cache' });
+            if (response.ok) {
+                await cache.put(asset.url, response);
+            }
+        } catch (error) {
+            console.warn(`Service worker: Failed to cache ${asset.url}`, error);
+        }
+    }));
 
     console.info('Service worker: Installed');
 }
