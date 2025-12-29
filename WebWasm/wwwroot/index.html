@@ -56,7 +56,7 @@
             try {
                 swRegistration = await navigator.serviceWorker.register('service-worker.js', { 
                     updateViaCache: 'none',
-                    scope: '/'
+                    scope: '/WebWasm/'
                 });
                 
                 console.log('Service Worker registered successfully:', swRegistration);
