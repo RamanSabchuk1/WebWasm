@@ -29,3 +29,25 @@ function urlBase64ToUint8Array(base64String) {
 
     return outputArray;
 }
+
+var fcMesaging = null;
+
+export function InitializeFirebaseMessaging(firebaseConfig) {
+    firebase.initializeApp(firebaseConfig);
+    fcMesaging = firebase.messaging();
+}
+
+export async function getFcmToken(vapidPublicKey) {
+    try {
+        const currentToken = await fcMesaging.getToken({ vapidKey: vapidPublicKey });
+        if (currentToken) {
+            return currentToken;
+        } else {
+            console.log('No registration token available. Request permission to generate one.');
+            return null;
+        }
+    } catch (err) {
+        console.log('An error occurred while retrieving token. ', err);
+        return null;
+    }
+}

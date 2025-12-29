@@ -1,5 +1,8 @@
-﻿@inject AppJsSerrivce AppJsService
+﻿@using Blazored.LocalStorage
+@using System.Security.Cryptography.X509Certificates
+@inject AppJsSerrivce AppJsService
 @inject ApiClient ApiClient
+@inject ILocalStorageService LocalStorage;
 
 <h3>Push Notifications</h3>
 
@@ -14,32 +17,35 @@
 }
 
 @code {
-    private bool isSubscribed = false;
     private string? subscriptionJson;
+    private bool isSubscribed = false;
+    private PushSettings? pushSettings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pushSettings  = await LocalStorage.GetItemAsync<PushSettings>(nameof(PushSettings));
+        isSubscribed = pushSettings?.Enabled ?? false;    
+    }
 
     private async Task Subscribe()
     {
         var module = await AppJsService.GetAppJsModule();
         var vapidPublicKey = await ApiClient.Get<PublicKeyInfo>("Notify/vapid");
-        var subscription = await module.InvokeAsync<PushSubscriptionInfo>("subscribeToPushNotifications", vapidPublicKey.Vapid);
+        var firebaseConfig = await ApiClient.Get<FireBaseConfig>("Notify/config");
 
-        if (subscription is not null)
-        {
-            subscriptionJson = System.Text.Json.JsonSerializer.Serialize(subscription);
-            var info = new DeviceTokenInfo(
-                DeviceToken: subscription.Endpoint,
-                Name: "WebWasm Client",
-                AdditionalData: subscription.Keys
-            );
 
-            await ApiClient.Post("DeviceTokens", info);
-            isSubscribed = true;
-            StateHasChanged();
-        }
+        await module.InvokeVoidAsync("InitializeFirebaseMessaging", firebaseConfig);
+        var fcmToken = await module.InvokeAsync<string>("getFcmToken", vapidPublicKey.Vapid);
+        subscriptionJson = fcmToken;
+        var info = new DeviceTokenInfo(fcmToken, "WebWasm Client", null);
 
+        await ApiClient.Post("DeviceTokens", info);
+        isSubscribed = true;
+        StateHasChanged();
     }
 
-    public record PushSubscriptionInfo(string Endpoint, Dictionary<string, string> Keys);
+    public record FireBaseConfig(string ApiKey, string AuthDomain, string ProjectId, string StorageBucket, string MessagingSenderId, string AppId);
     private record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
     private record PublicKeyInfo(string Vapid);
+    private record PushSettings(bool Enabled);
 }
