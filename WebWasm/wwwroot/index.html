@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebWasm</title>
-    <base href="/" /> 
+    <base href="/" />
     <link rel="preload" id="webassembly" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
@@ -31,10 +31,12 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="firebase-app-compact.min.js"></script>
-    <script src="firebase-messaging-compact.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
     <script src="rxjs.umd.min.js"></script>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCcnA6c8s9ML0VJu35JhwzTGQoG-PcNnN0",
@@ -46,13 +48,61 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const messaging = firebase.messaging();
+
+        let messaging = null;
+        let swRegistration = null;
+
+        async function initializeFirebaseMessaging() {
+            try {
+                swRegistration = await navigator.serviceWorker.register('service-worker.js', { 
+                    updateViaCache: 'none',
+                    scope: '/'
+                });
+                
+                console.log('Service Worker registered successfully:', swRegistration);
+
+                await navigator.serviceWorker.ready;
+                
+                messaging = firebase.messaging();
+                
+                messaging.onMessage((payload) => {
+                    console.log('Foreground message received:', payload);
+
+                    if (Notification.permission === 'granted') {
+                        const notificationTitle = payload.notification?.title || 'New Message';
+                        const notificationOptions = {
+                            body: payload.notification?.body || '',
+                            icon: 'icon-512.png',
+                            data: payload.data
+                        };
+                        new Notification(notificationTitle, notificationOptions);
+                    }
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize Firebase Messaging:', error);
+                return false;
+            }
+        }
 
         async function getFcmToken() {
             try {
-                const vapidKey = 'BAOL6t3T-11IkD0zsIhvJd8cclIhh8VIvoKGtdgm2riQRiW9xoBFHvo4yH__os24AFiPItQDBKKn0_AS8-UK1vE'; 
-                
-                const currentToken = await messaging.getToken({ vapidKey: vapidKey });
+                if (!messaging) {
+                    const initialized = await initializeFirebaseMessaging();
+                    if (!initialized) {
+                        console.error('Firebase messaging not initialized');
+                        return null;
+                    }
+                }
+
+                const registration = await navigator.serviceWorker.ready;
+                const vapidKey = 'BAOL6t3T-11IkD0zsIhvJd8cclIhh8VIvoKGtdgm2riQRiW9xoBFHvo4yH__os24AFiPItQDBKKn0_AS8-UK1vE';
+                const currentToken = await messaging.getToken({
+                    vapidKey: vapidKey,
+                    serviceWorkerRegistration: registration
+                });
+
                 if (currentToken) {
                     console.log('FCM Token:', currentToken);
                     return currentToken;
@@ -61,13 +111,13 @@
                     return null;
                 }
             } catch (err) {
-                console.error('An error occurred while retrieving token. ', err);
+                console.error('An error occurred while retrieving token:', err);
                 return null;
             }
         }
-    </script>
 
-    <script>navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });</script>
+        initializeFirebaseMessaging();
+    </script>
 </body>
 
 </html>

@@ -1,3 +1,6 @@
+// This file is kept for compatibility but the main service worker (service-worker.js)
+// handles Firebase messaging. Firebase is configured to use our unified service worker.
+
 importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js');
 
@@ -11,17 +14,36 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/icon-192.png'
-  };
+messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+    const notificationTitle = payload.notification?.title || 'New Notification';
+    const notificationOptions = {
+        body: payload.notification?.body || '',
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
+        data: payload.data
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('notificationclick', (event) => {
+    console.log('[firebase-messaging-sw.js] Notification click:', event);
+    event.notification.close();
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            for (const client of clientList) {
+                if ('focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
+        })
+    );
 });

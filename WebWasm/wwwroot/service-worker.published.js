@@ -1,5 +1,20 @@
+importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js');
+
 self.importScripts('./rxjs.umd.min.js'); 
 self.importScripts('./service-worker-assets.js');
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCcnA6c8s9ML0VJu35JhwzTGQoG-PcNnN0",
+    authDomain: "kliffort-site.firebaseapp.com",
+    projectId: "kliffort-site",
+    storageBucket: "kliffort-site.firebasestorage.app",
+    messagingSenderId: "250756228052",
+    appId: "1:250756228052:web:e0623066a48c50c8512c41"
+};
+
+firebase.initializeApp(firebaseConfig);
+const firebaseMessaging = firebase.messaging();
 
 const { fromEvent } = rxjs;
 
@@ -40,6 +55,21 @@ notificationClick$.subscribe(event => {
     console.log('Service Worker: Notification click received', event.data);
     event.notification.close();
     event.waitUntil(onNotificationClick(event));
+});
+
+firebaseMessaging.onBackgroundMessage((payload) => {
+    console.log('[Service Worker] Received Firebase background message:', payload);
+
+    const notificationTitle = payload.notification?.title || 'New Notification';
+    const notificationOptions = {
+        body: payload.notification?.body || '',
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
+        data: payload.data,
+        tag: payload.data?.tag || 'firebase-notification'
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 async function onInstall() {
@@ -93,16 +123,23 @@ async function onFetch(event) {
 }
 
 function onMessage(payload) {
-    self.registration.showNotification(payload.title, {
-        body: payload.body,
-        icon: 'icon-512.png',
+    console.log('[Service Worker] Message received:', payload);
+    
+    const title = payload.title || payload.notification?.title || 'New Notification';
+    const body = payload.body || payload.notification?.body || '';
+    const url = payload.url || payload.data?.url || '/';
+    
+    self.registration.showNotification(title, {
+        body: body,
+        icon: 'icon-192.png',
+        badge: 'icon-192.png',
         vibrate: [100, 50, 100],
-        data: { url: payload.url }
-    })
+        data: { url: url }
+    });
 }
 
 async function onNotificationClick(event) {
-    const urlToOpen = event.notification.data.url;
+    const urlToOpen = event.notification.data?.url || '/';
 
     const windowClients = await clients.matchAll({
         type: 'window',
@@ -110,7 +147,7 @@ async function onNotificationClick(event) {
     });
 
     for (const client of windowClients) {
-        if (client.url === urlToOpen && 'focus' in client) {
+        if ('focus' in client) {
             return client.focus();
         }
     }

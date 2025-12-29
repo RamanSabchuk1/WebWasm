@@ -6,9 +6,10 @@ namespace WebWasm.Services;
 
 public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthStateProvider authStateProvider)
 {
+    public const string Authorization = nameof(Authorization);
     private const string Bearer = nameof(Bearer);
-    private const string BaseAddress = "https://kliffort.com/api/dev/";
-    //private const string BaseAddress = "https://localhost:7231/";
+    //private const string BaseAddress = "https://kliffort.com/api/dev/";
+    private const string BaseAddress = "https://localhost:7231/";
 
     private const string Auth = nameof(Auth);
 
@@ -23,7 +24,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
         var client = await GetHttpClient();
         var response = await client.GetAsync(endpoint);
 
-        response.EnsureSuccessStatusCode();
+        await CheckResponseHeader(response, endpoint);
         return await response.Content.ReadFromJsonAsync<TResponse>() ?? throw new Exception($"Failed to get {endpoint}.");
     }
 
@@ -43,7 +44,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
         var client = await GetHttpClient();
         var response = await client.PostAsJsonAsync(endpoint, data);
 
-        response.EnsureSuccessStatusCode();
+        await CheckResponseHeader(response, endpoint);
         return response;
     }
 
@@ -64,6 +65,25 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
         }
 
         return client;
+    }
+
+    private async ValueTask CheckResponseHeader(HttpResponseMessage response, string endpoint)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Request to {endpoint} failed with status code {response.StatusCode}: {content}");
+        }
+
+        if (response.Headers.TryGetValues(Authorization, out var values))
+        {
+            var rawToken = values.FirstOrDefault();
+            var newToken = rawToken is null || rawToken.Length < 10 ? string.Empty : rawToken[7..];
+            if (newToken != string.Empty)
+            {
+                await authStateProvider.MarkUserAsAuthenticated(newToken);
+            }
+        }
     }
 
     private static StringContent CreateJsonContent<T>(T data)

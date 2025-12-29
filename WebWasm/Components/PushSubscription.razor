@@ -3,51 +3,109 @@
 
 <h3>Push Notifications</h3>
 
-<button class="btn btn-primary" @onclick="Subscribe">
-    Subscribe to Notifications
-</button>
+@if (isLoading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else
+{
+    <button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribing">
+        @if (isSubscribing)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        }
+        Subscribe to Notifications
+    </button>
+}
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <p class="text-danger mt-3">@errorMessage</p>
+    <div class="alert alert-danger mt-3" role="alert">
+        <strong>Error:</strong> @errorMessage
+    </div>
 }
 
 @if (!string.IsNullOrEmpty(fcmToken))
 {
-    <div class="mt-3">
-        <p class="text-success">Success! Here is your FCM Token. Send this to your backend.</p>
-        <pre style="word-wrap: break-word; white-space: pre-wrap;"><code>@fcmToken</code></pre>
+    <div class="alert alert-success mt-3" role="alert">
+        <p><strong>Success!</strong> Push notifications enabled.</p>
+        <details>
+            <summary>View FCM Token</summary>
+            <pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@fcmToken</code></pre>
+        </details>
     </div>
 }
-
 
 @code {
     private string? fcmToken;
     private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSubscribing = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check if notifications are supported
+            var isSupported = await JSRuntime.InvokeAsync<bool>("eval", "'Notification' in window && 'serviceWorker' in navigator");
+            if (!isSupported)
+            {
+                errorMessage = "Push notifications are not supported in this browser.";
+            }
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
 
     private async Task Subscribe()
     {
+        errorMessage = null;
+        isSubscribing = true;
+        StateHasChanged();
 
-        var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
-
-        if (permission != "granted")
+        try
         {
-            errorMessage = "Notification permission was not granted.";
-            return;
+            // Request notification permission
+            var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
+
+            if (permission != "granted")
+            {
+                errorMessage = "Notification permission was denied. Please enable notifications in your browser settings.";
+                return;
+            }
+
+            // Get FCM token using our registered service worker
+            var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
+            
+            if (!string.IsNullOrEmpty(token))
+            {
+                fcmToken = token;
+                
+                // Send token to backend
+                var info = new DeviceTokenInfo(fcmToken, "WebWasm PWA", new Dictionary<string, string>
+                {
+                    { "platform", "web" },
+                    { "userAgent", await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent") }
+                });
+
+                await ApiClient.Post("DeviceTokens", info);
+            }
+            else
+            {
+                errorMessage = "Could not retrieve FCM token. Please check the browser console for more details.";
+            }
         }
-
-        var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
-        if (!string.IsNullOrEmpty(token))
+        catch (Exception ex)
         {
-            fcmToken = token;
-            var info = new DeviceTokenInfo(fcmToken, "WebWasm Client", null);
-
-            await ApiClient.Post("DeviceTokens", info);
+            errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine($"Push subscription error: {ex}");
+        }
+        finally
+        {
+            isSubscribing = false;
             StateHasChanged();
-        }
-        else
-        {
-            errorMessage = "Could not retrieve FCM token. Check the browser console for errors.";
         }
     }
 
