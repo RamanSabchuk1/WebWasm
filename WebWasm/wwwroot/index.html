@@ -36,6 +36,38 @@
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
     <script src="rxjs.umd.min.js"></script>
     <script type="module" src="app.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcnA6c8s9ML0VJu35JhwzTGQoG-PcNnN0",
+            authDomain: "kliffort-site.firebaseapp.com",
+            projectId: "kliffort-site",
+            storageBucket: "kliffort-site.firebasestorage.app",
+            messagingSenderId: "250756228052",
+            appId: "1:250756228052:web:e0623066a48c50c8512c41"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        async function getFcmToken() {
+            try {
+                const vapidKey = 'BAOL6t3T-11IkD0zsIhvJd8cclIhh8VIvoKGtdgm2riQRiW9xoBFHvo4yH__os24AFiPItQDBKKn0_AS8-UK1vE'; 
+                
+                const currentToken = await messaging.getToken({ vapidKey: vapidKey });
+                if (currentToken) {
+                    console.log('FCM Token:', currentToken);
+                    return currentToken;
+                } else {
+                    console.log('No registration token available. Request permission to generate one.');
+                    return null;
+                }
+            } catch (err) {
+                console.error('An error occurred while retrieving token. ', err);
+                return null;
+            }
+        }
+    </script>
+
     <script>navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });</script>
 </body>
 

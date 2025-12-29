@@ -1,51 +1,55 @@
-﻿@using Blazored.LocalStorage
-@using System.Security.Cryptography.X509Certificates
-@inject AppJsSerrivce AppJsService
-@inject ApiClient ApiClient
-@inject ILocalStorageService LocalStorage;
+﻿@inject ApiClient ApiClient
+@inject IJSRuntime JSRuntime
 
 <h3>Push Notifications</h3>
 
-<button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribed">
+<button class="btn btn-primary" @onclick="Subscribe">
     Subscribe to Notifications
 </button>
 
-@if (!string.IsNullOrEmpty(subscriptionJson))
+@if (!string.IsNullOrEmpty(errorMessage))
 {
-    <p>Subscription JSON:</p>
-    <pre><code>@subscriptionJson</code></pre>
+    <p class="text-danger mt-3">@errorMessage</p>
 }
 
-@code {
-    private string? subscriptionJson;
-    private bool isSubscribed = false;
-    private PushSettings? pushSettings;
+@if (!string.IsNullOrEmpty(fcmToken))
+{
+    <div class="mt-3">
+        <p class="text-success">Success! Here is your FCM Token. Send this to your backend.</p>
+        <pre style="word-wrap: break-word; white-space: pre-wrap;"><code>@fcmToken</code></pre>
+    </div>
+}
 
-    protected override async Task OnInitializedAsync()
-    {
-        pushSettings  = await LocalStorage.GetItemAsync<PushSettings>(nameof(PushSettings));
-        isSubscribed = pushSettings?.Enabled ?? false;    
-    }
+
+@code {
+    private string? fcmToken;
+    private string? errorMessage;
 
     private async Task Subscribe()
     {
-        var module = await AppJsService.GetAppJsModule();
-        var vapidPublicKey = await ApiClient.Get<PublicKeyInfo>("Notify/vapid");
-        var firebaseConfig = await ApiClient.Get<FireBaseConfig>("Notify/config");
 
+        var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
 
-        await module.InvokeVoidAsync("InitializeFirebaseMessaging", firebaseConfig);
-        var fcmToken = await module.InvokeAsync<string>("getFcmToken", vapidPublicKey.Vapid);
-        subscriptionJson = fcmToken;
-        var info = new DeviceTokenInfo(fcmToken, "WebWasm Client", null);
+        if (permission != "granted")
+        {
+            errorMessage = "Notification permission was not granted.";
+            return;
+        }
 
-        await ApiClient.Post("DeviceTokens", info);
-        isSubscribed = true;
-        StateHasChanged();
+        var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            fcmToken = token;
+            var info = new DeviceTokenInfo(fcmToken, "WebWasm Client", null);
+
+            await ApiClient.Post("DeviceTokens", info);
+            StateHasChanged();
+        }
+        else
+        {
+            errorMessage = "Could not retrieve FCM token. Check the browser console for errors.";
+        }
     }
 
-    public record FireBaseConfig(string ApiKey, string AuthDomain, string ProjectId, string StorageBucket, string MessagingSenderId, string AppId);
     private record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
-    private record PublicKeyInfo(string Vapid);
-    private record PushSettings(bool Enabled);
 }
