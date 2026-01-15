@@ -1,77 +1,155 @@
-.page {
-    position: relative;
+/* Main App Container */
+.app-container {
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--bg-main, #F5EBE0);
 }
 
-main {
-    flex: 1;
-}
-
+/* Sidebar - Desktop */
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    display: none;
 }
 
-.top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* Space for mobile nav */
+}
+
+/* Top Header */
+.top-header {
+    background: var(--bg-surface, #FAF7F2);
+    padding: 1rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(139, 115, 85, 0.08);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.search-container {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #C9A86C 0%, #E8A545 100%);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 24px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
-
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+.search-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(201, 168, 108, 0.3);
 }
 
-@media (min-width: 641px) {
-    .page {
+.search-icon {
+    font-size: 1rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #D5C4A1 0%, #C9A86C 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.user-name {
+    font-weight: 500;
+    color: var(--text-primary, #3D3D3D);
+    display: none;
+}
+
+/* Page Content */
+.page-content {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Mobile Navigation - Fixed Bottom */
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-surface, #FAF7F2);
+    box-shadow: 0 -4px 20px rgba(139, 115, 85, 0.15);
+    border-radius: 24px 24px 0 0;
+    z-index: 1000;
+    padding: 0.5rem 0;
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+    .app-container {
         flex-direction: row;
     }
 
     .sidebar {
-        width: 250px;
+        display: flex;
+        width: 280px;
+        min-width: 280px;
         height: 100vh;
         position: sticky;
         top: 0;
+        background: var(--bg-surface, #FAF7F2);
+        box-shadow: 4px 0 20px rgba(139, 115, 85, 0.08);
+        border-radius: 0 32px 32px 0;
+        overflow: hidden;
     }
 
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
+    .main-content {
         flex: 1;
-        text-align: right;
-        width: 0;
+        padding-bottom: 0;
     }
 
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+    .mobile-nav {
+        display: none;
+    }
+
+    .user-name {
+        display: block;
+    }
+
+    .page-content {
+        padding: 2rem 2.5rem;
+    }
+}
+
+/* Large Desktop */
+@media (min-width: 1200px) {
+    .sidebar {
+        width: 300px;
+        min-width: 300px;
+    }
+
+    .page-content {
+        padding: 2rem 3rem;
     }
 }

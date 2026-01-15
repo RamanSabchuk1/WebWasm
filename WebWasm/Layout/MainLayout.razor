@@ -3,20 +3,33 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="page">
-            <div class="sidebar">
+        <div class="app-container">
+            <nav class="sidebar">
                 <NavMenu />
-            </div>
+            </nav>
 
-            <main>
-                <div class="top-row px-4">
-                    <p>@context.User?.Identity?.Name</p>
-                </div>
+            <main class="main-content">
+                <header class="top-header">
+                    <div class="header-content">
+                        <div class="search-container">
+                            <span class="search-icon">🔍</span>
+                            <span class="search-text">Search</span>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-avatar">👤</span>
+                            <span class="user-name">@context.User?.Identity?.Name</span>
+                        </div>
+                    </div>
+                </header>
 
-                <article class="content px-4">
+                <article class="page-content">
                     @Body
                 </article>
             </main>
+
+            <nav class="mobile-nav">
+                <NavMenu IsMobile="true" />
+            </nav>
         </div>
     </Authorized>
     <NotAuthorized>

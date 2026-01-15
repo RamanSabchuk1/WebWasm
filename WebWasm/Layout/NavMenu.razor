@@ -1,39 +1,159 @@
 ﻿@inject LocalStorageAuthStateProvider AuthProvider
 @inject NavigationManager NavManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">WebWasm</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+@if (!IsMobile)
+{
+    <!-- Desktop Sidebar Navigation -->
+    <div class="desktop-nav">
+        <div class="nav-header">
+            <div class="logo-container">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">Admin Panel</span>
+            </div>
+            <div class="user-profile">
+                <div class="avatar">👤</div>
+                <span class="status-badge online">online</span>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-title">Main</span>
+            <nav class="nav-list">
+                <NavLink class="nav-item" href="" Match="NavLinkMatch.All">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                </NavLink>
+                <NavLink class="nav-item" href="orders">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-text">Orders</span>
+                </NavLink>
+                <NavLink class="nav-item" href="users">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Users</span>
+                </NavLink>
+                <NavLink class="nav-item" href="companies">
+                    <span class="nav-icon">🏢</span>
+                    <span class="nav-text">Companies</span>
+                </NavLink>
+            </nav>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-title">Management</span>
+            <nav class="nav-list">
+                <NavLink class="nav-item" href="regions">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-text">Regions</span>
+                </NavLink>
+                <NavLink class="nav-item" href="devices">
+                    <span class="nav-icon">📱</span>
+                    <span class="nav-text">Devices</span>
+                </NavLink>
+                <NavLink class="nav-item" href="providers">
+                    <span class="nav-icon">🔗</span>
+                    <span class="nav-text">Providers</span>
+                </NavLink>
+                <NavLink class="nav-item" href="materials">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Materials</span>
+                </NavLink>
+            </nav>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-title">Finance & Support</span>
+            <nav class="nav-list">
+                <NavLink class="nav-item" href="payments">
+                    <span class="nav-icon">💳</span>
+                    <span class="nav-text">Payments</span>
+                </NavLink>
+                <NavLink class="nav-item" href="vehicles">
+                    <span class="nav-icon">🚗</span>
+                    <span class="nav-text">Vehicles</span>
+                </NavLink>
+                <NavLink class="nav-item" href="supports">
+                    <span class="nav-icon">🎧</span>
+                    <span class="nav-text">Support</span>
+                </NavLink>
+            </nav>
+        </div>
+
+        <div class="nav-footer">
+            <button class="logout-btn" @onclick="Logout">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Log Out</span>
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-nav-bar">
+        <NavLink class="mobile-nav-item" href="" Match="NavLinkMatch.All">
+            <span class="mobile-nav-icon">🏠</span>
+            <span class="mobile-nav-label">Home</span>
+        </NavLink>
+        <NavLink class="mobile-nav-item" href="orders">
+            <span class="mobile-nav-icon">📦</span>
+            <span class="mobile-nav-label">Orders</span>
+        </NavLink>
+        <NavLink class="mobile-nav-item" href="users">
+            <span class="mobile-nav-icon">👥</span>
+            <span class="mobile-nav-label">Users</span>
+        </NavLink>
+        <button class="mobile-nav-item menu-trigger" @onclick="ToggleNavMenu">
+            <span class="mobile-nav-icon">☰</span>
+            <span class="mobile-nav-label">More</span>
         </button>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <button @onclick="Logout">Log Out</button>
+    @if (!collapseNavMenu)
+    {
+        <div class="mobile-menu-overlay" @onclick="ToggleNavMenu">
+            <div class="mobile-menu-panel" @onclick:stopPropagation>
+                <div class="mobile-menu-header">
+                    <span class="mobile-menu-title">Menu</span>
+                    <button class="close-btn" @onclick="ToggleNavMenu">✕</button>
+                </div>
+                <nav class="mobile-menu-list">
+                    <NavLink class="mobile-menu-item" href="companies" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">🏢</span> Companies
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="regions" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">🗺️</span> Regions
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="devices" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">📱</span> Devices
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="providers" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">🔗</span> Providers
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="materials" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">📋</span> Materials
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="payments" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">💳</span> Payments
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="vehicles" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">🚗</span> Vehicles
+                    </NavLink>
+                    <NavLink class="mobile-menu-item" href="supports" @onclick="ToggleNavMenu">
+                        <span class="nav-icon">🎧</span> Support
+                    </NavLink>
+                </nav>
+                <button class="mobile-logout-btn" @onclick="Logout">
+                    <span class="nav-icon">🚪</span> Log Out
+                </button>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    }
+}
 
 @code {
+    [Parameter]
+    public bool IsMobile { get; set; } = false;
+
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;

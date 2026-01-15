@@ -1,18 +1,135 @@
-﻿@page "/counter"
+﻿@page "/orders"
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>Orders</PageTitle>
 
-<h1>Counter</h1>
+<div class="page-header">
+    <h1>📦 Orders</h1>
+    <p class="page-subtitle">Manage and track all orders</p>
+</div>
 
-<p role="status">Current count: @currentCount</p>
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-icon">📊</span>
+        <div class="stat-content">
+            <span class="stat-value">@totalOrders</span>
+            <span class="stat-label">Total Orders</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">⏳</span>
+        <div class="stat-content">
+            <span class="stat-value">@pendingOrders</span>
+            <span class="stat-label">Pending</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">✅</span>
+        <div class="stat-content">
+            <span class="stat-value">@completedOrders</span>
+            <span class="stat-label">Completed</span>
+        </div>
+    </div>
+</div>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<div class="content-card">
+    <div class="card-header">
+        <h3>Recent Orders</h3>
+        <button class="btn-primary" @onclick="AddOrder">+ New Order</button>
+    </div>
+    <p class="empty-state">No orders yet. Click "New Order" to create one.</p>
+</div>
+
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+        color: var(--text-secondary, #7A7A7A);
+        margin: 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: var(--bg-surface, #FAF7F2);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(201, 168, 108, 0.2) 0%, rgba(139, 115, 85, 0.2) 100%);
+        border-radius: 12px;
+    }
+    
+    .stat-content {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary, #3D3D3D);
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary, #7A7A7A);
+    }
+    
+    .content-card {
+        background: var(--bg-surface, #FAF7F2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .card-header h3 {
+        margin: 0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        color: var(--text-secondary, #7A7A7A);
+        padding: 2rem;
+    }
+</style>
 
 @code {
-    private int currentCount = 0;
+    private int totalOrders = 0;
+    private int pendingOrders = 0;
+    private int completedOrders = 0;
 
-    private void IncrementCount()
+    private void AddOrder()
     {
-        currentCount++;
+        totalOrders++;
+        pendingOrders++;
     }
 }

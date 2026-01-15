@@ -1,5 +1,42 @@
+/* ============================================
+   SuperAdmin Dashboard - Style Guide
+   Color Palette:
+   - Background: #F5EBE0 (warm cream)
+   - Card/Surface: #FAF7F2 (light cream)
+   - Primary: #C9A86C (warm gold/tan)
+   - Primary Dark: #8B7355 (brown)
+   - Text Primary: #3D3D3D
+   - Text Secondary: #7A7A7A
+   - Accent: #E8A545 (warm orange)
+   ============================================ */
+
+:root {
+    --bg-main: #F5EBE0;
+    --bg-surface: #FAF7F2;
+    --bg-nav: #FAF7F2;
+    --color-primary: #C9A86C;
+    --color-primary-dark: #8B7355;
+    --color-accent: #E8A545;
+    --text-primary: #3D3D3D;
+    --text-secondary: #7A7A7A;
+    --shadow-soft: 0 4px 20px rgba(139, 115, 85, 0.1);
+    --shadow-medium: 0 8px 30px rgba(139, 115, 85, 0.15);
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5 {
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 h1:focus {
@@ -7,33 +44,87 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: var(--color-primary-dark);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover, .btn-link:hover {
+    color: var(--color-accent);
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 24px;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--color-primary);
 }
 
 .content {
-    padding-top: 1.1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* Card styles */
+.card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    border: none;
+    padding: 1.5rem;
+}
+
+/* Table styles */
+.table {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.table thead th {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 1rem;
+    font-weight: 500;
+}
+
+.table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+}
+
+.table tbody tr:hover {
+    background: rgba(201, 168, 108, 0.1);
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 2px solid #26b050;
+    border-radius: var(--radius-sm);
 }
 
 .invalid {
-    outline: 1px solid red;
+    outline: 2px solid #dc3545;
+    border-radius: var(--radius-sm);
 }
 
 .validation-message {
-    color: red;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
 }
 
 #blazor-error-ui {
