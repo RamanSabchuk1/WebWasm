@@ -1,0 +1,36 @@
+﻿.page-header {
+    margin-bottom: 2rem;
+}
+
+    .page-header h1 {
+        margin-bottom: 0.5rem;
+    }
+
+.page-subtitle {
+    color: var(--text-secondary, #7A7A7A);
+    margin: 0;
+}
+
+.content-card {
+    background: var(--bg-surface, #FAF7F2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+    .card-header h3 {
+        margin: 0;
+    }
+
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary, #7A7A7A);
+    padding: 2rem;
+}

@@ -16,9 +16,11 @@
                             <span class="brand-icon">⚡</span>
                             <span class="brand-text">Admin Panel</span>
                         </div>
-                        <div class="user-info" @onclick="NavigateToProfile">
-                            <span class="user-avatar">👤</span>
-                        </div>
+                        <NavLink href="myuserinfo">
+                            <div class="user-info">
+                                <span class="user-avatar">👤</span>
+                            </div>
+                        </NavLink>
                     </div>
                 </header>
 
@@ -36,10 +38,3 @@
         <Login />
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-    private void NavigateToProfile()
-    {
-        NavManager.NavigateTo("/myuserinfo");
-    }
-}

@@ -10,10 +10,12 @@
                 <span class="logo-icon">⚡</span>
                 <span class="logo-text">Admin Panel</span>
             </div>
-            <div class="user-profile" @onclick="NavigateToProfile">
-                <div class="avatar">👤</div>
-                <span class="status-badge online">online</span>
-            </div>
+            <NavLink href="myuserinfo">
+                <div class="user-profile">
+                    <div class="avatar">👤</div>
+                    <span class="status-badge online">online</span>
+                </div>
+            </NavLink>
         </div>
 
         <div class="nav-section">
@@ -165,11 +167,6 @@ else
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
-    }
-
-    private void NavigateToProfile()
-    {
-        NavManager.NavigateTo("/myuserinfo");
     }
 
     private async Task Logout()
