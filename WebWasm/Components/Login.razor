@@ -243,13 +243,11 @@
             }
 
             await ApiClient.Login(_loginModel);
-            Console.WriteLine("Login successful.");
 
         }
         catch (Exception ex)
         {
             _errorMessage = $"Login failed: {ex.Message}";
-            Console.WriteLine($"Login failed: {ex.Message}");
         }
         finally
         {

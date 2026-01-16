@@ -1,4 +1,4 @@
-@page "/myuserinfo"
+﻿@page "/myuserinfo"
 
 <PageTitle>My Profile</PageTitle>
 
@@ -55,6 +55,10 @@
                 }
             </button>
         </EditForm>
+    </div>
+
+    <div class="notification-section">
+        <PushSubscription />
     </div>
 </div>
 
@@ -189,6 +193,10 @@
         opacity: 0.7;
         cursor: not-allowed;
     }
+
+    .notification-section {
+        margin-top: 1rem;
+    }
 </style>
 
 @code {
@@ -215,9 +223,6 @@
         
         // Simulate API call
         await Task.Delay(500);
-        
-        // In real app, call API to save FirstName and LastName
-        Console.WriteLine($"Saving: {_userInfo.FirstName} {_userInfo.LastName}");
         
         _isSaving = false;
         _saveSuccess = true;

@@ -76,9 +76,7 @@ else
                 return;
             }
 
-            // Get FCM token using our registered service worker
-            var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
-            
+            var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");            
             if (!string.IsNullOrEmpty(token))
             {
                 fcmToken = token;
@@ -100,7 +98,6 @@ else
         catch (Exception ex)
         {
             errorMessage = $"An error occurred: {ex.Message}";
-            Console.WriteLine($"Push subscription error: {ex}");
         }
         finally
         {
