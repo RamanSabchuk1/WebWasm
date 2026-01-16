@@ -1,4 +1,5 @@
 ﻿@using WebWasm.Components
+@inject NavigationManager NavManager
 @inherits LayoutComponentBase
 
 <AuthorizeView>
@@ -9,15 +10,14 @@
             </nav>
 
             <main class="main-content">
-                <header class="top-header">
+                <header class="top-header mobile-only">
                     <div class="header-content">
-                        <div class="search-container">
-                            <span class="search-icon">🔍</span>
-                            <span class="search-text">Search</span>
+                        <div class="brand-title">
+                            <span class="brand-icon">⚡</span>
+                            <span class="brand-text">Admin Panel</span>
                         </div>
-                        <div class="user-info">
+                        <div class="user-info" @onclick="NavigateToProfile">
                             <span class="user-avatar">👤</span>
-                            <span class="user-name">@context.User?.Identity?.Name</span>
                         </div>
                     </div>
                 </header>
@@ -36,3 +36,10 @@
         <Login />
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    private void NavigateToProfile()
+    {
+        NavManager.NavigateTo("/myuserinfo");
+    }
+}

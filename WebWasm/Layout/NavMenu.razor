@@ -10,7 +10,7 @@
                 <span class="logo-icon">⚡</span>
                 <span class="logo-text">Admin Panel</span>
             </div>
-            <div class="user-profile">
+            <div class="user-profile" @onclick="NavigateToProfile">
                 <div class="avatar">👤</div>
                 <span class="status-badge online">online</span>
             </div>
@@ -88,23 +88,19 @@
 }
 else
 {
-    <!-- Mobile Bottom Navigation -->
+    <!-- Mobile Bottom Navigation (Icons only, no labels) -->
     <div class="mobile-nav-bar">
         <NavLink class="mobile-nav-item" href="" Match="NavLinkMatch.All">
             <span class="mobile-nav-icon">🏠</span>
-            <span class="mobile-nav-label">Home</span>
         </NavLink>
         <NavLink class="mobile-nav-item" href="orders">
             <span class="mobile-nav-icon">📦</span>
-            <span class="mobile-nav-label">Orders</span>
         </NavLink>
         <NavLink class="mobile-nav-item" href="users">
             <span class="mobile-nav-icon">👥</span>
-            <span class="mobile-nav-label">Users</span>
         </NavLink>
         <button class="mobile-nav-item menu-trigger" @onclick="ToggleNavMenu">
             <span class="mobile-nav-icon">☰</span>
-            <span class="mobile-nav-label">More</span>
         </button>
     </div>
 
@@ -161,6 +157,11 @@ else
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void NavigateToProfile()
+    {
+        NavManager.NavigateTo("/myuserinfo");
     }
 
     private async Task Logout()
