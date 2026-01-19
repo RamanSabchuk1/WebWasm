@@ -2,122 +2,123 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebWasm</title>
-    <base href="/" />
-    <link rel="preload" id="webassembly" />
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="WebWasm.styles.css" rel="stylesheet" />
-    <link href="manifest.webmanifest" rel="manifest" />
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-    <script type="importmap"></script>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>WebWasm</title>
+	<base href="/" />
+	<link rel="preload" id="webassembly" />
+	<link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/app.css" />
+	<link rel="icon" type="image/png" href="favicon.png" />
+	<link href="WebWasm.styles.css" rel="stylesheet" />
+	<link href="manifest.webmanifest" rel="manifest" />
+	<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+	<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+	<script type="importmap"></script>
 </head>
 
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
-    </div>
+	<div id="app">
+		<svg class="loading-progress">
+			<circle r="40%" cx="50%" cy="50%" />
+			<circle r="40%" cx="50%" cy="50%" />
+		</svg>
+		<div class="loading-progress-text"></div>
+	</div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
-    </div>
+	<div id="blazor-error-ui">
+		An unhandled error has occurred.
+		<a href="." class="reload">Reload</a>
+		<span class="dismiss">🗙</span>
+	</div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
-    <script src="rxjs.umd.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
+	<script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+	<script src="rxjs.umd.min.js"></script>
+	<script src="js/service-worker-interop.js"></script>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCcnA6c8s9ML0VJu35JhwzTGQoG-PcNnN0",
-            authDomain: "kliffort-site.firebaseapp.com",
-            projectId: "kliffort-site",
-            storageBucket: "kliffort-site.firebasestorage.app",
-            messagingSenderId: "250756228052",
-            appId: "1:250756228052:web:e0623066a48c50c8512c41"
-        };
+	<script>
+		const firebaseConfig = {
+			apiKey: "AIzaSyCcnA6c8s9ML0VJu35JhwzTGQoG-PcNnN0",
+			authDomain: "kliffort-site.firebaseapp.com",
+			projectId: "kliffort-site",
+			storageBucket: "kliffort-site.firebasestorage.app",
+			messagingSenderId: "250756228052",
+			appId: "1:250756228052:web:e0623066a48c50c8512c41"
+		};
 
-        firebase.initializeApp(firebaseConfig);
+		firebase.initializeApp(firebaseConfig);
 
-        let messaging = null;
-        let swRegistration = null;
+		let messaging = null;
+		let swRegistration = null;
 
-        async function initializeFirebaseMessaging() {
-            try {
-                swRegistration = await navigator.serviceWorker.register('service-worker.js', { 
-                    updateViaCache: 'none',
-                    scope: '/WebWasm/'
-                });
-                
-                console.log('Service Worker registered successfully:', swRegistration);
+		async function initializeFirebaseMessaging() {
+			try {
+				swRegistration = await navigator.serviceWorker.register('service-worker.js', { 
+					updateViaCache: 'none',
+					scope: '/WebWasm/'
+				});
+				
+				console.log('Service Worker registered successfully:', swRegistration);
 
-                await navigator.serviceWorker.ready;
-                
-                messaging = firebase.messaging();
-                
-                messaging.onMessage((payload) => {
-                    console.log('Foreground message received:', payload);
+				await navigator.serviceWorker.ready;
+				
+				messaging = firebase.messaging();
+				
+				messaging.onMessage((payload) => {
+					console.log('Foreground message received:', payload);
 
-                    if (Notification.permission === 'granted') {
-                        const notificationTitle = payload.notification?.title || 'New Message';
-                        const notificationOptions = {
-                            body: payload.notification?.body || '',
-                            icon: 'icon-512.png',
-                            data: payload.data
-                        };
-                        new Notification(notificationTitle, notificationOptions);
-                    }
-                });
+					if (Notification.permission === 'granted') {
+						const notificationTitle = payload.notification?.title || 'New Message';
+						const notificationOptions = {
+							body: payload.notification?.body || '',
+							icon: 'icon-512.png',
+							data: payload.data
+						};
+						new Notification(notificationTitle, notificationOptions);
+					}
+				});
 
-                return true;
-            } catch (error) {
-                console.error('Failed to initialize Firebase Messaging:', error);
-                return false;
-            }
-        }
+				return true;
+			} catch (error) {
+				console.error('Failed to initialize Firebase Messaging:', error);
+				return false;
+			}
+		}
 
-        async function getFcmToken() {
-            try {
-                if (!messaging) {
-                    const initialized = await initializeFirebaseMessaging();
-                    if (!initialized) {
-                        console.error('Firebase messaging not initialized');
-                        return null;
-                    }
-                }
+		async function getFcmToken() {
+			try {
+				if (!messaging) {
+					const initialized = await initializeFirebaseMessaging();
+					if (!initialized) {
+						console.error('Firebase messaging not initialized');
+						return null;
+					}
+				}
 
-                const registration = await navigator.serviceWorker.ready;
-                const vapidKey = 'BAOL6t3T-11IkD0zsIhvJd8cclIhh8VIvoKGtdgm2riQRiW9xoBFHvo4yH__os24AFiPItQDBKKn0_AS8-UK1vE';
-                const currentToken = await messaging.getToken({
-                    vapidKey: vapidKey,
-                    serviceWorkerRegistration: registration
-                });
+				const registration = await navigator.serviceWorker.ready;
+				const vapidKey = 'BAOL6t3T-11IkD0zsIhvJd8cclIhh8VIvoKGtdgm2riQRiW9xoBFHvo4yH__os24AFiPItQDBKKn0_AS8-UK1vE';
+				const currentToken = await messaging.getToken({
+					vapidKey: vapidKey,
+					serviceWorkerRegistration: registration
+				});
 
-                if (currentToken) {
-                    console.log('FCM Token:', currentToken);
-                    return currentToken;
-                } else {
-                    console.log('No registration token available. Request permission to generate one.');
-                    return null;
-                }
-            } catch (err) {
-                console.error('An error occurred while retrieving token:', err);
-                return null;
-            }
-        }
+				if (currentToken) {
+					console.log('FCM Token:', currentToken);
+					return currentToken;
+				} else {
+					console.log('No registration token available. Request permission to generate one.');
+					return null;
+				}
+			} catch (err) {
+				console.error('An error occurred while retrieving token:', err);
+				return null;
+			}
+		}
 
-        initializeFirebaseMessaging();
-    </script>
+		initializeFirebaseMessaging();
+	</script>
 </body>
 
 </html>

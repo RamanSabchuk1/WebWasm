@@ -5,106 +5,106 @@
 
 @if (isLoading)
 {
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
+	<div class="spinner-border text-primary" role="status">
+		<span class="visually-hidden">Loading...</span>
+	</div>
 }
 else
 {
-    <button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribing">
-        @if (isSubscribing)
-        {
-            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-        }
-        Subscribe to Notifications
-    </button>
+	<button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribing">
+		@if (isSubscribing)
+		{
+			<span class="spinner-border spinner-border-sm me-2" role="status"></span>
+		}
+		Subscribe to Notifications
+	</button>
 }
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="alert alert-danger mt-3" role="alert">
-        <strong>Error:</strong> @errorMessage
-    </div>
+	<div class="alert alert-danger mt-3" role="alert">
+		<strong>Error:</strong> @errorMessage
+	</div>
 }
 
 @if (!string.IsNullOrEmpty(fcmToken))
 {
-    <div class="alert alert-success mt-3" role="alert">
-        <p><strong>Success!</strong> Push notifications enabled.</p>
-        <details>
-            <summary>View FCM Token</summary>
-            <pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@fcmToken</code></pre>
-        </details>
-    </div>
+	<div class="alert alert-success mt-3" role="alert">
+		<p><strong>Success!</strong> Push notifications enabled.</p>
+		<details>
+			<summary>View FCM Token</summary>
+			<pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@fcmToken</code></pre>
+		</details>
+	</div>
 }
 
 @code {
-    private string? fcmToken;
-    private string? errorMessage;
-    private bool isLoading = true;
-    private bool isSubscribing = false;
+	private string? fcmToken;
+	private string? errorMessage;
+	private bool isLoading = true;
+	private bool isSubscribing = false;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            // Check if notifications are supported
-            var isSupported = await JSRuntime.InvokeAsync<bool>("eval", "'Notification' in window && 'serviceWorker' in navigator");
-            if (!isSupported)
-            {
-                errorMessage = "Push notifications are not supported in this browser.";
-            }
-            isLoading = false;
-            StateHasChanged();
-        }
-    }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			// Check if notifications are supported
+			var isSupported = await JSRuntime.InvokeAsync<bool>("eval", "'Notification' in window && 'serviceWorker' in navigator");
+			if (!isSupported)
+			{
+				errorMessage = "Push notifications are not supported in this browser.";
+			}
+			isLoading = false;
+			StateHasChanged();
+		}
+	}
 
-    private async Task Subscribe()
-    {
-        errorMessage = null;
-        isSubscribing = true;
-        StateHasChanged();
+	private async Task Subscribe()
+	{
+		errorMessage = null;
+		isSubscribing = true;
+		StateHasChanged();
 
-        try
-        {
-            // Request notification permission
-            var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
+		try
+		{
+			// Request notification permission
+			var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
 
-            if (permission != "granted")
-            {
-                errorMessage = "Notification permission was denied. Please enable notifications in your browser settings.";
-                return;
-            }
+			if (permission != "granted")
+			{
+				errorMessage = "Notification permission was denied. Please enable notifications in your browser settings.";
+				return;
+			}
 
-            var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");            
-            if (!string.IsNullOrEmpty(token))
-            {
-                fcmToken = token;
-                
-                // Send token to backend
-                var info = new DeviceTokenInfo(fcmToken, "WebWasm PWA", new Dictionary<string, string>
-                {
-                    { "platform", "web" },
-                    { "userAgent", await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent") }
-                });
+			var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");            
+			if (!string.IsNullOrEmpty(token))
+			{
+				fcmToken = token;
+				
+				// Send token to backend
+				var info = new DeviceTokenInfo(fcmToken, "WebWasm PWA", new Dictionary<string, string>
+				{
+					{ "platform", "web" },
+					{ "userAgent", await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent") }
+				});
 
-                await ApiClient.Post("DeviceTokens", info);
-            }
-            else
-            {
-                errorMessage = "Could not retrieve FCM token. Please check the browser console for more details.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"An error occurred: {ex.Message}";
-        }
-        finally
-        {
-            isSubscribing = false;
-            StateHasChanged();
-        }
-    }
+				await ApiClient.Post("DeviceTokens", info);
+			}
+			else
+			{
+				errorMessage = "Could not retrieve FCM token. Please check the browser console for more details.";
+			}
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"An error occurred: {ex.Message}";
+		}
+		finally
+		{
+			isSubscribing = false;
+			StateHasChanged();
+		}
+	}
 
-    private record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
+	private record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
 }

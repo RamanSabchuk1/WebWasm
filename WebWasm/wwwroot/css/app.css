@@ -204,3 +204,25 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.form-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    border: 2px solid rgba(139, 115, 85, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: white;
+    color: #3D3D3D;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+    .form-input:focus {
+        outline: none;
+        border-color: #C9A86C;
+        box-shadow: 0 0 0 4px rgba(201, 168, 108, 0.15);
+    }
+
+    .form-input::placeholder {
+        color: #9E9E9E;
+    }

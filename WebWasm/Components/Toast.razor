@@ -1,0 +1,16 @@
+@using WebWasm.Services
+@implements IDisposable
+
+@if (_messages.Count > 0)
+{
+	<div class="toast-container">
+		@foreach (var message in _messages)
+		{
+			<div class="toast toast-@message.Type.ToString().ToLower()">
+				<span class="toast-icon">@GetIcon(message.Type)</span>
+				<span class="toast-message">@message.Text</span>
+				<button class="toast-close" @onclick="() => RemoveMessage(message)">×</button>
+			</div>
+		}
+	</div>
+}

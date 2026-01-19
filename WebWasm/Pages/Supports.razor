@@ -1,15 +1,13 @@
 ﻿@page "/supports"
+@using WebWasm.Components
 
 <PageTitle>Support</PageTitle>
 
 <div class="page-header">
-    <h1>⚙️ Support</h1>
-    <p class="page-subtitle">Manage support tickets and inquiries</p>
+	<h1>⚙️ Support</h1>
+	<p class="page-subtitle">Manage support tickets and inquiries</p>
 </div>
 
 <div class="content-card">
-    @foreach (var item in _suggestions)
-    {
-        @item.Name
-    }
+	<SuggestionsTable Suggestions="@_suggestions" OnApply="@HandleApply" />
 </div>

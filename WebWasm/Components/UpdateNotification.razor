@@ -1,0 +1,14 @@
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+
+@if (_updateAvailable)
+{
+	<div class="update-banner">
+		<div class="update-content">
+			<span class="update-icon">🔄</span>
+			<span class="update-text">A new version is available!</span>
+			<button class="update-button" @onclick="ReloadApp">Update Now</button>
+			<button class="update-dismiss" @onclick="DismissUpdate">×</button>
+		</div>
+	</div>
+}

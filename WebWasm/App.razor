@@ -1,9 +1,15 @@
-﻿<CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-        <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-        </Found>
-    </Router>
+﻿@using WebWasm.Components
+
+<CascadingAuthenticationState>
+	<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+		<Found Context="routeData">
+			<RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
+			<FocusOnNavigate RouteData="@routeData" Selector="h1" />
+		</Found>
+	</Router>
 </CascadingAuthenticationState>
+
+<UpdateNotification />
+<Toast />
+<Loading />
 

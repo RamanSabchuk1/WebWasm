@@ -1,0 +1,37 @@
+@using Microsoft.AspNetCore.Components.QuickGrid
+@typeparam TItem
+
+<div class="data-grid-container">
+	@if (ShowSearch)
+	{
+		<div class="data-grid-search">
+			<input type="text" 
+				   placeholder="Search..." 
+				   @bind="_searchText" 
+				   @bind:event="oninput"
+				   class="search-input" />
+		</div>
+	}
+
+	@if (_hasItems)
+	{
+		<div class="data-grid-scroll">
+			<QuickGrid Items="@FilteredItems" Pagination="@_pagination" class="data-grid">
+				@ChildContent
+			</QuickGrid>
+		</div>
+
+		@if (ShowPagination && _pagination.TotalItemCount > _pagination.ItemsPerPage)
+		{
+			<div class="data-grid-pagination">
+				<CustomPaginator State="@_pagination" />
+			</div>
+		}
+	}
+	else
+	{
+		<div class="empty-state">
+			<p>No data available</p>
+		</div>
+	}
+</div>

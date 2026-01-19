@@ -1,0 +1,89 @@
+.update-banner {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 9999;
+	background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+	box-shadow: 0 4px 20px rgba(139, 115, 85, 0.3);
+	animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		transform: translateY(-100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+.update-content {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 1rem;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.update-icon {
+	font-size: 1.5rem;
+}
+
+.update-text {
+	color: white;
+	font-weight: 500;
+	font-size: 0.875rem;
+}
+
+.update-button {
+	padding: 0.5rem 1rem;
+	border: 2px solid white;
+	border-radius: 6px;
+	background: white;
+	color: var(--accent-primary, #C9A86C);
+	cursor: pointer;
+	font-size: 0.875rem;
+	font-weight: 600;
+	transition: all 0.2s;
+}
+
+	.update-button:hover {
+		background: transparent;
+		color: white;
+	}
+
+.update-dismiss {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1.5rem;
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: background-color 0.2s;
+}
+
+	.update-dismiss:hover {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+
+@media (max-width: 640px) {
+	.update-content {
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.update-text {
+		flex: 1;
+		min-width: 150px;
+	}
+}

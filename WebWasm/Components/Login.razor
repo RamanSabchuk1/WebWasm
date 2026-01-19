@@ -1,257 +1,55 @@
 ﻿@inject ApiClient ApiClient
 
 <div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <div class="login-logo">⚡</div>
-            <h2>Welcome Back</h2>
-            <p class="login-subtitle">Sign in to your admin account</p>
-        </div>
+	<div class="login-card">
+		<div class="login-header">
+			<div class="login-logo">⚡</div>
+			<h2>Welcome Back</h2>
+			<p class="login-subtitle">Sign in to your admin account</p>
+		</div>
 
-        <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin" class="login-form">
-            <DataAnnotationsValidator />
-            
-            <div class="form-group">
-                <label for="username">Username</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">👤</span>
-                    <InputText id="username" @bind-Value="_loginModel.Username" placeholder="Enter your username" class="form-input" />
-                </div>
-                <ValidationMessage For="@(() => _loginModel.Username)" />
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrapper">
-                    <span class="input-icon">🔒</span>
-                    <InputText id="password" @bind-Value="_loginModel.Password" type="password" placeholder="Enter your password" class="form-input" />
-                </div>
-                <ValidationMessage For="@(() => _loginModel.Password)" />
-            </div>
+		<EditForm Model="@_loginModel" OnValidSubmit="HandleLogin" class="login-form">
+			<DataAnnotationsValidator />
+			
+			<div class="form-group">
+				<label for="username">Username</label>
+				<div class="input-wrapper">
+					<span class="input-icon">👤</span>
+					<InputText id="username" @bind-Value="_loginModel.Username" placeholder="Enter your username" class="form-input" />
+				</div>
+				<ValidationMessage For="@(() => _loginModel.Username)" />
+			</div>
+			
+			<div class="form-group">
+				<label for="password">Password</label>
+				<div class="input-wrapper">
+					<span class="input-icon">🔒</span>
+					<InputText id="password" @bind-Value="_loginModel.Password" type="password" placeholder="Enter your password" class="form-input" />
+				</div>
+				<ValidationMessage For="@(() => _loginModel.Password)" />
+			</div>
 
-            @if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                <div class="error-message">
-                    <span>⚠️</span> @_errorMessage
-                </div>
-            }
+			@if (!string.IsNullOrEmpty(_errorMessage))
+			{
+				<div class="error-message">
+					<span>⚠️</span> @_errorMessage
+				</div>
+			}
 
-            <button type="submit" class="login-button" disabled="@_isLoading">
-                @if (_isLoading)
-                {
-                    <span>Signing in...</span>
-                }
-                else
-                {
-                    <span>Sign In</span>
-                }
-            </button>
-        </EditForm>
-        
-        <div class="login-footer">
-            <p>SuperAdmin Panel v1.0</p>
-        </div>
-    </div>
+			<button type="submit" class="login-button" disabled="@_isLoading">
+				@if (_isLoading)
+				{
+					<span>Signing in...</span>
+				}
+				else
+				{
+					<span>Sign In</span>
+				}
+			</button>
+		</EditForm>
+		
+		<div class="login-footer">
+			<p>SuperAdmin Panel v1.0</p>
+		</div>
+	</div>
 </div>
-
-<style>
-    .login-container {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #F5EBE0 0%, #E8DCC8 50%, #D5C4A1 100%);
-        padding: 1rem;
-    }
-    
-    .login-card {
-        width: 100%;
-        max-width: 420px;
-        background: #FAF7F2;
-        border-radius: 24px;
-        padding: 2.5rem;
-        box-shadow: 0 20px 60px rgba(139, 115, 85, 0.2);
-    }
-    
-    .login-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    
-    .login-logo {
-        width: 72px;
-        height: 72px;
-        background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto 1.25rem;
-        box-shadow: 0 8px 24px rgba(139, 115, 85, 0.3);
-    }
-    
-    .login-header h2 {
-        margin: 0 0 0.5rem 0;
-        color: #3D3D3D;
-        font-size: 1.75rem;
-    }
-    
-    .login-subtitle {
-        color: #7A7A7A;
-        margin: 0;
-        font-size: 0.9375rem;
-    }
-    
-    .login-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-    }
-    
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .form-group label {
-        font-weight: 500;
-        color: #3D3D3D;
-        font-size: 0.875rem;
-    }
-    
-    .input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-    
-    .input-icon {
-        position: absolute;
-        left: 1rem;
-        font-size: 1.125rem;
-        z-index: 1;
-    }
-    
-    .form-input {
-        width: 100%;
-        padding: 1rem 1rem 1rem 3rem;
-        border: 2px solid rgba(139, 115, 85, 0.2);
-        border-radius: 12px;
-        font-size: 1rem;
-        background: white;
-        color: #3D3D3D;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        box-sizing: border-box;
-    }
-    
-    .form-input:focus {
-        outline: none;
-        border-color: #C9A86C;
-        box-shadow: 0 0 0 4px rgba(201, 168, 108, 0.15);
-    }
-    
-    .form-input::placeholder {
-        color: #9E9E9E;
-    }
-    
-    .error-message {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.875rem 1rem;
-        background: rgba(220, 53, 69, 0.1);
-        border: 1px solid rgba(220, 53, 69, 0.2);
-        border-radius: 12px;
-        color: #dc3545;
-        font-size: 0.875rem;
-    }
-    
-    .login-button {
-        width: 100%;
-        padding: 1rem;
-        background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
-        border: none;
-        border-radius: 12px;
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        margin-top: 0.5rem;
-    }
-    
-    .login-button:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(139, 115, 85, 0.3);
-    }
-    
-    .login-button:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-    
-    .login-footer {
-        text-align: center;
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid rgba(139, 115, 85, 0.15);
-    }
-    
-    .login-footer p {
-        color: #7A7A7A;
-        font-size: 0.8125rem;
-        margin: 0;
-    }
-    
-    @@media (max-width: 480px) {
-        .login-card {
-            padding: 1.5rem;
-        }
-        
-        .login-header h2 {
-            font-size: 1.5rem;
-        }
-    }
-</style>
-
-@code {
-    public record LoginModel()
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
-    public record TokenResponse(string Token);
-
-    private LoginModel _loginModel = new ();
-    private bool _isLoading = false;
-    private string? _errorMessage;
-
-    private async Task HandleLogin()
-    {
-        _errorMessage = null;
-        _isLoading = true;
-        
-        try
-        {
-            if (string.IsNullOrWhiteSpace(_loginModel.Username) || string.IsNullOrWhiteSpace(_loginModel.Password))
-            {
-                _errorMessage = "Username and password cannot be empty.";
-                return;
-            }
-
-            await ApiClient.Login(_loginModel);
-
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Login failed: {ex.Message}";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-}

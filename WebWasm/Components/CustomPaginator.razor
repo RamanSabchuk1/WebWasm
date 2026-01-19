@@ -1,0 +1,24 @@
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+@if (State != null && State.TotalItemCount > 0)
+{
+	<div class="pagination">
+		<button @onclick="GoToFirstPage" disabled="@(!CanGoToPreviousPage())">
+			First
+		</button>
+		<button @onclick="GoToPreviousPage" disabled="@(!CanGoToPreviousPage())">
+			Previous
+		</button>
+
+		<span class="pagination-state">
+			Page @CurrentPage of @TotalPages
+		</span>
+
+		<button @onclick="GoToNextPage" disabled="@(!CanGoToNextPage())">
+			Next
+		</button>
+		<button @onclick="GoToLastPage" disabled="@(!CanGoToNextPage())">
+			Last
+		</button>
+	</div>
+}

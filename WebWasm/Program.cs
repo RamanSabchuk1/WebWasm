@@ -15,6 +15,8 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddSingleton<AppJsService>();
 builder.Services.AddSingleton<EncryptionService>();
+builder.Services.AddSingleton<ToastService>();
+builder.Services.AddSingleton<LoadingService>();
 builder.Services.AddScoped<ApiClient>();
 builder.Services.AddScoped<LocalStorageAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<LocalStorageAuthStateProvider>());
