@@ -1,5 +1,4 @@
 ﻿@inject LocalStorageAuthStateProvider AuthProvider
-@inject NavigationManager NavManager
 
 @if (!IsMobile)
 {
@@ -43,10 +42,6 @@
         <div class="nav-section">
             <span class="nav-section-title">Management</span>
             <nav class="nav-list">
-                <NavLink class="nav-item" href="regions">
-                    <span class="nav-icon">🗺️</span>
-                    <span class="nav-text">Regions</span>
-                </NavLink>
                 <NavLink class="nav-item" href="devices">
                     <span class="nav-icon">📱</span>
                     <span class="nav-text">Devices</span>

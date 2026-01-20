@@ -30,7 +30,7 @@ public partial class Login(NavigationManager navManager)
 			}
 
 			await ApiClient.Login(_loginModel);
-			navManager.NavigateTo("/");
+			navManager.NavigateTo("myuserinfo");
 
 		}
 		catch (Exception ex)
