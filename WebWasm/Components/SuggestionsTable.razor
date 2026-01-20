@@ -16,6 +16,7 @@
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredSuggestions" Pagination="@_pagination" class="data-grid">
 				<PropertyColumn Property="@(s => s.Name)" Title="Name" Sortable="true" />
+				<PropertyColumn Property="@(s => s.UserInfoId)" Title="User" Sortable="true" />
 				<TemplateColumn Title="Data" Sortable="false">
 					<div class="data-cell">
 						@if (context.Data.Count > 0)

@@ -7,7 +7,7 @@ public partial class Toast : ComponentBase, IDisposable
 {
 	[Inject] private ToastService ToastSvc { get; set; } = default!;
 
-	private List<ToastMessage> _messages = [];
+	private readonly List<ToastMessage> _messages = [];
 	private readonly Dictionary<ToastMessage, CancellationTokenSource> _timers = [];
 
 	protected override void OnInitialized()
@@ -25,7 +25,7 @@ public partial class Toast : ComponentBase, IDisposable
 
 		_ = Task.Run(async () =>
 		{
-			await Task.Delay(5000, cts.Token);
+			await Task.Delay(4000, cts.Token);
 			if (!cts.Token.IsCancellationRequested)
 			{
 				await InvokeAsync(() =>
