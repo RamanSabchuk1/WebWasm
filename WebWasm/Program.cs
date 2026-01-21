@@ -17,9 +17,10 @@ builder.Services.AddSingleton<AppJsService>();
 builder.Services.AddSingleton<EncryptionService>();
 builder.Services.AddSingleton<ToastService>();
 builder.Services.AddSingleton<LoadingService>();
-builder.Services.AddScoped<ApiClient>();
-builder.Services.AddScoped<LocalStorageAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<LocalStorageAuthStateProvider>());
+builder.Services.AddSingleton<CashService>();
+builder.Services.AddSingleton<ApiClient>();
+builder.Services.AddSingleton<LocalStorageAuthStateProvider>();
+builder.Services.AddSingleton<AuthenticationStateProvider>(provider => provider.GetRequiredService<LocalStorageAuthStateProvider>());
 
 builder.Services.AddAuthorizationCore();
 
