@@ -29,7 +29,6 @@ public record ActivityRecord(string Description, DateTime Date);
 public record struct ProducerWorkingTime(TimeOnly StartLoadingHours, TimeOnly EndLoadingHours, TimeOnly StartWorkingHours, TimeOnly EndWorkingHours, DayOfWeek DayOfWeek);
 public record struct PriceInfo(decimal MinPrice, decimal PricePerHour, decimal PricePerKm, decimal MaxPrice);
 
-
 public record MutateLoadingPlace(string Name, Location Location, Guid MaterialTypeId, decimal Cost, int Volume);
 public record CalculationInfoRequest(ICollection<Guid> OrderIds);
 public record OrderCostRequest(Guid LoadingPlaceId, TimeSpan Duration, decimal Distance, int[] Weights);

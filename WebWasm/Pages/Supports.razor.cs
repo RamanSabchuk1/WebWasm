@@ -4,28 +4,18 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Supports(ApiClient apiClient, ToastService toastService, LoadingService loadingService) : ComponentBase
+public partial class Supports(CashService cashService, ApiClient apiClient, ToastService toastService, LoadingService loadingService) : ComponentBase
 {
 	private ICollection<Suggestion> _suggestions = [];
 
 	protected override async Task OnInitializedAsync()
 	{
-		await LoadSuggestions();
+		await LoadSuggestions(true);
 	}
 
-	private async Task LoadSuggestions()
+	private async Task LoadSuggestions(bool useCash)
 	{
-		await loadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				_suggestions = await apiClient.Get<ICollection<Suggestion>>("Supports/suggestion/all");
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Failed to load suggestions: {ex.Message}");
-			}
-		});
+		_suggestions = await cashService.GetData<Suggestion>(useCash);
 	}
 
 	private async Task HandleApply(Guid suggestionId)
@@ -36,7 +26,7 @@ public partial class Supports(ApiClient apiClient, ToastService toastService, Lo
 			{
 				await apiClient.Post($"Supports/suggestion/apply?suggestionId={suggestionId}");
 				toastService.ShowSuccess("Suggestion applied successfully!");
-				await LoadSuggestions();
+				await LoadSuggestions(false);
 			}
 			catch (Exception ex)
 			{

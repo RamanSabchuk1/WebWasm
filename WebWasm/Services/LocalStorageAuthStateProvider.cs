@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 namespace WebWasm.Services;
 
-public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, EncryptionService encryptionService) : AuthenticationStateProvider
+public class LocalStorageAuthStateProvider(/*ILocalStorageService localStorage, */EncryptionService encryptionService/*, IServiceProvider provider*/) : AuthenticationStateProvider
 {
 	private const string TokenStorageKey = "encryptedAuthToken";
 
 	public override async Task<AuthenticationState> GetAuthenticationStateAsync()
 	{
-		var encryptedToken = await localStorage.GetItemAsync<string>(TokenStorageKey);
+		var encryptedToken = await GlobalScope.LocalStorage.GetItemAsync<string>(TokenStorageKey);
 
 		if (string.IsNullOrWhiteSpace(encryptedToken))
 		{
@@ -44,15 +44,15 @@ public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, En
 	public async ValueTask MarkUserAsAuthenticated(string rawJwt)
 	{
 		var encryptedToken = encryptionService.Encrypt(rawJwt);
-		await localStorage.SetItemAsync(TokenStorageKey, encryptedToken);
-		
+		await GlobalScope.LocalStorage.SetItemAsync(TokenStorageKey, encryptedToken);
+
 		var authState = GetAuthenticationStateAsync();
 		NotifyAuthenticationStateChanged(authState);
 	}
 
 	public async ValueTask MarkUserAsLoggedOut()
 	{
-		await localStorage.RemoveItemAsync(TokenStorageKey);
+		await GlobalScope.LocalStorage.RemoveItemAsync(TokenStorageKey);
 
 		var authState = Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
 		NotifyAuthenticationStateChanged(authState);
@@ -60,7 +60,7 @@ public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, En
 
 	public async ValueTask<string> GetRawJwt()
 	{
-		var encryptedToken = await localStorage.GetItemAsync<string>(TokenStorageKey);
+		var encryptedToken = await GlobalScope.LocalStorage.GetItemAsync<string>(TokenStorageKey);
 
 		if (string.IsNullOrWhiteSpace(encryptedToken))
 		{

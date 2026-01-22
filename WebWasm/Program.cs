@@ -24,4 +24,12 @@ builder.Services.AddSingleton<AuthenticationStateProvider>(provider => provider.
 
 builder.Services.AddAuthorizationCore();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+GlobalScope.LocalStorage = host.Services.CreateScope().ServiceProvider.GetRequiredService<ILocalStorageService>();
+await host.RunAsync();
+
+public static class GlobalScope
+{
+	public static ILocalStorageService LocalStorage { get; set; } = null!;
+}
