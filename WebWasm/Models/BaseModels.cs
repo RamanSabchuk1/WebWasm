@@ -24,9 +24,14 @@ public record Region(Guid Id, string Name, ICollection<Level> Levels);
 public record Triangle(Location Point1, Location Point2, Location Point3);
 public record UserInfo(Guid Id, string FirstName, string MiddleName, string LastName, string MobilePhone, Company? Company);
 public record Vehicle(Guid Id, Guid DriverId, Guid CompanyId, string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Driver? Driver);
+public record ActivityRecord(string Description, DateTime Date);
+
 public record struct ProducerWorkingTime(TimeOnly StartLoadingHours, TimeOnly EndLoadingHours, TimeOnly StartWorkingHours, TimeOnly EndWorkingHours, DayOfWeek DayOfWeek);
 public record struct PriceInfo(decimal MinPrice, decimal PricePerHour, decimal PricePerKm, decimal MaxPrice);
+
+
 public record MutateLoadingPlace(string Name, Location Location, Guid MaterialTypeId, decimal Cost, int Volume);
+public record CalculationInfoRequest(ICollection<Guid> OrderIds);
 public record OrderCostRequest(Guid LoadingPlaceId, TimeSpan Duration, decimal Distance, int[] Weights);
 public record OrderCostResponse(Guid LoadingPlaceId, decimal Cost);
 public record MaterialTypeInfo(Guid? ParentId, string Name, string Description, string Solidity, string Photo);
