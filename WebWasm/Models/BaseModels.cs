@@ -45,28 +45,28 @@ public record CreateUser(Guid CompanyId, string FirstName, string MiddleName, st
 
 public enum LevelType
 {
-    Neighborhood,
-    City
+	Neighborhood,
+	City
 }
 
 public enum RoleType
 {
-    Driver,
-    TransportManager,
-    OperatorProducer,
-    AccountAdmin,
-    SuperAdmin
+	Driver,
+	TransportManager,
+	OperatorProducer,
+	AccountAdmin,
+	SuperAdmin
 }
 
 public enum OrderStatus
 {
-    Draft,
-    WaitingApprove,
-    PaymentPending,
-    Active,
-    Completed,
-    CorruptedPayment,
-    Cancelled,
-    Archived,
-    Deleted
+	Draft,
+	WaitingApprove,
+	PaymentPending,
+	Active,
+	Completed,
+	CorruptedPayment,
+	Cancelled,
+	Archived,
+	Deleted
 }

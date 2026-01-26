@@ -23,6 +23,7 @@ public partial class Loading : ComponentBase, IDisposable
 
 	public void Dispose()
 	{
+		GC.SuppressFinalize(this);
 		LoadingSvc.OnChange -= OnLoadingStateChanged;
 	}
 }

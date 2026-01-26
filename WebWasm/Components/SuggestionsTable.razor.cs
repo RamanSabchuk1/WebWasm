@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
-using WebWasm.Models;
+using WebWasm.Pages;
 
 namespace WebWasm.Components;
 
 public partial class SuggestionsTable : ComponentBase
 {
-	[Parameter, EditorRequired] public IEnumerable<Suggestion> Suggestions { get; set; } = [];
+	[Parameter, EditorRequired] public IEnumerable<Supports.SuggestionsWithUser> Suggestions { get; set; } = [];
 	[Parameter] public EventCallback<Guid> OnApply { get; set; }
 
 	private readonly HashSet<Guid> _expandedRows = [];
@@ -22,7 +22,7 @@ public partial class SuggestionsTable : ComponentBase
 			_expandedRows.Add(id);
 	}
 
-	private IQueryable<Suggestion> FilteredSuggestions
+	private IQueryable<Supports.SuggestionsWithUser> FilteredSuggestions
 	{
 		get
 		{
@@ -32,8 +32,8 @@ public partial class SuggestionsTable : ComponentBase
 			{
 				var lowerSearch = _searchText.ToLowerInvariant();
 				items = items.Where(s =>
-					s.Name.Contains(lowerSearch, StringComparison.OrdinalIgnoreCase) ||
-					s.Data.Any(kvp =>
+					s.Suggestion.Name.Contains(lowerSearch, StringComparison.OrdinalIgnoreCase) ||
+					s.Suggestion.Data.Any(kvp =>
 						kvp.Key.Contains(lowerSearch, StringComparison.OrdinalIgnoreCase) ||
 						kvp.Value.Contains(lowerSearch, StringComparison.OrdinalIgnoreCase)));
 			}

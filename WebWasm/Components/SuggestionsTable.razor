@@ -15,19 +15,19 @@
 	{
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredSuggestions" Pagination="@_pagination" class="data-grid">
-				<PropertyColumn Property="@(s => s.Name)" Title="Name" Sortable="true" />
-				<PropertyColumn Property="@(s => s.UserInfoId)" Title="User" Sortable="true" />
+				<PropertyColumn Property="@(s => s.Suggestion.Name)" Title="Name" Sortable="true" />
+				<PropertyColumn Property="@(s => s.GetUserName())" Title="User" Sortable="true" />
 				<TemplateColumn Title="Data" Sortable="false">
 					<div class="data-cell">
-						@if (context.Data.Count > 0)
+						@if (context.Suggestion.Data.Count > 0)
 						{
-							<button class="btn-expand" @onclick="() => ToggleExpand(context.Id)">
-								@(IsExpanded(context.Id) ? "▼" : "▶") @context.Data.Count item(s)
+							<button class="btn-expand" @onclick="() => ToggleExpand(context.Suggestion.Id)">
+								@(IsExpanded(context.Suggestion.Id) ? "▼" : "▶") @context.Suggestion.Data.Count item(s)
 							</button>
-							@if (IsExpanded(context.Id))
+							@if (IsExpanded(context.Suggestion.Id))
 							{
 								<div class="data-expanded">
-									@foreach (var kvp in context.Data)
+									@foreach (var kvp in context.Suggestion.Data)
 									{
 										<div class="data-item">
 											<span class="data-key">@kvp.Key:</span>
@@ -43,11 +43,11 @@
 						}
 					</div>
 				</TemplateColumn>
-				<PropertyColumn Property="@(s => s.Created)" Title="Created" Format="yyyy-MM-dd HH:mm" Sortable="true" />
+				<PropertyColumn Property="@(s => s.Suggestion.Created)" Title="Created" Format="yyyy-MM-dd HH:mm" Sortable="true" />
 				<TemplateColumn Title="Applied" Sortable="false">
-					@if (context.Applied.HasValue)
+					@if (context.Suggestion.Applied.HasValue)
 					{
-						<span class="status-badge status-applied">@context.Applied.Value.ToString("yyyy-MM-dd HH:mm")</span>
+						<span class="status-badge status-applied">@context.Suggestion.Applied.Value.ToString("yyyy-MM-dd HH:mm")</span>
 					}
 					else
 					{
@@ -56,9 +56,9 @@
 				</TemplateColumn>
 				<TemplateColumn Title="Actions" Sortable="false">
 					<button class="btn-action" 
-							disabled="@context.Applied.HasValue"
-							@onclick="() => OnApply.InvokeAsync(context.Id)">
-						@(context.Applied.HasValue ? "Applied" : "Apply")
+							disabled="@context.Suggestion.Applied.HasValue"
+							@onclick="() => OnApply.InvokeAsync(context.Suggestion.Id)">
+						@(context.Suggestion.Applied.HasValue ? "Applied" : "Apply")
 					</button>
 				</TemplateColumn>
 			</QuickGrid>

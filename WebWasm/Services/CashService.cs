@@ -9,18 +9,18 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 {
 	private static readonly JsonSerializerOptions _serOptions = SerializationHelper.SerializerOptions();
 
-    private readonly TimeSpan _defaultExpirationTime = TimeSpan.FromMinutes(5);
+	private readonly TimeSpan _defaultExpirationTime = TimeSpan.FromMinutes(15);
 	private readonly ConcurrentDictionary<string, TimeSpan> _typeExpiration = new()
 	{
-		[nameof(Suggestion)] = TimeSpan.FromSeconds(30),
-		[nameof(Region)] = TimeSpan.FromSeconds(30),
-		[nameof(Vehicle)] = TimeSpan.FromSeconds(30),
-		[nameof(Driver)] = TimeSpan.FromSeconds(40),
-		[nameof(Producer)] = TimeSpan.FromSeconds(50),
-		[nameof(Company)] = TimeSpan.FromSeconds(50),
-		[nameof(User)] = TimeSpan.FromSeconds(50),
-		[nameof(Order)] = TimeSpan.FromSeconds(50),
-		[nameof(CalculationInfo)] = TimeSpan.FromSeconds(50),
+		[nameof(Suggestion)] = TimeSpan.FromMinutes(2),
+		[nameof(Region)] = TimeSpan.FromMinutes(5),
+		[nameof(Vehicle)] = TimeSpan.FromMinutes(2),
+		[nameof(Driver)] = TimeSpan.FromMinutes(3),
+		[nameof(Producer)] = TimeSpan.FromMinutes(2),
+		[nameof(Company)] = TimeSpan.FromMinutes(3),
+		[nameof(User)] = TimeSpan.FromMinutes(3),
+		[nameof(Order)] = TimeSpan.FromMinutes(2),
+		[nameof(CalculationInfo)] = TimeSpan.FromMinutes(2),
 	};
 
 	private readonly ConcurrentDictionary<string, Func<object?, Task<JsonElement>>> _typeFetch = new()

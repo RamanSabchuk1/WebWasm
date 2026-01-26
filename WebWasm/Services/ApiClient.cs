@@ -57,6 +57,18 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		await CheckResponseHeader(response, endpoint);
 	}
 
+	public async ValueTask Delete(string endpoint)
+	{
+		var client = await GetHttpClient();
+
+		var request = new HttpRequestMessage(HttpMethod.Delete, endpoint);
+		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+		var response = await client.SendAsync(request);
+
+		await CheckResponseHeader(response, endpoint);
+	}
+
 	private async ValueTask<HttpResponseMessage> PostInternal<TRequest>(string endpoint, TRequest data, bool readResponse = false)
 	{
 		var client = await GetHttpClient();

@@ -6,7 +6,7 @@ namespace WebWasm.Pages;
 
 public partial class Supports(CashService cashService, ApiClient apiClient, ToastService toastService, LoadingService loadingService) : ComponentBase
 {
-	private ICollection<Suggestion> _suggestions = [];
+	private ICollection<SuggestionsWithUser> _suggestions = [];
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -15,7 +15,10 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 
 	private async Task LoadSuggestions(bool useCash)
 	{
-		_suggestions = await cashService.GetData<Suggestion>(useCash);
+		var suggestions = await cashService.GetData<Suggestion>(useCash);
+		var users = await cashService.GetData<User>(useCash);
+		var userDict = users.ToDictionary(u => u.UserInfo.Id);
+		_suggestions = [.. suggestions.Select(s => new SuggestionsWithUser(s, userDict.TryGetValue(s.UserInfoId, out var user) ? user : null))];
 	}
 
 	private async Task HandleApply(Guid suggestionId)
@@ -33,5 +36,13 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 				toastService.ShowError($"Failed to apply suggestion: {ex.Message}");
 			}
 		});
+	}
+
+	public record SuggestionsWithUser(Suggestion Suggestion, User? User)
+	{
+		public string GetUserName()
+		{
+			return User is null ? "Anonymous" : $"{User.Login}";
+		}
 	}
 }
