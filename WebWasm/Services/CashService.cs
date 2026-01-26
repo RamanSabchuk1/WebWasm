@@ -1,24 +1,26 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
+using WebWasm.Helpers;
 using WebWasm.Models;
 
 namespace WebWasm.Services;
 
 public class CashService(ApiClient apiClient, ToastService toastService, LoadingService loadingService)
 {
-	private readonly TimeSpan _defaultExpirationTime = TimeSpan.FromMinutes(15);
+	private static readonly JsonSerializerOptions _serOptions = SerializationHelper.SerializerOptions();
+
+    private readonly TimeSpan _defaultExpirationTime = TimeSpan.FromMinutes(5);
 	private readonly ConcurrentDictionary<string, TimeSpan> _typeExpiration = new()
 	{
-		[nameof(Suggestion)] = TimeSpan.FromMinutes(5),
-		[nameof(MaterialType)] = TimeSpan.FromMinutes(30),
-		[nameof(Region)] = TimeSpan.FromMinutes(30),
-		[nameof(Vehicle)] = TimeSpan.FromMinutes(5),
-		[nameof(Driver)] = TimeSpan.FromMinutes(5),
-		[nameof(Producer)] = TimeSpan.FromMinutes(5),
-		[nameof(Company)] = TimeSpan.FromMinutes(5),
-		[nameof(User)] = TimeSpan.FromMinutes(5),
-		[nameof(Order)] = TimeSpan.FromSeconds(150),
-		[nameof(CalculationInfo)] = TimeSpan.FromSeconds(150),
+		[nameof(Suggestion)] = TimeSpan.FromSeconds(30),
+		[nameof(Region)] = TimeSpan.FromSeconds(30),
+		[nameof(Vehicle)] = TimeSpan.FromSeconds(30),
+		[nameof(Driver)] = TimeSpan.FromSeconds(40),
+		[nameof(Producer)] = TimeSpan.FromSeconds(50),
+		[nameof(Company)] = TimeSpan.FromSeconds(50),
+		[nameof(User)] = TimeSpan.FromSeconds(50),
+		[nameof(Order)] = TimeSpan.FromSeconds(50),
+		[nameof(CalculationInfo)] = TimeSpan.FromSeconds(50),
 	};
 
 	private readonly ConcurrentDictionary<string, Func<object?, Task<JsonElement>>> _typeFetch = new()
@@ -58,7 +60,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		{
 			try
 			{
-				return cachedInfo.Data.Deserialize<T[]>() ?? [];
+				return cachedInfo.Data.Deserialize<T[]>(_serOptions) ?? [];
 			}
 			catch (Exception ex)
 			{
@@ -85,7 +87,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			{
 				var args = await BuildCalculationInfoRequest(key, useCash);
 				var response = await fetchFunc(args);
-				var res = response.Deserialize<T[]>();
+				var res = response.Deserialize<T[]>(_serOptions);
 				if (res is not null)
 				{
 					cashValue = new CashedInfo(DateTime.UtcNow, response);

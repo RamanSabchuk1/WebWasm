@@ -44,7 +44,7 @@
 					</div>
 				</TemplateColumn>
 				<PropertyColumn Property="@(s => s.Created)" Title="Created" Format="yyyy-MM-dd HH:mm" Sortable="true" />
-				<TemplateColumn Title="Applied" Sortable="true">
+				<TemplateColumn Title="Applied" Sortable="false">
 					@if (context.Applied.HasValue)
 					{
 						<span class="status-badge status-applied">@context.Applied.Value.ToString("yyyy-MM-dd HH:mm")</span>
