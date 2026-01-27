@@ -76,4 +76,19 @@ public partial class DevicesTable : ComponentBase
 			return items;
 		}
 	}
+
+    public async Task SetPage(int pageNumber)
+    {
+        if (pageNumber > 0)
+        {
+            var maxPage = _pagination.TotalItemCount.HasValue
+                ? (int)Math.Ceiling((double)_pagination.TotalItemCount.Value / _pagination.ItemsPerPage)
+                : 1;
+
+            if (pageNumber <= maxPage)
+            {
+                await _pagination.SetCurrentPageIndexAsync(pageNumber - 1);
+            }
+        }
+    }
 }

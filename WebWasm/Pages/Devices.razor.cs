@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -12,8 +13,9 @@ public partial class Devices : ComponentBase
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
 
 	private List<DeviceTokenWithUser> _devicesWithUsers = [];
+    private DevicesTable? _devicesTableRef;
 
-	protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
 	{
 		await LoadDevices(true);
 	}
@@ -21,7 +23,7 @@ public partial class Devices : ComponentBase
 	private async Task LoadDevices(bool useCash)
 	{
 		var deviceTokens = await CashService.GetData<DeviceToken>(useCash);
-		var users = await CashService.GetData<User>(useCash);
+		var users = await CashService.GetData<User>(useCash, async () => await GoToPage(0));
 
 		var userDict = users.ToDictionary(u => u.UserInfo.Id);
 
@@ -49,6 +51,14 @@ public partial class Devices : ComponentBase
 			}
 		});
 	}
+
+    public async Task GoToPage(int pageNumber)
+    {
+        if (_devicesTableRef is not null)
+        {
+            await _devicesTableRef.SetPage(pageNumber);
+        }
+    }
 }
 
 public record DeviceTokenWithUser(DeviceToken DeviceToken, User? User)

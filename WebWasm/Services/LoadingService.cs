@@ -22,7 +22,7 @@ public class LoadingService
 		}
 	}
 
-	public async Task<T> ExecuteWithLoading<T>(Func<Task<T>> action)
+	public async Task<T> ExecuteWithLoading<T>(Func<Task<T>> action, Func<Task>? callBack = null)
 	{
 		Show();
 		try
@@ -32,10 +32,14 @@ public class LoadingService
 		finally
 		{
 			Hide();
+			if (callBack is not null)
+			{
+				await callBack();
+			}
 		}
 	}
 
-	public async Task ExecuteWithLoading(Func<Task> action)
+	public async Task ExecuteWithLoading(Func<Task> action, Func<Task>? callBack = null)
 	{
 		Show();
 		try
@@ -45,6 +49,10 @@ public class LoadingService
 		finally
 		{
 			Hide();
-		}
+            if (callBack is not null)
+            {
+                await callBack();
+            }
+        }
 	}
 }

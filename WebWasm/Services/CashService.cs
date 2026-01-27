@@ -42,7 +42,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 
 	private readonly ConcurrentDictionary<string, CashedInfo> _cachedData = [];
 
-	public async ValueTask<T[]> GetData<T>(bool useCash = true)
+	public async ValueTask<T[]> GetData<T>(bool useCash = true, Func<Task>? callBack = null)
 	{
 		var key = typeof(T).Name;
 		if (!_typeFetch.TryGetValue(key, out var fetchFunc))
@@ -69,7 +69,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			}
 		}
 
-		var (cashValue, result) = await FetchData<T>(key, fetchFunc, useCash);
+		var (cashValue, result) = await FetchData<T>(key, fetchFunc, useCash, callBack);
 		if (cashValue is not null)
 		{
 			_cachedData[key] = cashValue;
@@ -78,7 +78,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		return result;
 	}
 
-	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
+	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash, Func<Task>? callBack)
 	{
 		T[] result = [];
 		CashedInfo? cashValue = null;
@@ -99,7 +99,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			{
 				toastService.ShowError($"Failed to load {key}: {ex.Message}");
 			}
-		});
+		}, callBack);
 
 		return (cashValue, result);
 	}

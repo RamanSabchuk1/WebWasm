@@ -1,40 +1,35 @@
 ﻿@page "/materials"
+@using WebWasm.Components
 
 <PageTitle>Materials</PageTitle>
 
 <div class="page-header">
-    <h1>🧉 Materials</h1>
-    <p class="page-subtitle">Manage materials inventory</p>
+	<h1>🧉 Materials</h1>
+	<p class="page-subtitle">Manage materials inventory</p>
 </div>
 
 <div class="content-card">
-    <div class="card-header">
-        <h3>Material List</h3>
-        <button class="btn-primary">+ Add Material</button>
-    </div>
-    <p class="empty-state">No materials in inventory yet.</p>
+	<div class="card-header">
+		<h3>Material List</h3>
+		<button class="btn-primary" @onclick="OpenAddModal">+ Add Material</button>
+	</div>
+	<MaterialsTable @ref="_materialsTableRef"
+					Materials="@_materials" 
+					OnEdit="@HandleEdit" 
+					OnDelete="@HandleDelete" />
 </div>
 
-<style>
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--text-secondary, #7A7A7A); margin: 0; }
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .card-header h3 { margin: 0; }
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+<MaterialModal IsOpen="@_isModalOpen"
+			   EditingMaterial="@_editingMaterial"
+			   AllMaterials="@_materials"
+			   OnClose="@CloseModal"
+			   OnSubmit="@HandleSubmit" />
+
+@* Example usage: You can call GoToPage(pageNumber) from any method or button *@
+@* Uncomment below to see a quick page navigation example:
+<div class="quick-nav">
+	<button @onclick="() => GoToPage(1)">Go to Page 1</button>
+	<button @onclick="() => GoToPage(2)">Go to Page 2</button>
+	<button @onclick="() => GoToPage(3)">Go to Page 3</button>
+</div>
+*@

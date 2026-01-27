@@ -9,5 +9,5 @@
 </div>
 
 <div class="content-card">
-	<SuggestionsTable Suggestions="@_suggestions" OnApply="@HandleApply" />
+	<SuggestionsTable @ref="_suggestionsTableRef" Suggestions="@_suggestions" OnApply="@HandleApply" />
 </div>

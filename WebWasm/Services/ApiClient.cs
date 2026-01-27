@@ -45,7 +45,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		await PostInternal(endpoint, data, true);
 	}
 
-	public async ValueTask Post(string endpoint)
+    public async ValueTask Post(string endpoint)
 	{
 		var client = await GetHttpClient();
 
@@ -57,6 +57,22 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		await CheckResponseHeader(response, endpoint);
 	}
 
+    public async ValueTask Put<TRequest>(string endpoint, TRequest data)
+    {
+        var client = await GetHttpClient();
+
+        var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
+        {
+            Content = JsonContent.Create(data)
+        };
+
+        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+        var response = await client.SendAsync(request);
+        await CheckResponseHeader(response, endpoint);
+        _ = await response.Content.ReadAsStringAsync();
+    }
+
 	public async ValueTask Delete(string endpoint)
 	{
 		var client = await GetHttpClient();
@@ -65,8 +81,8 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
 
 		var response = await client.SendAsync(request);
-
-		await CheckResponseHeader(response, endpoint);
+        _ = await response.Content.ReadAsStringAsync();
+        await CheckResponseHeader(response, endpoint);
 	}
 
 	private async ValueTask<HttpResponseMessage> PostInternal<TRequest>(string endpoint, TRequest data, bool readResponse = false)

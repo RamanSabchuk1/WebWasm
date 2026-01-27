@@ -12,5 +12,5 @@
 	<div class="card-header">
 		<h3>Device List</h3>
 	</div>
-	<DevicesTable Devices="@_devicesWithUsers" OnUnbind="@HandleUnbind" />
+	<DevicesTable @ref="_devicesTableRef" Devices="@_devicesWithUsers" OnUnbind="@HandleUnbind" />
 </div>

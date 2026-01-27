@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -7,8 +8,9 @@ namespace WebWasm.Pages;
 public partial class Supports(CashService cashService, ApiClient apiClient, ToastService toastService, LoadingService loadingService) : ComponentBase
 {
 	private ICollection<SuggestionsWithUser> _suggestions = [];
+    private SuggestionsTable? _suggestionsTableRef;
 
-	protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
 	{
 		await LoadSuggestions(true);
 	}
@@ -16,9 +18,9 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 	private async Task LoadSuggestions(bool useCash)
 	{
 		var suggestions = await cashService.GetData<Suggestion>(useCash);
-		var users = await cashService.GetData<User>(useCash);
-		var userDict = users.ToDictionary(u => u.UserInfo.Id);
-		_suggestions = [.. suggestions.Select(s => new SuggestionsWithUser(s, userDict.TryGetValue(s.UserInfoId, out var user) ? user : null))];
+		var users = await cashService.GetData<User>(useCash, async () => await GoToPage(0));
+		var userDict = users.ToDictionary(u => u.Id);
+        _suggestions = [.. suggestions.Select(s => new SuggestionsWithUser(s, userDict.TryGetValue(s.UserInfoId, out var user) ? user : null))];
 	}
 
 	private async Task HandleApply(Guid suggestionId)
@@ -42,7 +44,19 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 	{
 		public string GetUserName()
 		{
-			return User is null ? "Anonymous" : $"{User.Login}";
-		}
+            return User is null
+                ? "Anonymous"
+                : string.IsNullOrEmpty(User.UserInfo.FirstName)
+                    ? User.Login
+                    : $"{User.UserInfo.FirstName} {User.UserInfo.LastName}";
+        }
 	}
+
+    public async Task GoToPage(int pageNumber)
+    {
+        if (_suggestionsTableRef is not null)
+        {
+            await _suggestionsTableRef.SetPage(pageNumber);
+        }
+    }
 }

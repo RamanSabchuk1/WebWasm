@@ -1,0 +1,96 @@
+﻿@using Microsoft.AspNetCore.Components.QuickGrid
+@using WebWasm.Models
+@using WebWasm.Services
+
+<div class="data-grid-container">
+	<div class="data-grid-search">
+		<input type="text" 
+			   placeholder="Search materials..." 
+			   @bind="_searchText" 
+			   @bind:event="oninput"
+			   class="search-input" />
+	</div>
+
+	@if (_hasItems)
+	{
+		<div class="data-grid-scroll">
+			<div class="materials-tree">
+				@{
+					var itemsToShow = FilteredMaterials
+						.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage)
+						.Take(_pagination.ItemsPerPage)
+						.ToList();
+				}
+				@foreach (var material in itemsToShow)
+				{
+					@RenderMaterialRow(material, 0)
+				}
+			</div>
+		</div>
+
+		@if (_pagination.TotalItemCount.HasValue && _pagination.TotalItemCount.Value > _pagination.ItemsPerPage)
+		{
+			<div class="data-grid-pagination">
+				<CustomPaginator State="@_pagination" />
+			</div>
+		}
+	}
+	else
+	{
+		<div class="empty-state">
+			<p>No materials available</p>
+		</div>
+	}
+</div>
+
+@code {
+	private RenderFragment RenderMaterialRow(MaterialType material, int level) => __builder =>
+	{
+		var hasChildren = Materials.Any(m => m.ParentId == material.Id);
+
+		<div class="material-row" style="padding-left: @(level * 30)px">
+			<div class="material-content">
+				<div class="material-expand">
+					@if (hasChildren)
+					{
+						<button class="btn-expand" @onclick="() => ToggleExpand(material.Id)">
+							@(_expandedIds.Contains(material.Id) ? "▼" : "▶")
+						</button>
+					}
+					else
+					{
+						<span class="expand-spacer"></span>
+					}
+				</div>
+				<div class="material-photo">
+					@if (!string.IsNullOrEmpty(material.Photo))
+					{
+						<img src="@material.Photo" alt="@material.Name" />
+					}
+					else
+					{
+						<div class="photo-placeholder">📦</div>
+					}
+				</div>
+				<div class="material-info">
+					<div class="material-name">@material.Name</div>
+					<div class="material-description">@material.Description</div>
+					<div class="material-solidity">Solidity: <span class="badge">@material.Solidity</span></div>
+				</div>
+				<div class="material-actions">
+					<button class="btn-action btn-edit" @onclick="() => OnEdit.InvokeAsync(material)">✏️ Edit</button>
+					<button class="btn-action btn-delete" @onclick="() => OnDelete.InvokeAsync(material.Id)">🗑️ Delete</button>
+				</div>
+			</div>
+		</div>
+
+		@if (hasChildren && _expandedIds.Contains(material.Id))
+		{
+			var children = Materials.Where(m => m.ParentId == material.Id).ToList();
+			foreach (var child in children)
+			{
+				@RenderMaterialRow(child, level + 1)
+			}
+		}
+	};
+}
