@@ -28,7 +28,7 @@ public partial class MaterialsTable : ComponentBase
 				).ToList();
 
 			// Only show root items (no parent) for pagination
-			return filtered.Where(m => m.ParentId == null).ToList();
+			return [.. filtered.Where(m => m.ParentId == null)];
 		}
 	}
 
@@ -44,24 +44,13 @@ public partial class MaterialsTable : ComponentBase
 		}
 	}
 
-	protected override void OnAfterRender(bool firstRender)
+	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		// TotalItemCount is calculated internally by QuickGrid based on the IQueryable
-		// We don't need to set it manually
-	}
-
-	public async Task SetPage(int pageNumber)
-	{
-		if (pageNumber > 0)
+		if (firstRender)
 		{
-			var maxPage = _pagination.TotalItemCount.HasValue 
-				? (int)Math.Ceiling((double)_pagination.TotalItemCount.Value / _pagination.ItemsPerPage) 
-				: 1;
-			
-			if (pageNumber <= maxPage)
-			{
-				await _pagination.SetCurrentPageIndexAsync(pageNumber - 1);
-			}
+			await Task.Delay(100);
+			await _pagination.SetCurrentPageIndexAsync(0);
+			StateHasChanged();
 		}
 	}
 }

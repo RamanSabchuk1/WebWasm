@@ -48,13 +48,6 @@ public partial class DevicesTable : ComponentBase
 		}
 	}
 
-	protected override async Task OnParametersSetAsync()
-	{
-		// Reset pagination when devices data changes
-		await _pagination.SetCurrentPageIndexAsync(0);
-		StateHasChanged();
-	}
-
 	private IQueryable<DeviceTokenWithUser> FilteredDevices
 	{
 		get
@@ -77,18 +70,13 @@ public partial class DevicesTable : ComponentBase
 		}
 	}
 
-    public async Task SetPage(int pageNumber)
-    {
-        if (pageNumber > 0)
-        {
-            var maxPage = _pagination.TotalItemCount.HasValue
-                ? (int)Math.Ceiling((double)_pagination.TotalItemCount.Value / _pagination.ItemsPerPage)
-                : 1;
-
-            if (pageNumber <= maxPage)
-            {
-                await _pagination.SetCurrentPageIndexAsync(pageNumber - 1);
-            }
-        }
-    }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await Task.Delay(100);
+			await _pagination.SetCurrentPageIndexAsync(0);
+			StateHasChanged();
+		}
+	}
 }

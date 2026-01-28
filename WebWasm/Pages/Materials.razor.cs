@@ -24,7 +24,7 @@ public partial class Materials : ComponentBase
 
 	private async Task LoadMaterials(bool useCash)
 	{
-		_materials = [.. await CashService.GetData<MaterialType>(useCash, async () => await GoToPage(0))];
+		_materials = [.. await CashService.GetData<MaterialType>(useCash)];
 	}
 
 	private void OpenAddModal()
@@ -53,8 +53,7 @@ public partial class Materials : ComponentBase
 			{
 				if (_editingMaterial is not null)
 				{
-					// Update existing material - using POST with ID in route
-					await ApiClient.Post($"MaterialTypes/{_editingMaterial.Id}", materialInfo);
+					await ApiClient.Put($"MaterialTypes/{_editingMaterial.Id}", materialInfo);
 					ToastService.ShowSuccess("Material updated successfully!");
 				}
 				else
@@ -97,17 +96,5 @@ public partial class Materials : ComponentBase
 				ToastService.ShowError($"Failed to delete material: {ex.Message}");
 			}
 		});
-	}
-
-	/// <summary>
-	/// Example method to demonstrate programmatic page navigation
-	/// Can be called from UI or other methods
-	/// </summary>
-	public async Task GoToPage(int pageNumber)
-	{
-		if (_materialsTableRef is not null)
-		{
-			await _materialsTableRef.SetPage(pageNumber);
-		}
 	}
 }

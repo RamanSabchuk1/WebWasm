@@ -48,17 +48,4 @@ public partial class CustomPaginator : ComponentBase
 			await State.SetCurrentPageIndexAsync(lastPage);
 		}
 	}
-
-	/// <summary>
-	/// Set the current page to a specific page number (1-based)
-	/// </summary>
-	/// <param name="pageNumber">The page number to navigate to (1-based)</param>
-	public async Task SetPage(int pageNumber)
-	{
-		if (State != null && pageNumber > 0 && pageNumber <= TotalPages)
-		{
-			await State.SetCurrentPageIndexAsync(pageNumber - 1);
-			StateHasChanged();
-		}
-	}
 }

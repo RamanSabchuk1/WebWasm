@@ -11,7 +11,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 	public const string Authorization = nameof(Authorization);
 	private const string Bearer = nameof(Bearer);
 	private const string BaseAddress = "https://kliffort.com/api/dev/";
-	// private const string BaseAddress = "https://localhost:7231/";
+	//private const string BaseAddress = "https://localhost:7231/";
 
 	private const string Auth = nameof(Auth);
 
@@ -45,7 +45,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		await PostInternal(endpoint, data, true);
 	}
 
-    public async ValueTask Post(string endpoint)
+	public async ValueTask Post(string endpoint)
 	{
 		var client = await GetHttpClient();
 
@@ -57,21 +57,21 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		await CheckResponseHeader(response, endpoint);
 	}
 
-    public async ValueTask Put<TRequest>(string endpoint, TRequest data)
-    {
-        var client = await GetHttpClient();
+	public async ValueTask Put<TRequest>(string endpoint, TRequest data)
+	{
+		var client = await GetHttpClient();
 
-        var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
-        {
-            Content = JsonContent.Create(data)
-        };
+		var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
+		{
+			Content = JsonContent.Create(data)
+		};
 
-        request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
 
-        var response = await client.SendAsync(request);
-        await CheckResponseHeader(response, endpoint);
-        _ = await response.Content.ReadAsStringAsync();
-    }
+		var response = await client.SendAsync(request);
+		await CheckResponseHeader(response, endpoint);
+		_ = await response.Content.ReadAsStringAsync();
+	}
 
 	public async ValueTask Delete(string endpoint)
 	{
@@ -81,8 +81,8 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
 
 		var response = await client.SendAsync(request);
-        _ = await response.Content.ReadAsStringAsync();
-        await CheckResponseHeader(response, endpoint);
+		_ = await response.Content.ReadAsStringAsync();
+		await CheckResponseHeader(response, endpoint);
 	}
 
 	private async ValueTask<HttpResponseMessage> PostInternal<TRequest>(string endpoint, TRequest data, bool readResponse = false)
