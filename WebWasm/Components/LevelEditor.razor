@@ -1,0 +1,89 @@
+@using WebWasm.Models
+
+@if (IsOpen)
+{
+	<div class="modal-overlay" @onclick="CloseEditor">
+		<div class="modal-container modal-fullscreen" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>@(IsEditMode ? "Edit Level" : "Add New Level")</h2>
+				<button class="btn-close" @onclick="CloseEditor">?</button>
+			</div>
+
+			<div class="modal-body level-editor-body">
+				<div class="editor-grid">
+					<!-- Left Panel: Configuration -->
+					<div class="config-panel">
+						<h3>Configuration</h3>
+
+						<div class="form-group">
+							<label>Level Type *</label>
+							<div class="radio-group">
+								@foreach (var type in Enum.GetValues<LevelType>())
+								{
+									<label class="radio-label">
+										<input type="radio" @onchange="e => _levelType = type" checked="@(_levelType == type)" />
+										<span>@type</span>
+									</label>
+								}
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label>Calculation Algorithm *</label>
+							<div class="radio-group">
+								<label class="radio-label">
+									<input type="radio" @onchange="e => _algorithm = 1" checked="@(_algorithm == 1)" />
+									<span>Algorithm 1</span>
+								</label>
+								<label class="radio-label">
+									<input type="radio" @onchange="e => _algorithm = 2" checked="@(_algorithm == 2)" />
+									<span>Algorithm 2</span>
+								</label>
+							</div>
+						</div>
+
+						<div class="section-divider"></div>
+
+						<h3>Price Information</h3>
+						<PriceInfoEditor @ref="_priceEditor" ExistingPrice="@_priceInfo" />
+					</div>
+
+					<!-- Right Panel: Map -->
+					<div class="map-panel">
+						@if (_showDrawer)
+						{
+							<PolygonDrawer InitialPoints="@_points"
+										   OnCancel="@CancelDrawer"
+										   OnConfirm="@HandleDrawerConfirm" />
+						}
+						else
+						{
+							<div class="drawer-placeholder">
+								<div class="placeholder-content">
+									<p>?? Click below to draw polygon</p>
+								</div>
+								<button class="btn-start-drawing" @onclick="OpenDrawer">
+									??? Start Drawing
+								</button>
+							</div>
+						}
+					</div>
+				</div>
+
+				@if (!string.IsNullOrEmpty(_errorMessage))
+				{
+					<div class="error-message">
+						?? @_errorMessage
+					</div>
+				}
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseEditor">Cancel</button>
+				<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!CanSubmit)">
+					@(IsEditMode ? "Update" : "Create") Level
+				</button>
+			</div>
+		</div>
+	</div>
+}

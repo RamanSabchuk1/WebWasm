@@ -42,6 +42,7 @@ public record CreateDriverSlot(TimeOnly StartTime, TimeOnly EndTime, DateOnly Wo
 public record CreateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime, string Name);
 public record CreateLevel(LevelType Type, byte CalculationAlgorithm, ICollection<Location> Points, Dictionary<uint, PriceInfo> Info);
 public record CreateUser(Guid CompanyId, string FirstName, string MiddleName, string LastName, string MobilePhone, RoleType[] Roles);
+public record CreateRegion(string Name);
 
 public enum LevelType
 {

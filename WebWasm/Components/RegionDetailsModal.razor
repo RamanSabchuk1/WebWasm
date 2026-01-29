@@ -1,0 +1,89 @@
+@using WebWasm.Models
+
+@if (IsOpen && Region is not null)
+{
+	<div class="modal-overlay" @onclick="CloseModal">
+		<div class="modal-container modal-large" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>@Region.Name - Details</h2>
+				<button class="btn-close" @onclick="CloseModal">?</button>
+			</div>
+
+			<div class="modal-body">
+				@if (Region.Levels?.Count > 0)
+				{
+					<div class="levels-tabs">
+						@foreach (var level in Region.Levels)
+						{
+							<div class="level-tab">
+								<div class="level-header">
+									<h3>
+										<span class="level-badge level-badge-@level.Type.ToString().ToLower()">
+											@level.Type
+										</span>
+										Algorithm: @level.CalculationAlgorithm
+									</h3>
+									<button class="btn-action btn-delete-level" 
+											@onclick="() => OnDeleteLevel.InvokeAsync((Region, level.Id))"
+											title="Delete this level">
+										??? Delete Level
+									</button>
+								</div>
+
+								<div class="level-content">
+									<div class="level-info">
+										<p><strong>Triangles:</strong> @(level.Triangles?.Count ?? 0)</p>
+										@if (level.Info?.Info?.Count > 0)
+										{
+											<div class="prices-section">
+												<strong>Price Info:</strong>
+												<div class="prices-grid">
+													@foreach (var priceEntry in level.Info.Info)
+													{
+														<div class="price-item">
+															<span class="price-key">Company @priceEntry.Key:</span>
+															<span class="price-value">
+																@priceEntry.Value.MinPrice - @priceEntry.Value.MaxPrice
+																(@priceEntry.Value.PricePerHour/h, @priceEntry.Value.PricePerKm/km)
+															</span>
+														</div>
+													}
+												</div>
+											</div>
+										}
+									</div>
+
+									@if (level.Triangles?.Count > 0)
+									{
+										<TriangleMap Triangles="@level.Triangles" 
+													 LevelType="@level.Type" 
+													 MapHeight="400px" />
+									}
+									else
+									{
+										<div class="empty-state">
+											No triangles in this level
+										</div>
+									}
+								</div>
+							</div>
+						}
+					</div>
+				}
+				else
+				{
+					<div class="empty-state">
+						<p>No levels configured for this region</p>
+					</div>
+				}
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="() => OnAddLevel.InvokeAsync(Region)">
+					+ Add Level
+				</button>
+				<button class="btn-secondary" @onclick="CloseModal">Close</button>
+			</div>
+		</div>
+	</div>
+}

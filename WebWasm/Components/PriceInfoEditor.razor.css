@@ -1,0 +1,68 @@
+.price-editor-container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1rem;
+	background: var(--bg-surface, #FAF7F2);
+	border-radius: 8px;
+}
+
+.price-fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 1rem;
+}
+
+.price-field {
+	display: flex;
+	flex-direction: column;
+}
+
+	.price-field label {
+		margin-bottom: 0.5rem;
+		color: var(--text-primary, #3D2E1F);
+		font-weight: 500;
+		font-size: 0.9rem;
+	}
+
+.form-control {
+	padding: 0.75rem;
+	border: 2px solid var(--border-color, #E5D5C0);
+	border-radius: 6px;
+	font-size: 1rem;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	transition: border-color 0.2s;
+	font-family: inherit;
+}
+
+	.form-control:focus {
+		outline: none;
+		border-color: var(--accent-primary, #8B7355);
+	}
+
+	.form-control[type="number"] {
+		font-family: 'Courier New', monospace;
+	}
+
+.error-message {
+	padding: 0.75rem;
+	background: #FFE5E5;
+	color: #D32F2F;
+	border-radius: 6px;
+	font-size: 0.875rem;
+	border-left: 3px solid #D32F2F;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+	.price-fields {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+	.price-fields {
+		grid-template-columns: 1fr;
+	}
+}

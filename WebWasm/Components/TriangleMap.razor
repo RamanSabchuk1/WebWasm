@@ -1,0 +1,84 @@
+@using WebWasm.Models
+@implements IAsyncDisposable
+
+<div class="map-container" style="height: @MapHeight">
+	<div @ref="_mapElement" class="leaflet-map"></div>
+</div>
+
+@code {
+	[Parameter] public ICollection<Triangle>? Triangles { get; set; }
+	[Parameter] public LevelType LevelType { get; set; }
+	[Parameter] public string MapHeight { get; set; } = "400px";
+
+	private ElementReference _mapElement;
+	private IJSObjectReference? _jsModule;
+	private IJSObjectReference? _mapInstance;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender && Triangles?.Count > 0)
+		{
+			await LoadMapScript();
+			await InitializeMap();
+		}
+	}
+
+	private async Task LoadMapScript()
+	{
+		try
+		{
+			_jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/triangle-map.js");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error loading map script: {ex.Message}");
+		}
+	}
+
+	private async Task InitializeMap()
+	{
+		if (_jsModule is null || Triangles is null)
+			return;
+
+		try
+		{
+			var triangleData = Triangles.Select(t => new
+			{
+				point1 = new { lat = t.Point1.Latitude, lng = t.Point1.Longitude },
+				point2 = new { lat = t.Point2.Latitude, lng = t.Point2.Longitude },
+				point3 = new { lat = t.Point3.Latitude, lng = t.Point3.Longitude }
+			}).ToList();
+
+			var color = LevelType == LevelType.Neighborhood ? "#1565C0" : "#E65100";
+
+			_mapInstance = await _jsModule.InvokeAsync<IJSObjectReference>(
+				"initMap",
+				_mapElement,
+				triangleData,
+				color
+			);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error initializing map: {ex.Message}");
+		}
+	}
+
+	async ValueTask IAsyncDisposable.DisposeAsync()
+	{
+		if (_mapInstance is not null)
+		{
+			try
+			{
+				await _mapInstance.InvokeVoidAsync("dispose");
+				await _mapInstance.DisposeAsync();
+			}
+			catch { }
+		}
+
+		if (_jsModule is not null)
+		{
+			await _jsModule.DisposeAsync();
+		}
+	}
+}

@@ -1,0 +1,58 @@
+@using WebWasm.Models
+@implements IAsyncDisposable
+
+<div class="polygon-drawer-container">
+	<div class="map-wrapper">
+		<div @ref="_mapElement" class="leaflet-map"></div>
+	</div>
+
+	<div class="drawing-controls">
+		<div class="points-list">
+			<h4>Points (@_points.Count)</h4>
+			@if (_points.Count > 0)
+			{
+				<div class="points-items">
+					@for (int i = 0; i < _points.Count; i++)
+					{
+						var point = _points[i];
+						var index = i;
+						<div class="point-item" @key="index">
+							<span class="point-index">@(index + 1)</span>
+							<span class="point-coords">
+								@point.Latitude.ToString("F6"), @point.Longitude.ToString("F6")
+							</span>
+							<button class="btn-delete-point" @onclick="() => DeletePoint(index)" title="Delete point">?</button>
+						</div>
+					}
+				</div>
+			}
+			else
+			{
+				<p class="no-points">Click on map to add points</p>
+			}
+		</div>
+
+		<div class="control-buttons">
+			<button class="btn-undo" @onclick="UndoLastPoint" disabled="@(_points.Count == 0)">
+				? Undo
+			</button>
+			<button class="btn-clear" @onclick="ClearAll" disabled="@(_points.Count == 0)">
+				?? Clear
+			</button>
+		</div>
+
+		@if (!string.IsNullOrEmpty(_errorMessage))
+		{
+			<div class="error-message">
+				?? @_errorMessage
+			</div>
+		}
+	</div>
+
+	<div class="action-buttons">
+		<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">Cancel</button>
+		<button class="btn-primary" @onclick="HandleConfirm" disabled="@(_points.Count < 3)">
+			? Confirm Polygon (@_points.Count points)
+		</button>
+	</div>
+</div>

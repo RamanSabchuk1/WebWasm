@@ -1,0 +1,57 @@
+@using WebWasm.Models
+
+@if (IsOpen)
+{
+	<div class="modal-overlay" @onclick="CloseModal">
+		<div class="modal-container" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>@(IsEditMode ? "Edit Region" : "Add New Region")</h2>
+				<button class="btn-close" @onclick="CloseModal">?</button>
+			</div>
+
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Region Name *</label>
+					<input type="text"
+						   class="form-control"
+						   @bind="_name"
+						   placeholder="Enter region name" />
+				</div>
+
+				@if (IsEditMode && _existingLevels.Count > 0)
+				{
+					<div class="form-section">
+						<h3>Current Levels</h3>
+						<div class="levels-list">
+							@foreach (var level in _existingLevels)
+							{
+								<div class="level-item">
+									<span class="level-badge level-badge-@level.Type.ToString().ToLower()">
+										@level.Type
+									</span>
+									<span class="level-info">
+										Algorithm: @level.CalculationAlgorithm | Triangles: @(level.Triangles?.Count ?? 0)
+									</span>
+								</div>
+							}
+						</div>
+					</div>
+				}
+
+				@if (!string.IsNullOrEmpty(_errorMessage))
+				{
+					<div class="error-message">
+						?? @_errorMessage
+					</div>
+				}
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
+				<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!IsValid)">
+					@(IsEditMode ? "Update" : "Create")
+				</button>
+			</div>
+		</div>
+	</div>
+}

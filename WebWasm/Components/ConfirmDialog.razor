@@ -1,0 +1,20 @@
+@if (IsOpen)
+{
+	<div class="confirm-overlay" @onclick="() => OnCancel.InvokeAsync()">
+		<div class="confirm-dialog" @onclick:stopPropagation="true">
+			<div class="confirm-header">
+				<h2>@Title</h2>
+				<button class="btn-close" @onclick="() => OnCancel.InvokeAsync()">?</button>
+			</div>
+
+			<div class="confirm-body">
+				<p>@Message</p>
+			</div>
+
+			<div class="confirm-footer">
+				<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">@CancelText</button>
+				<button class="btn-danger" @onclick="() => OnConfirm.InvokeAsync()">@ConfirmText</button>
+			</div>
+		</div>
+	</div>
+}

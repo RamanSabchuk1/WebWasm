@@ -1,0 +1,149 @@
+.confirm-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1001;
+	padding: 1rem;
+	animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+.confirm-dialog {
+	background: var(--bg-primary, #FFFBF5);
+	border-radius: 16px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	max-width: 400px;
+	width: 100%;
+	animation: slideUp 0.3s ease-in-out;
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(20px);
+		opacity: 0;
+	}
+
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+.confirm-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1.5rem;
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.confirm-header h2 {
+		margin: 0;
+		color: var(--text-primary, #3D2E1F);
+		font-size: 1.25rem;
+	}
+
+.btn-close {
+	background: none;
+	border: none;
+	font-size: 2rem;
+	line-height: 1;
+	color: var(--text-secondary, #7A7A7A);
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	transition: all 0.2s;
+}
+
+	.btn-close:hover {
+		background: var(--bg-surface, #FAF7F2);
+		color: var(--text-primary, #3D2E1F);
+	}
+
+.confirm-body {
+	padding: 1.5rem;
+	color: var(--text-primary, #3D2E1F);
+	line-height: 1.6;
+}
+
+	.confirm-body p {
+		margin: 0;
+	}
+
+.confirm-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	padding: 1.5rem;
+	border-top: 1px solid var(--border-color, #E5D5C0);
+}
+
+.btn-secondary, .btn-danger {
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 500;
+	transition: all 0.2s;
+}
+
+.btn-secondary {
+	background: var(--bg-surface, #FAF7F2);
+	color: var(--text-primary, #3D2E1F);
+	border: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.btn-secondary:hover {
+		background: var(--border-color, #E5D5C0);
+	}
+
+.btn-danger {
+	background: #D32F2F;
+	color: white;
+}
+
+	.btn-danger:hover {
+		background: #B71C1C;
+	}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+	.confirm-dialog {
+		max-width: 90vw;
+	}
+
+	.confirm-header,
+	.confirm-body,
+	.confirm-footer {
+		padding: 1rem;
+	}
+
+	.btn-secondary, .btn-danger {
+		flex: 1;
+	}
+
+	.confirm-footer {
+		flex-direction: column-reverse;
+	}
+}

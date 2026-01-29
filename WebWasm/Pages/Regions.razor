@@ -1,40 +1,48 @@
 ﻿@page "/regions"
+@using WebWasm.Components
 
 <PageTitle>Regions</PageTitle>
 
 <div class="page-header">
-    <h1>🌍 Regions</h1>
-    <p class="page-subtitle">Manage geographical regions</p>
+	<h1>🌍 Regions</h1>
+	<p class="page-subtitle">Manage geographical regions and delivery levels</p>
 </div>
 
 <div class="content-card">
-    <div class="card-header">
-        <h3>Region List</h3>
-        <button class="btn-primary">+ Add Region</button>
-    </div>
-    <p class="empty-state">No regions configured yet.</p>
+	<div class="card-header">
+		<h3>Region List</h3>
+		<button class="btn-primary" @onclick="OpenAddRegionModal">+ Add Region</button>
+	</div>
+	<RegionsTable @ref="_regionsTableRef"
+				  Regions="@_regions"
+				  OnView="@HandleViewDetails"
+				  OnEdit="@HandleEditRegion"
+				  OnDelete="@HandleDeleteRegion" />
 </div>
 
-<style>
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--text-secondary, #7A7A7A); margin: 0; }
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .card-header h3 { margin: 0; }
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+<RegionModal IsOpen="@_isRegionModalOpen"
+			 EditingRegion="@_editingRegion"
+			 OnClose="@CloseRegionModal"
+			 OnSubmit="@HandleRegionSubmit" />
+
+<RegionDetailsModal IsOpen="@_isDetailsModalOpen"
+					 Region="@_viewingRegion"
+					 OnClose="@CloseDetailsModal"
+					 OnAddLevel="@HandleAddLevel"
+					 OnDeleteLevel="@HandleDeleteLevel"
+					 OnEditLevel="@HandleEditLevel" />
+
+<LevelEditor IsOpen="@_isLevelEditorOpen"
+			 Region="@_editingLevelRegion"
+			 EditingLevel="@_editingLevel"
+			 OnClose="@CloseLevelEditor"
+			 OnSubmit="@HandleLevelSubmit" />
+
+<ConfirmDialog IsOpen="@_isConfirmOpen"
+			   Title="@_confirmTitle"
+			   Message="@_confirmMessage"
+			   ConfirmText="@_confirmText"
+			   CancelText="Cancel"
+			   OnConfirm="@HandleConfirm"
+			   OnCancel="@CloseConfirm"
+			   IsDangerous="true" />

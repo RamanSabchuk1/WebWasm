@@ -1,0 +1,48 @@
+@using WebWasm.Models
+
+<div class="price-editor-container">
+	<div class="price-fields">
+		<div class="price-field">
+			<label>Min Price *</label>
+			<input type="number" 
+				   class="form-control" 
+				   @bind="_minPrice" 
+				   step="0.01"
+				   placeholder="0.00" />
+		</div>
+
+		<div class="price-field">
+			<label>Price Per Hour *</label>
+			<input type="number" 
+				   class="form-control" 
+				   @bind="_pricePerHour" 
+				   step="0.01"
+				   placeholder="0.00" />
+		</div>
+
+		<div class="price-field">
+			<label>Price Per KM *</label>
+			<input type="number" 
+				   class="form-control" 
+				   @bind="_pricePerKm" 
+				   step="0.01"
+				   placeholder="0.00" />
+		</div>
+
+		<div class="price-field">
+			<label>Max Price *</label>
+			<input type="number" 
+				   class="form-control" 
+				   @bind="_maxPrice" 
+				   step="0.01"
+				   placeholder="0.00" />
+		</div>
+	</div>
+
+	@if (!string.IsNullOrEmpty(_errorMessage))
+	{
+		<div class="error-message">
+			?? @_errorMessage
+		</div>
+	}
+</div>
