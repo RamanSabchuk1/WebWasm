@@ -136,13 +136,12 @@
 .btn-action {
 	padding: 0.5rem 1rem;
 	border: none;
-	border-radius: 6px;
-	background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
-	color: white;
+	border-radius: 8px;
 	cursor: pointer;
 	font-size: 0.875rem;
 	font-weight: 500;
 	transition: all 0.2s;
+	white-space: nowrap;
 }
 
 	.btn-action:hover:not(:disabled) {
@@ -156,24 +155,18 @@
 		opacity: 0.6;
 	}
 
-.btn-view {
-	background: linear-gradient(135deg, #42A5F5 0%, #1976D2 100%);
-}
-
 	.btn-view:hover {
 		box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 	}
 
 .btn-edit {
-	background: linear-gradient(135deg, #FFA726 0%, #F57C00 100%);
+	background: var(--accent-light, #E5D5C0);
+	color: var(--accent-primary, #8B7355);
 }
 
-	.btn-edit:hover {
-		box-shadow: 0 4px 12px rgba(245, 124, 0, 0.3);
-	}
-
 .btn-delete {
-	background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+	background: #FFE5E5;
+	color: #D32F2F;
 }
 
 	.btn-delete:hover {

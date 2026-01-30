@@ -72,7 +72,6 @@ public partial class PriceInfoEditor : ComponentBase
 		_entries.Clear();
 		_expandedIndex = null;
 		_globalError = string.Empty;
-		_isInitialized = true;
 
 		if (ExistingPrices?.Count > 0)
 		{

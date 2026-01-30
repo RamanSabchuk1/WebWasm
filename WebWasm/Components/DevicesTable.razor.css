@@ -219,7 +219,8 @@
 	}
 
 .btn-unbind {
-	background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+	background: #FFE5E5;
+	color: #D32F2F;
 }
 
 	.btn-unbind:hover {

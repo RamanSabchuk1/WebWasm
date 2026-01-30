@@ -19,6 +19,11 @@ public partial class DevicesTable : ComponentBase
 	private string _searchText = string.Empty;
 	private bool _hasItems => FilteredDevices.Any();
 
+	// Confirmation dialog state
+	private bool _showConfirmDialog = false;
+	private string _confirmMessage = string.Empty;
+	private string _pendingToken = string.Empty;
+	private Guid _pendingUserId = Guid.Empty;
 
 	private bool IsExpanded(Guid id) => _expandedTokens.Contains(id);
 	private bool IsDataExpanded(Guid id) => _expandedData.Contains(id);
@@ -33,6 +38,29 @@ public partial class DevicesTable : ComponentBase
 	{
 		if (!_expandedData.Remove(id))
 			_expandedData.Add(id);
+	}
+
+	private void ShowUnbindConfirmation(string token, Guid userId, string deviceName)
+	{
+		_pendingToken = token;
+		_pendingUserId = userId;
+		_confirmMessage = $"Are you sure you want to unbind the device '{deviceName}'? This action cannot be undone.";
+		_showConfirmDialog = true;
+	}
+
+	private async Task ConfirmUnbind()
+	{
+		_showConfirmDialog = false;
+		await OnUnbind.InvokeAsync((_pendingToken, _pendingUserId));
+		_pendingToken = string.Empty;
+		_pendingUserId = Guid.Empty;
+	}
+
+	private void CancelUnbind()
+	{
+		_showConfirmDialog = false;
+		_pendingToken = string.Empty;
+		_pendingUserId = Guid.Empty;
 	}
 
 	private async Task CopyToClipboard(string text)

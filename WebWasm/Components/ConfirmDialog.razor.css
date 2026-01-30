@@ -8,7 +8,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1001;
+	z-index: 2001; /* Above other modals and navigation */
 	padding: 1rem;
 	animation: fadeIn 0.2s ease-in-out;
 }
@@ -128,9 +128,15 @@
 	}
 
 /* Mobile responsiveness */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+	.confirm-overlay {
+		padding: 0.5rem;
+		padding-top: 3rem;
+		padding-bottom: 60px;
+	}
+
 	.confirm-dialog {
-		max-width: 90vw;
+		max-width: 95vw;
 	}
 
 	.confirm-header,
@@ -139,8 +145,61 @@
 		padding: 1rem;
 	}
 
+	.confirm-header h2 {
+		font-size: 1.1rem;
+	}
+
+	.btn-close {
+		width: 28px;
+		height: 28px;
+		font-size: 1.5rem;
+	}
+
+	.btn-secondary, .btn-danger {
+		padding: 0.6rem 1.2rem;
+		font-size: 0.95rem;
+	}
+
+	.confirm-footer {
+		gap: 0.5rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.confirm-overlay {
+		padding: 0.25rem;
+		padding-top: 2.5rem;
+		padding-bottom: 60px;
+	}
+
+	.confirm-dialog {
+		max-width: 100%;
+	}
+
+	.confirm-header,
+	.confirm-body,
+	.confirm-footer {
+		padding: 0.75rem;
+	}
+
+	.confirm-header h2 {
+		font-size: 1rem;
+	}
+
+	.btn-close {
+		width: 24px;
+		height: 24px;
+		font-size: 1.25rem;
+	}
+
+	.confirm-body {
+		font-size: 0.9rem;
+	}
+
 	.btn-secondary, .btn-danger {
 		flex: 1;
+		padding: 0.55rem 1rem;
+		font-size: 0.9rem;
 	}
 
 	.confirm-footer {

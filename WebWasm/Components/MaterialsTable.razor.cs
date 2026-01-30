@@ -15,6 +15,11 @@ public partial class MaterialsTable : ComponentBase
 	private HashSet<Guid> _expandedIds = [];
 	private PaginationState _pagination = new() { ItemsPerPage = 10 };
 
+	// Confirmation dialog state
+	private bool _showConfirmDialog = false;
+	private string _confirmMessage = string.Empty;
+	private Guid _pendingDeleteId = Guid.Empty;
+
 	private List<MaterialType> FilteredMaterials
 	{
 		get
@@ -42,6 +47,29 @@ public partial class MaterialsTable : ComponentBase
 		{
 			_expandedIds.Add(materialId);
 		}
+	}
+
+	private void ShowDeleteConfirmation(MaterialType material)
+	{
+		_pendingDeleteId = material.Id;
+		var hasChildren = Materials.Any(m => m.ParentId == material.Id);
+		_confirmMessage = hasChildren 
+			? $"Are you sure you want to delete '{material.Name}'? This will also delete all its child materials. This action cannot be undone."
+			: $"Are you sure you want to delete '{material.Name}'? This action cannot be undone.";
+		_showConfirmDialog = true;
+	}
+
+	private async Task ConfirmDelete()
+	{
+		_showConfirmDialog = false;
+		await OnDelete.InvokeAsync(_pendingDeleteId);
+		_pendingDeleteId = Guid.Empty;
+	}
+
+	private void CancelDelete()
+	{
+		_showConfirmDialog = false;
+		_pendingDeleteId = Guid.Empty;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

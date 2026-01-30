@@ -1,40 +1,65 @@
 ﻿@page "/payments"
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using WebWasm.Components
+@using WebWasm.Models
 
 <PageTitle>Payments</PageTitle>
 
 <div class="page-header">
-    <h1>💳 Payments</h1>
-    <p class="page-subtitle">Manage payment transactions</p>
+	<h1>💳 Payments</h1>
+	<p class="page-subtitle">Manage payment transactions</p>
 </div>
 
 <div class="content-card">
-    <div class="card-header">
-        <h3>Payment History</h3>
-        <button class="btn-primary">+ New Payment</button>
-    </div>
-    <p class="empty-state">No payment records yet.</p>
+	<div class="card-header">
+		<h3>Credit Cards</h3>
+	</div>
+
+	<div class="data-grid-container">
+		<div class="data-grid-search">
+			<input type="text"
+				   placeholder="Search cards..."
+				   @bind="_searchText"
+				   @bind:event="oninput"
+				   class="search-input" />
+		</div>
+
+		@if (_hasItems)
+		{
+			<div class="data-grid-scroll">
+				<QuickGrid Items="@FilteredCards.AsQueryable()" Pagination="@_pagination" class="data-grid">
+					<PropertyColumn Property="@(c => c.MaskedCard)" Title="Card Number" Sortable="true" />
+					<PropertyColumn Property="@(c => c.ExpirationDate.ToString("MM/yyyy"))" Title="Expiration Date" Sortable="true" />
+					<PropertyColumn Property="@(c => c.UnbindAt.ToString("yyyy-MM-dd"))" Title="Unbind At" Sortable="true" />
+					<TemplateColumn Title="Actions" Sortable="false">
+						<button class="btn-action btn-delete"
+								@onclick="() => ShowDeleteConfirmation(context)">
+							🗑️ Delete
+						</button>
+					</TemplateColumn>
+				</QuickGrid>
+			</div>
+
+			@if (_pagination.TotalItemCount.HasValue && _pagination.TotalItemCount.Value > _pagination.ItemsPerPage)
+			{
+				<div class="data-grid-pagination">
+					<CustomPaginator State="@_pagination" />
+				</div>
+			}
+		}
+		else
+		{
+			<div class="empty-state">
+				<p>No credit cards registered yet</p>
+			</div>
+		}
+	</div>
 </div>
 
-<style>
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--text-secondary, #7A7A7A); margin: 0; }
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .card-header h3 { margin: 0; }
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+<ConfirmDialog IsOpen="@_showConfirmDialog"
+			   Title="Confirm Delete"
+			   Message="@_confirmMessage"
+			   ConfirmText="Delete"
+			   CancelText="Cancel"
+			   OnConfirm="ConfirmDelete"
+			   OnCancel="CancelDelete" />

@@ -1,0 +1,266 @@
+.page-header {
+	margin-bottom: 2rem;
+}
+
+.page-header h1 {
+	margin-bottom: 0.5rem;
+	color: var(--text-primary, #3D2E1F);
+}
+
+.page-subtitle {
+	color: var(--text-secondary, #7A7A7A);
+	margin: 0;
+	font-size: 0.95rem;
+}
+
+.content-card {
+	background: var(--bg-surface, #FAF7F2);
+	border-radius: 16px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+}
+
+.card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+}
+
+.card-header h3 {
+	margin: 0;
+	color: var(--text-primary, #3D2E1F);
+	font-size: 1.25rem;
+}
+
+.data-grid-container {
+	background: var(--bg-primary, #FFFBF5);
+	border-radius: 12px;
+	padding: 1rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+}
+
+.data-grid-search {
+	margin-bottom: 1rem;
+}
+
+.search-input {
+	width: 100%;
+	padding: 0.75rem;
+	border: 2px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	font-size: 1rem;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	transition: border-color 0.2s;
+	font-family: inherit;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--accent-primary, #8B7355);
+}
+
+.data-grid-scroll {
+	overflow-x: auto;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(139, 115, 85, 0.05);
+}
+
+.data-grid {
+	width: 100%;
+	background: var(--bg-surface, #FAF7F2);
+	border-collapse: collapse;
+}
+
+.data-grid :global(thead) {
+	background: var(--color-primary, #C9A86C);
+	color: white;
+}
+
+.data-grid :global(thead th) {
+	padding: 1rem;
+	font-weight: 600;
+	text-align: left;
+	border: none;
+	font-size: 0.95rem;
+}
+
+.data-grid :global(tbody td) {
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+	color: var(--text-primary, #3D2E1F);
+}
+
+.data-grid :global(tbody tr:hover) {
+	background: var(--bg-primary, #FFFBF5);
+}
+
+.data-grid :global(tbody tr:last-child td) {
+	border-bottom: none;
+}
+
+.btn-action {
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 0.85rem;
+	font-weight: 500;
+	transition: all 0.2s;
+	white-space: nowrap;
+}
+
+.btn-delete {
+	background: #FFE5E5;
+	color: #D32F2F;
+}
+
+.btn-delete:hover {
+	background: #D32F2F;
+	color: white;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
+}
+
+.empty-state {
+	text-align: center;
+	color: var(--text-secondary, #7A7A7A);
+	padding: 2rem 1rem;
+	font-size: 0.95rem;
+}
+
+.data-grid-pagination {
+	margin-top: 1.5rem;
+	display: flex;
+	justify-content: center;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+	.page-header {
+		margin-bottom: 1.5rem;
+	}
+
+	.page-header h1 {
+		font-size: 1.5rem;
+		margin-bottom: 0.4rem;
+	}
+
+	.page-subtitle {
+		font-size: 0.9rem;
+	}
+
+	.content-card {
+		padding: 1rem;
+	}
+
+	.card-header {
+		margin-bottom: 1rem;
+		padding-bottom: 0.75rem;
+	}
+
+	.card-header h3 {
+		font-size: 1.1rem;
+	}
+
+	.data-grid-container {
+		padding: 0.75rem;
+	}
+
+	.data-grid-search {
+		margin-bottom: 0.75rem;
+	}
+
+	.search-input {
+		padding: 0.6rem;
+		font-size: 0.95rem;
+	}
+
+	.data-grid :global(thead th) {
+		padding: 0.75rem;
+		font-size: 0.85rem;
+	}
+
+	.data-grid :global(tbody td) {
+		padding: 0.6rem 0.75rem;
+		font-size: 0.9rem;
+	}
+
+	.btn-action {
+		padding: 0.4rem 0.8rem;
+		font-size: 0.8rem;
+	}
+
+	.empty-state {
+		padding: 1.5rem 0.75rem;
+		font-size: 0.9rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.page-header {
+		margin-bottom: 1.25rem;
+	}
+
+	.page-header h1 {
+		font-size: 1.25rem;
+	}
+
+	.page-subtitle {
+		font-size: 0.85rem;
+	}
+
+	.content-card {
+		padding: 0.75rem;
+		border-radius: 12px;
+	}
+
+	.card-header {
+		margin-bottom: 0.75rem;
+		padding-bottom: 0.5rem;
+	}
+
+	.card-header h3 {
+		font-size: 1rem;
+	}
+
+	.data-grid-container {
+		padding: 0.5rem;
+	}
+
+	.data-grid-search {
+		margin-bottom: 0.5rem;
+	}
+
+	.search-input {
+		padding: 0.55rem;
+		font-size: 0.9rem;
+	}
+
+	.data-grid :global(thead th) {
+		padding: 0.6rem;
+		font-size: 0.75rem;
+	}
+
+	.data-grid :global(tbody td) {
+		padding: 0.5rem;
+		font-size: 0.8rem;
+	}
+
+	.btn-action {
+		padding: 0.35rem 0.6rem;
+		font-size: 0.75rem;
+	}
+
+	.empty-state {
+		padding: 1.25rem 0.5rem;
+		font-size: 0.85rem;
+	}
+
+	.data-grid-pagination {
+		margin-top: 1rem;
+	}
+}

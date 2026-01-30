@@ -43,6 +43,14 @@
 	}
 </div>
 
+<ConfirmDialog IsOpen="@_showConfirmDialog"
+			   Title="Confirm Delete"
+			   Message="@_confirmMessage"
+			   ConfirmText="Delete"
+			   CancelText="Cancel"
+			   OnConfirm="ConfirmDelete"
+			   OnCancel="CancelDelete" />
+
 @code {
 	private RenderFragment RenderMaterialRow(MaterialType material, int level) => __builder =>
 	{
@@ -79,7 +87,7 @@
 				</div>
 				<div class="material-actions">
 					<button class="btn-action btn-edit" @onclick="() => OnEdit.InvokeAsync(material)">✏️ Edit</button>
-					<button class="btn-action btn-delete" @onclick="() => OnDelete.InvokeAsync(material.Id)">🗑️ Delete</button>
+					<button class="btn-action btn-delete" @onclick="() => ShowDeleteConfirmation(material)">🗑️ Delete</button>
 				</div>
 			</div>
 		</div>

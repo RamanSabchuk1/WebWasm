@@ -59,7 +59,7 @@
 				</TemplateColumn>
 				<TemplateColumn Title="Actions" Sortable="false">
 					<button class="btn-action btn-unbind" 
-							@onclick="() => OnUnbind.InvokeAsync((context.DeviceToken.Token, context.DeviceToken.UserInfoId))">
+							@onclick="() => ShowUnbindConfirmation(context.DeviceToken.Token, context.DeviceToken.UserInfoId, context.DeviceToken.Device)">
 						Unbind
 					</button>
 				</TemplateColumn>
@@ -80,3 +80,11 @@
 		</div>
 	}
 </div>
+
+<ConfirmDialog IsOpen="@_showConfirmDialog"
+			   Title="Confirm Unbind"
+			   Message="@_confirmMessage"
+			   ConfirmText="Unbind"
+			   CancelText="Cancel"
+			   OnConfirm="ConfirmUnbind"
+			   OnCancel="CancelUnbind" />
