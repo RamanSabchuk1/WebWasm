@@ -1,4 +1,4 @@
-@using WebWasm.Models
+﻿@using WebWasm.Models
 
 @if (IsOpen)
 {
@@ -6,7 +6,7 @@
 		<div class="modal-container" @onclick:stopPropagation="true">
 			<div class="modal-header">
 				<h2>@(IsEditMode ? "Edit Region" : "Add New Region")</h2>
-				<button class="btn-close" @onclick="CloseModal">?</button>
+				<button class="btn-close" @onclick="CloseModal">❌</button>
 			</div>
 
 			<div class="modal-body">

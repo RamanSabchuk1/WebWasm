@@ -1,4 +1,4 @@
-@using WebWasm.Models
+﻿@using WebWasm.Models
 
 @if (IsOpen && Region is not null)
 {
@@ -6,7 +6,7 @@
 		<div class="modal-container modal-large" @onclick:stopPropagation="true">
 			<div class="modal-header">
 				<h2>@Region.Name - Details</h2>
-				<button class="btn-close" @onclick="CloseModal">?</button>
+				<button class="btn-close" @onclick="CloseModal">❌</button>
 			</div>
 
 			<div class="modal-body">
@@ -21,13 +21,20 @@
 										<span class="level-badge level-badge-@level.Type.ToString().ToLower()">
 											@level.Type
 										</span>
-										Algorithm: @level.CalculationAlgorithm
+										Algorithm: @AlgorithmTranslation(level.CalculationAlgorithm)
 									</h3>
-									<button class="btn-action btn-delete-level" 
-											@onclick="() => OnDeleteLevel.InvokeAsync((Region, level.Id))"
-											title="Delete this level">
-										??? Delete Level
-									</button>
+									<div class="level-actions">
+										<button class="btn-action btn-edit-level" 
+												@onclick="() => OnEditLevel.InvokeAsync((Region, level))"
+												title="Edit this level">
+											✏️ Edit Level
+										</button>
+										<button class="btn-action btn-delete-level" 
+												@onclick="() => OnDeleteLevel.InvokeAsync((Region, level.Id))"
+												title="Delete this level">
+											🗑️ Delete Level
+										</button>
+									</div>
 								</div>
 
 								<div class="level-content">
@@ -41,7 +48,7 @@
 													@foreach (var priceEntry in level.Info.Info)
 													{
 														<div class="price-item">
-															<span class="price-key">Company @priceEntry.Key:</span>
+															<span class="price-key">@priceEntry.Key KG:</span>
 															<span class="price-value">
 																@priceEntry.Value.MinPrice - @priceEntry.Value.MaxPrice
 																(@priceEntry.Value.PricePerHour/h, @priceEntry.Value.PricePerKm/km)

@@ -1,4 +1,4 @@
-@using WebWasm.Models
+﻿@using WebWasm.Models
 @implements IAsyncDisposable
 
 <div class="polygon-drawer-container">
@@ -21,7 +21,7 @@
 							<span class="point-coords">
 								@point.Latitude.ToString("F6"), @point.Longitude.ToString("F6")
 							</span>
-							<button class="btn-delete-point" @onclick="() => DeletePoint(index)" title="Delete point">?</button>
+							<button class="btn-delete-point" @onclick="() => DeletePoint(index)" title="Delete point">🗑️</button>
 						</div>
 					}
 				</div>
@@ -34,17 +34,17 @@
 
 		<div class="control-buttons">
 			<button class="btn-undo" @onclick="UndoLastPoint" disabled="@(_points.Count == 0)">
-				? Undo
+				✖️ Undo
 			</button>
 			<button class="btn-clear" @onclick="ClearAll" disabled="@(_points.Count == 0)">
-				?? Clear
+				🧹 Clear
 			</button>
 		</div>
 
 		@if (!string.IsNullOrEmpty(_errorMessage))
 		{
 			<div class="error-message">
-				?? @_errorMessage
+				🌋 @_errorMessage
 			</div>
 		}
 	</div>
@@ -52,7 +52,7 @@
 	<div class="action-buttons">
 		<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">Cancel</button>
 		<button class="btn-primary" @onclick="HandleConfirm" disabled="@(_points.Count < 3)">
-			? Confirm Polygon (@_points.Count points)
+			✅ Confirm Polygon (@_points.Count points)
 		</button>
 	</div>
 </div>

@@ -66,13 +66,13 @@
 .btn-close {
 	background: none;
 	border: none;
-	font-size: 2rem;
+	font-size: 1.5rem;
 	line-height: 1;
 	color: var(--text-secondary, #7A7A7A);
 	cursor: pointer;
-	padding: 0;
-	width: 32px;
-	height: 32px;
+	padding: 0.5rem;
+	width: 40px;
+	height: 40px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -96,10 +96,10 @@
 
 .editor-grid {
 	display: grid;
-	grid-template-columns: 300px 1fr;
+	grid-template-columns: 280px 1fr;
 	gap: 1.5rem;
 	flex: 1;
-	min-height: 500px;
+	min-height: 400px;
 }
 
 .config-panel {
@@ -117,6 +117,7 @@
 		margin: 0 0 0.75rem 0;
 		font-size: 0.95rem;
 		color: var(--text-primary, #3D2E1F);
+		font-weight: 600;
 	}
 
 .form-group {
@@ -147,6 +148,7 @@
 	padding: 0.5rem;
 	border-radius: 6px;
 	transition: background-color 0.2s;
+	user-select: none;
 }
 
 	.radio-label:hover {
@@ -171,6 +173,7 @@
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
+	min-height: 400px;
 }
 
 .drawer-placeholder {
@@ -212,7 +215,7 @@
 	}
 
 .error-message {
-	padding: 0.75rem;
+	padding: 1rem;
 	background: #FFE5E5;
 	color: #D32F2F;
 	border-radius: 8px;
@@ -238,6 +241,7 @@
 	font-size: 1rem;
 	font-weight: 500;
 	transition: all 0.2s;
+	white-space: nowrap;
 }
 
 .btn-secondary {
@@ -253,10 +257,13 @@
 .btn-primary {
 	background: var(--accent-primary, #8B7355);
 	color: white;
+	min-width: 120px;
 }
 
 	.btn-primary:hover:not(:disabled) {
 		background: var(--accent-dark, #6D5A44);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
 	}
 
 	.btn-primary:disabled {
@@ -264,18 +271,25 @@
 		cursor: not-allowed;
 	}
 
-/* Mobile responsiveness */
+/* Tablet */
 @media (max-width: 1024px) {
 	.editor-grid {
-		grid-template-columns: 1fr;
-		min-height: 400px;
+		grid-template-columns: 250px 1fr;
+		gap: 1rem;
+		min-height: 350px;
 	}
 
 	.config-panel {
-		max-height: 300px;
+		padding: 0.75rem;
+	}
+
+	.level-editor-body {
+		padding: 1rem;
+		gap: 0.75rem;
 	}
 }
 
+/* Mobile */
 @media (max-width: 768px) {
 	.modal-overlay {
 		padding: 0;
@@ -297,25 +311,85 @@
 	}
 
 	.editor-grid {
-		gap: 1rem;
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+		min-height: auto;
 	}
 
 	.config-panel {
-		padding: 0.75rem;
 		max-height: 250px;
+		padding: 0.75rem;
+	}
+
+	.map-panel {
+		min-height: 300px;
+	}
+
+	.modal-footer {
+		padding: 1rem;
+		gap: 0.5rem;
 	}
 
 	.btn-secondary, .btn-primary {
 		flex: 1;
+		min-width: auto;
 	}
 }
 
 @media (max-width: 480px) {
+	.modal-overlay {
+		padding: 0;
+	}
+
+	.modal-header {
+		padding: 1rem;
+	}
+
+	.modal-header h2 {
+		font-size: 1.1rem;
+	}
+
+	.btn-close {
+		width: 32px;
+		height: 32px;
+		font-size: 1.2rem;
+	}
+
+	.level-editor-body {
+		padding: 0.75rem;
+		gap: 0.5rem;
+	}
+
+	.config-panel {
+		max-height: 200px;
+		padding: 0.5rem;
+	}
+
+	.config-panel h3 {
+		font-size: 0.85rem;
+	}
+
+	.map-panel {
+		min-height: 250px;
+	}
+
 	.modal-footer {
 		flex-direction: column-reverse;
+		padding: 0.75rem;
 	}
 
 	.btn-secondary, .btn-primary {
 		width: 100%;
+		padding: 0.65rem 1rem;
+		font-size: 0.95rem;
+	}
+
+	.drawer-placeholder {
+		padding: 1rem;
+	}
+
+	.btn-start-drawing {
+		padding: 0.65rem 1rem;
+		font-size: 0.9rem;
 	}
 }

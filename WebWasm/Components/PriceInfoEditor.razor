@@ -1,48 +1,123 @@
-@using WebWasm.Models
+﻿@using WebWasm.Models
 
 <div class="price-editor-container">
-	<div class="price-fields">
-		<div class="price-field">
-			<label>Min Price *</label>
-			<input type="number" 
-				   class="form-control" 
-				   @bind="_minPrice" 
-				   step="0.01"
-				   placeholder="0.00" />
+	<div class="price-entries">
+		<div class="price-entries-header">
+			<h4>Price Entries (@_entries.Count)</h4>
+			<button class="btn-add-entry" @onclick="AddNewEntry" type="button">+ Add Entry</button>
 		</div>
 
-		<div class="price-field">
-			<label>Price Per Hour *</label>
-			<input type="number" 
-				   class="form-control" 
-				   @bind="_pricePerHour" 
-				   step="0.01"
-				   placeholder="0.00" />
-		</div>
+		@if (_entries.Count > 0)
+		{
+			<div class="entries-accordion">
+				@for (int i = 0; i < _entries.Count; i++)
+				{
+					var entry = _entries[i];
+					var index = i;
+					var isExpanded = _expandedIndex == index;
+					
+					<div class="entry-panel" @key="index">
+						<button class="entry-toggle" 
+								@onclick="() => ToggleExpand(index)"
+								type="button">
+							<span class="toggle-icon">@(isExpanded ? "▼" : "▶")</span>
+							<span class="entry-title">
+								Entry @(index + 1) - Key: @entry.Key
+								@if (!string.IsNullOrEmpty(entry.Error))
+								{
+									<span class="entry-status-error">⚠️</span>
+								}
+								else if (entry.MinPrice > 0 || entry.PricePerHour > 0 || entry.PricePerKm > 0 || entry.MaxPrice > 0)
+								{
+									<span class="entry-status-ok">✓</span>
+								}
+							</span>
+						</button>
 
-		<div class="price-field">
-			<label>Price Per KM *</label>
-			<input type="number" 
-				   class="form-control" 
-				   @bind="_pricePerKm" 
-				   step="0.01"
-				   placeholder="0.00" />
-		</div>
+						@if (isExpanded)
+						{
+							<div class="entry-content">
+								<div class="entry-header">
+									<div class="entry-key-input">
+								<label>Neto KG</label>
+										<input type="number"
+											   class="form-control"
+											   @bind="entry.Key"
+											   @bind:event="onchange"
+											   min="0"
+											   placeholder="e.g., 1" />
+									</div>
+									<button class="btn-delete-entry" @onclick="() => RemoveEntry(index)" type="button" title="Delete entry">🗑️</button>
+								</div>
 
-		<div class="price-field">
-			<label>Max Price *</label>
-			<input type="number" 
-				   class="form-control" 
-				   @bind="_maxPrice" 
-				   step="0.01"
-				   placeholder="0.00" />
-		</div>
+								<div class="entry-prices">
+									<div class="price-field">
+										<label>Min Price *</label>
+										<input type="number"
+											   class="form-control"
+											   @bind="entry.MinPrice"
+											   @bind:event="onchange"
+											   step="0.01"
+											   min="0"
+											   placeholder="0.00" />
+									</div>
+
+									<div class="price-field">
+										<label>Price Per Hour *</label>
+										<input type="number"
+											   class="form-control"
+											   @bind="entry.PricePerHour"
+											   @bind:event="onchange"
+											   step="0.01"
+											   min="0"
+											   placeholder="0.00" />
+									</div>
+
+									<div class="price-field">
+										<label>Price Per KM *</label>
+										<input type="number"
+											   class="form-control"
+											   @bind="entry.PricePerKm"
+											   @bind:event="onchange"
+											   step="0.01"
+											   min="0"
+											   placeholder="0.00" />
+									</div>
+
+									<div class="price-field">
+										<label>Max Price *</label>
+										<input type="number"
+											   class="form-control"
+											   @bind="entry.MaxPrice"
+											   @bind:event="onchange"
+											   step="0.01"
+											   min="0"
+											   placeholder="0.00" />
+									</div>
+								</div>
+
+								@if (!string.IsNullOrEmpty(entry.Error))
+								{
+									<div class="entry-error">⚠️ @entry.Error</div>
+								}
+							</div>
+						}
+					</div>
+				}
+			</div>
+		}
+		else
+		{
+			<div class="no-entries">
+				<p>No price entries yet. Click "Add Entry" to create one.</p>
+			</div>
+		}
 	</div>
 
-	@if (!string.IsNullOrEmpty(_errorMessage))
+	@if (!string.IsNullOrEmpty(_globalError))
 	{
 		<div class="error-message">
-			?? @_errorMessage
+			⚠️ @_globalError
 		</div>
 	}
 </div>

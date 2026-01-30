@@ -124,41 +124,66 @@
 		gap: 0.75rem;
 	}
 
-.level-badge {
-	display: inline-block;
-	padding: 0.25rem 0.75rem;
-	border-radius: 12px;
-	font-size: 0.8rem;
-	font-weight: 600;
-	white-space: nowrap;
-}
-
-.level-badge-neighborhood {
-	background: #E3F2FD;
-	color: #1565C0;
-}
-
-.level-badge-city {
-	background: #FFF3E0;
-	color: #E65100;
-}
-
-.btn-action {
-	padding: 0.5rem 1rem;
-	border: none;
-	background: #FFE5E5;
-	color: #D32F2F;
-	border-radius: 6px;
-	cursor: pointer;
-	font-size: 0.85rem;
-	font-weight: 500;
-	transition: all 0.2s;
-}
-
-	.btn-action:hover {
-		background: #D32F2F;
-		color: white;
+	.level-actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-shrink: 0;
 	}
+
+	.btn-action {
+		padding: 0.5rem 1rem;
+		border: none;
+		background: #FFE5E5;
+		color: #D32F2F;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-weight: 500;
+		transition: all 0.2s;
+		white-space: nowrap;
+	}
+
+		.btn-action:hover {
+			background: #D32F2F;
+			color: white;
+		}
+
+	.btn-edit-level {
+		background: var(--accent-light, #E5D5C0);
+		color: var(--accent-primary, #8B7355);
+	}
+
+		.btn-edit-level:hover {
+			background: var(--accent-primary, #8B7355);
+			color: white;
+		}
+
+	.btn-delete-level {
+		background: #FFE5E5;
+		color: #D32F2F;
+	}
+
+		.btn-delete-level:hover {
+			background: #D32F2F;
+			color: white;
+		}
+
+.modal-body {
+	padding: 1.5rem;
+}
+
+.levels-tabs {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.level-tab {
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 12px;
+	overflow: hidden;
+	background: var(--bg-surface, #FAF7F2);
+}
 
 .level-content {
 	padding: 1rem;

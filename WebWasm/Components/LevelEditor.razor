@@ -1,4 +1,4 @@
-@using WebWasm.Models
+﻿@using WebWasm.Models
 
 @if (IsOpen)
 {
@@ -6,7 +6,7 @@
 		<div class="modal-container modal-fullscreen" @onclick:stopPropagation="true">
 			<div class="modal-header">
 				<h2>@(IsEditMode ? "Edit Level" : "Add New Level")</h2>
-				<button class="btn-close" @onclick="CloseEditor">?</button>
+				<button class="btn-close" @onclick="CloseEditor">❌</button>
 			</div>
 
 			<div class="modal-body level-editor-body">
@@ -33,11 +33,11 @@
 							<div class="radio-group">
 								<label class="radio-label">
 									<input type="radio" @onchange="e => _algorithm = 1" checked="@(_algorithm == 1)" />
-									<span>Algorithm 1</span>
+									<span>Algorithm 1 (Price per km)</span>
 								</label>
 								<label class="radio-label">
 									<input type="radio" @onchange="e => _algorithm = 2" checked="@(_algorithm == 2)" />
-									<span>Algorithm 2</span>
+									<span>Algorithm 2 (Price per hour)</span>
 								</label>
 							</div>
 						</div>
@@ -45,7 +45,7 @@
 						<div class="section-divider"></div>
 
 						<h3>Price Information</h3>
-						<PriceInfoEditor @ref="_priceEditor" ExistingPrice="@_priceInfo" />
+						<PriceInfoEditor @key="@GetPriceEditorKey()" @ref="_priceEditor" ExistingPrices="@_priceInfo" />
 					</div>
 
 					<!-- Right Panel: Map -->
@@ -60,10 +60,10 @@
 						{
 							<div class="drawer-placeholder">
 								<div class="placeholder-content">
-									<p>?? Click below to draw polygon</p>
+									<p>👇🏻 Click below to draw polygon</p>
 								</div>
 								<button class="btn-start-drawing" @onclick="OpenDrawer">
-									??? Start Drawing
+									🎨 Start Drawing
 								</button>
 							</div>
 						}
@@ -73,7 +73,7 @@
 				@if (!string.IsNullOrEmpty(_errorMessage))
 				{
 					<div class="error-message">
-						?? @_errorMessage
+						🌋 @_errorMessage
 					</div>
 				}
 			</div>
