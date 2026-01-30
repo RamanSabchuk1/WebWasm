@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -11,7 +11,6 @@ public partial class PriceInfoEditor : ComponentBase
 	private List<PriceEntryModel> _entries = [];
 	private string _globalError = string.Empty;
 	private int? _expandedIndex = null;
-	private bool _isInitialized = false;
 	private Dictionary<uint, PriceInfo>? _lastExistingPrices = null;
 
 	private class PriceEntryModel
