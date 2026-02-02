@@ -23,7 +23,7 @@ public record Producer(Guid Id, Company? Company, string Name, ICollection<Produ
 public record Region(Guid Id, string Name, ICollection<Level> Levels);
 public record Triangle(Location Point1, Location Point2, Location Point3);
 public record UserInfo(Guid Id, string FirstName, string MiddleName, string LastName, string MobilePhone, Company? Company);
-public record Vehicle(Guid Id, Guid DriverId, Guid CompanyId, string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Driver? Driver);
+public record Vehicle(Guid Id, Guid DriverId, Guid CompanyId, string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Driver? Driver) { public Driver? Driver { get; set; } = Driver; }
 public record ActivityRecord(string Description, DateTime Date);
 
 public record struct ProducerWorkingTime(TimeOnly StartLoadingHours, TimeOnly EndLoadingHours, TimeOnly StartWorkingHours, TimeOnly EndWorkingHours, DayOfWeek DayOfWeek);
@@ -42,6 +42,7 @@ public record CreateDriverSlot(TimeOnly StartTime, TimeOnly EndTime, DateOnly Wo
 public record CreateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime, string Name);
 public record CreateLevel(LevelType Type, byte CalculationAlgorithm, ICollection<Location> Points, Dictionary<uint, PriceInfo> Info);
 public record CreateUser(Guid CompanyId, string FirstName, string MiddleName, string LastName, string MobilePhone, RoleType[] Roles);
+public record CreateVehicle(string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Guid DriverId);
 public record CreateRegion(string Name);
 
 public enum LevelType

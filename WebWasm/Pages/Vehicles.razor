@@ -1,40 +1,51 @@
 ﻿@page "/vehicles"
+@using WebWasm.Models
+@using WebWasm.Services
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject CashService CashService
+@inject ApiClient ApiClient
+@inject ToastService ToastService
+@inject LoadingService LoadingService
 
 <PageTitle>Vehicles</PageTitle>
 
-<div class="page-header">
-    <h1>🚛 Vehicles</h1>
-    <p class="page-subtitle">Manage vehicle fleet</p>
+<div class="vehicles-container">
+	<div class="page-header">
+		<div>
+			<h1>🚛 Vehicles</h1>
+			<p class="page-subtitle">Manage vehicle fleet</p>
+		</div>
+		<button class="btn-create" @onclick="OpenCreateModal">
+			➕ Add Vehicle
+		</button>
+	</div>
+
+	<div class="content-card">
+		@if (_vehicles != null)
+		{
+			<VehiclesTable @key="_vehiclesKey" Items="@_vehicles" OnDelete="ShowDeleteConfirmation" />
+		}
+		else
+		{
+			<div class="loading">Loading vehicles...</div>
+		}
+	</div>
 </div>
 
-<div class="content-card">
-    <div class="card-header">
-        <h3>Vehicle List</h3>
-        <button class="btn-primary">+ Add Vehicle</button>
-    </div>
-    <p class="empty-state">No vehicles registered yet.</p>
-</div>
+@if (_showCreateModal)
+{
+	<VehicleModal Companies="@_companies" 
+				   Drivers="@_drivers"
+				   IsEditMode="false"
+				   OnSubmit="CreateVehicle" 
+				   OnCancel="CloseCreateModal" />
+}
 
-<style>
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--text-secondary, #7A7A7A); margin: 0; }
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .card-header h3 { margin: 0; }
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+<ConfirmDialog IsOpen="@_showDeleteConfirm"
+			   Title="Confirm Delete"
+			   Message="@_deleteConfirmMessage"
+			   ConfirmText="Delete"
+			   CancelText="Cancel"
+			   OnConfirm="ConfirmDelete"
+			   OnCancel="CancelDelete" />
+

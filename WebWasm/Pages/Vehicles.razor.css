@@ -1,0 +1,68 @@
+.vehicles-container {
+	width: 100%;
+	padding: 0;
+}
+
+.page-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+	gap: 1rem;
+}
+
+	.page-header h1 {
+		margin: 0 0 0.5rem 0;
+		font-size: 2rem;
+		color: var(--text-primary, #3D3D3D);
+	}
+
+.page-subtitle {
+	color: var(--text-secondary, #7A7A7A);
+	margin: 0;
+	font-size: 0.875rem;
+}
+
+.btn-create {
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+	color: white;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.875rem;
+	white-space: nowrap;
+	transition: all 0.2s;
+}
+
+	.btn-create:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 20px rgba(139, 115, 85, 0.3);
+	}
+
+.content-card {
+	background: var(--bg-surface, #FAF7F2);
+	border-radius: 12px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+}
+
+@media (max-width: 768px) {
+	.page-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.btn-create {
+		width: 100%;
+	}
+
+	.page-header h1 {
+		font-size: 1.5rem;
+	}
+
+	.content-card {
+		padding: 1rem;
+	}
+}

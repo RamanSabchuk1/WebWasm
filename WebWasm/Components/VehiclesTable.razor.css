@@ -1,0 +1,270 @@
+.data-grid-container {
+	width: 100%;
+	overflow: hidden;
+}
+
+.data-grid-search {
+	margin-bottom: 1rem;
+}
+
+.search-input {
+	width: 100%;
+	max-width: 400px;
+	padding: 0.75rem 1rem;
+	border: 1px solid rgba(139, 115, 85, 0.2);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	background: var(--bg-surface, #FAF7F2);
+	color: var(--text-primary, #3D3D3D);
+	transition: border-color 0.2s;
+}
+
+	.search-input:focus {
+		outline: none;
+		border-color: var(--accent-primary, #C9A86C);
+	}
+
+	.search-input::placeholder {
+		color: var(--text-secondary, #7A7A7A);
+	}
+
+.data-grid-scroll {
+	overflow-x: auto;
+	overflow-y: visible;
+	-webkit-overflow-scrolling: touch;
+	width: 100%;
+	max-width: 100%;
+}
+
+::deep .data-grid {
+	width: 100%;
+	min-width: 600px;
+	border-collapse: collapse;
+}
+
+::deep .data-grid thead {
+	background: linear-gradient(135deg, rgba(201, 168, 108, 0.1) 0%, rgba(139, 115, 85, 0.1) 100%);
+}
+
+::deep .data-grid th {
+	padding: 1rem;
+	text-align: left;
+	font-weight: 600;
+	color: var(--text-primary, #3D3D3D);
+	border-bottom: 2px solid rgba(139, 115, 85, 0.2);
+	font-size: 0.875rem;
+	white-space: nowrap;
+}
+
+::deep .data-grid th button {
+	background: none;
+	border: none;
+	color: var(--text-primary, #3D3D3D);
+	font-weight: 600;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0;
+	font-size: 0.875rem;
+}
+
+::deep .data-grid th button:hover {
+	color: var(--accent-primary, #C9A86C);
+}
+
+::deep .data-grid tbody tr {
+	transition: background-color 0.2s;
+	border-bottom: 1px solid rgba(139, 115, 85, 0.1);
+}
+
+::deep .data-grid tbody tr:hover {
+	background-color: rgba(201, 168, 108, 0.05);
+}
+
+	::deep .data-grid td {
+		padding: 0.7rem 1rem !important;
+		color: var(--text-primary, #3D3D3D);
+		font-size: 0.875rem;
+	}
+
+.data-grid-pagination {
+	margin-top: 1rem;
+	display: flex;
+	justify-content: center;
+}
+
+.empty-state {
+	text-align: center;
+	color: var(--text-secondary, #7A7A7A);
+	padding: 3rem 1rem;
+}
+
+	.empty-state p {
+		margin: 0;
+		font-size: 1rem;
+	}
+
+.driver-cell {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.driver-thumbnail-container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.driver-thumbnail {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	border: 2px solid rgba(139, 115, 85, 0.2);
+	overflow: hidden;
+	cursor: pointer;
+	background: var(--bg-surface, #FAF7F2);
+	padding: 0;
+	transition: all 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+	.driver-thumbnail:hover {
+		border-color: var(--accent-primary, #C9A86C);
+		transform: scale(1.05);
+		box-shadow: 0 2px 8px rgba(139, 115, 85, 0.2);
+	}
+
+.driver-photo {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.default-avatar {
+	width: 24px;
+	height: 24px;
+	color: var(--text-secondary, #7A7A7A);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+	.default-avatar svg {
+		width: 100%;
+		height: 100%;
+	}
+
+.driver-info-expanded {
+	margin-top: 0.5rem;
+	padding: 0.75rem;
+	background: rgba(201, 168, 108, 0.05);
+	border-radius: 6px;
+	border-left: 3px solid var(--accent-primary, #C9A86C);
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.driver-detail {
+	display: flex;
+	gap: 0.5rem;
+	align-items: baseline;
+}
+
+.driver-label {
+	font-weight: 600;
+	color: var(--text-primary, #3D3D3D);
+	font-size: 0.75rem;
+	min-width: 50px;
+}
+
+.driver-value {
+	color: var(--text-secondary, #7A7A7A);
+	font-size: 0.875rem;
+}
+
+.text-muted {
+	color: var(--text-secondary, #7A7A7A);
+	font-style: italic;
+}
+
+.photo-cell {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.btn-view-photo {
+	background: none;
+	border: none;
+	color: var(--accent-primary, #C9A86C);
+	cursor: pointer;
+	padding: 0.25rem 0.5rem;
+	font-size: 0.875rem;
+	text-align: left;
+	transition: color 0.2s;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+	.btn-view-photo:hover {
+		color: var(--accent-dark, #8B7355);
+	}
+
+.photo-expanded {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background: rgba(201, 168, 108, 0.05);
+	border-radius: 6px;
+	border: 1px solid rgba(139, 115, 85, 0.2);
+}
+
+.vehicle-photo {
+	max-width: 200px;
+	max-height: 150px;
+	border-radius: 6px;
+	object-fit: cover;
+}
+
+.vehicle-actions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.btn-action {
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 6px;
+	background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+	color: white;
+	cursor: pointer;
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: all 0.2s;
+}
+
+	.btn-action:hover:not(:disabled) {
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
+	}
+
+	.btn-action:disabled {
+		background: rgba(139, 115, 85, 0.3);
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+.btn-delete {
+	background: #FFE5E5;
+	color: #D32F2F;
+	text-wrap: nowrap;
+}
+
+	.btn-delete:hover {
+		box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+	}

@@ -14,6 +14,6 @@ public partial class Orders(ToastService toastService)
         pendingOrders++;
         completedOrders++;
 
-        toastService.ShowSuccess("Order added successfully!");
+        toastService.ShowSuccess($"Order:{totalOrders} added successfully!");
     }
 }

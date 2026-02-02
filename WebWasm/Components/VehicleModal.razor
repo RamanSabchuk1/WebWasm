@@ -1,0 +1,103 @@
+@using WebWasm.Models
+@using WebWasm.Services
+
+<div class="modal-overlay" @onclick="() => OnCancel.InvokeAsync()">
+	<div class="modal-dialog vehicle-modal" @onclick:stopPropagation="true">
+		<div class="modal-header">
+			<h2>@(IsEditMode ? "Edit Vehicle" : "Create Vehicle")</h2>
+			<button class="btn-close" @onclick="() => OnCancel.InvokeAsync()">×</button>
+		</div>
+
+		<div class="modal-body">
+			<form>
+				<div class="form-group">
+					<label for="companySelect">Company *</label>
+					<select id="companySelect" 
+							@bind="_selectedCompanyId" 
+							disabled="@IsEditMode"
+							class="form-control">
+						<option value="">Select a company...</option>
+						@foreach (var company in Companies)
+						{
+							<option value="@company.Id">@company.LegalName</option>
+						}
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="modelInput">Model *</label>
+					<input id="modelInput" 
+						   type="text" 
+						   @bind="_model" 
+						   placeholder="Vehicle model"
+						   class="form-control" />
+				</div>
+
+				<div class="form-group">
+					<label for="registrationInput">Registration Number *</label>
+					<input id="registrationInput" 
+						   type="text" 
+						   @bind="_registrationNumber" 
+						   placeholder="Registration number"
+						   class="form-control" />
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="weightInput">Weight (kg) *</label>
+						<input id="weightInput" 
+							   type="number" 
+							   @bind="_vehicleWeight" 
+							   placeholder="0"
+							   class="form-control" />
+					</div>
+
+					<div class="form-group">
+						<label for="capacityInput">Capacity (kg) *</label>
+						<input id="capacityInput" 
+							   type="number" 
+							   @bind="_loadCapacity" 
+							   placeholder="0"
+							   class="form-control" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="driverSelect">Driver *</label>
+					<select id="driverSelect" 
+							@bind="_selectedDriverId" 
+							class="form-control">
+						<option value="">Select a driver...</option>
+						@foreach (var driver in Drivers)
+						{
+							<option value="@driver.Id">@(driver.UserInfo?.MobilePhone) @(string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? "Unknown" : driver.UserInfo?.FirstName) </option>
+						}
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="photoInput">Photo URL</label>
+					<input id="photoInput" 
+						   type="text" 
+						   @bind="_photo" 
+						   placeholder="Photo URL"
+						   class="form-control" />
+				</div>
+
+				@if (!string.IsNullOrEmpty(_photo))
+				{
+					<div class="photo-preview">
+						<img src="@_photo" alt="Vehicle preview" />
+					</div>
+				}
+			</form>
+		</div>
+
+		<div class="modal-footer">
+			<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">Cancel</button>
+			<button class="btn-primary" @onclick="SubmitForm" disabled="@(!IsFormValid())">
+				@(IsEditMode ? "Update" : "Create")
+			</button>
+		</div>
+	</div>
+</div>
