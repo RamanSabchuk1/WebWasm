@@ -14,10 +14,7 @@ public partial class Payments : ComponentBase
 
 	private List<CreditCardInfo> _creditCards = [];
 	private string _searchText = string.Empty;
-	private bool _hasItems => FilteredCards.Any();
-	private bool _showConfirmDialog = false;
-	private string _confirmMessage = string.Empty;
-	private Guid _pendingDeleteId = Guid.Empty;
+	private bool _hasItems => FilteredCards.Count != 0;
 	private PaginationState _pagination = new() { ItemsPerPage = 10 };
 
 	private List<CreditCardInfo> FilteredCards
@@ -26,9 +23,9 @@ public partial class Payments : ComponentBase
 		{
 			var filtered = string.IsNullOrWhiteSpace(_searchText)
 				? _creditCards
-				: _creditCards.Where(c =>
+				: [.. _creditCards.Where(c =>
 					c.MaskedCard.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
-				).ToList();
+				)];
 
 			return filtered;
 		}
@@ -42,38 +39,6 @@ public partial class Payments : ComponentBase
 	private async Task LoadCreditCards(bool useCash)
 	{
 		_creditCards = [.. await CashService.GetData<CreditCardInfo>(useCash)];
-	}
-
-	private void ShowDeleteConfirmation(CreditCardInfo card)
-	{
-		_pendingDeleteId = card.Id;
-		_confirmMessage = $"Are you sure you want to delete the credit card '{card.MaskedCard}'? This action cannot be undone.";
-		_showConfirmDialog = true;
-	}
-
-	private async Task ConfirmDelete()
-	{
-		_showConfirmDialog = false;
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				await ApiClient.Delete($"Payments/{_pendingDeleteId}");
-				ToastService.ShowSuccess("Credit card deleted successfully!");
-				await LoadCreditCards(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete credit card: {ex.Message}");
-			}
-		});
-		_pendingDeleteId = Guid.Empty;
-	}
-
-	private void CancelDelete()
-	{
-		_showConfirmDialog = false;
-		_pendingDeleteId = Guid.Empty;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -31,12 +31,6 @@
 					<PropertyColumn Property="@(c => c.MaskedCard)" Title="Card Number" Sortable="true" />
 					<PropertyColumn Property="@(c => c.ExpirationDate.ToString("MM/yyyy"))" Title="Expiration Date" Sortable="true" />
 					<PropertyColumn Property="@(c => c.UnbindAt.ToString("yyyy-MM-dd"))" Title="Unbind At" Sortable="true" />
-					<TemplateColumn Title="Actions" Sortable="false">
-						<button class="btn-action btn-delete"
-								@onclick="() => ShowDeleteConfirmation(context)">
-							🗑️ Delete
-						</button>
-					</TemplateColumn>
 				</QuickGrid>
 			</div>
 
@@ -55,11 +49,3 @@
 		}
 	</div>
 </div>
-
-<ConfirmDialog IsOpen="@_showConfirmDialog"
-			   Title="Confirm Delete"
-			   Message="@_confirmMessage"
-			   ConfirmText="Delete"
-			   CancelText="Cancel"
-			   OnConfirm="ConfirmDelete"
-			   OnCancel="CancelDelete" />

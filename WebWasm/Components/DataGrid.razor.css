@@ -78,11 +78,11 @@
 	background-color: rgba(201, 168, 108, 0.05);
 }
 
-::deep .data-grid td {
-	padding: 1rem;
-	color: var(--text-primary, #3D3D3D);
-	font-size: 0.875rem;
-}
+	::deep .data-grid td {
+		padding: 0.7rem 1rem !important;
+		color: var(--text-primary, #3D3D3D);
+		font-size: 0.875rem;
+	}
 
 .empty-state {
 	text-align: center;
