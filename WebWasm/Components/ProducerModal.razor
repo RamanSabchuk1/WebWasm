@@ -1,0 +1,124 @@
+@using WebWasm.Models
+
+@if (IsOpen)
+{
+	<div class="modal-overlay" @onclick="CloseModal">
+		<div class="modal-container modal-large" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>@(IsEditMode ? "Edit Producer" : "Add New Producer")</h2>
+				<button class="btn-close" @onclick="CloseModal">×</button>
+			</div>
+
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Producer Name *</label>
+					<input type="text"
+						   class="form-control"
+						   @bind="_name"
+						   placeholder="Enter producer name"
+						   disabled="@IsEditMode" />
+					@if (IsEditMode)
+					{
+						<small class="form-help">Producer name cannot be changed</small>
+					}
+				</div>
+
+				<div class="form-group">
+					<label>Company</label>
+					<select class="form-control" @bind="_companyId" disabled="@IsEditMode">
+						<option value="">No Company</option>
+						@foreach (var company in Companies)
+						{
+							<option value="@company.Id">@company.LegalName</option>
+						}
+					</select>
+					@if (IsEditMode)
+					{
+						<small class="form-help">Company cannot be changed</small>
+					}
+				</div>
+
+				<div class="form-section">
+					<div class="section-title">
+						<h3>Working Hours</h3>
+						<button type="button" class="btn-add-entry" @onclick="AddWorkingTimeEntry">
+							+ Add Working Time
+						</button>
+					</div>
+
+					@if (_workingTimeEntries.Count == 0)
+					{
+						<div class="empty-entries">
+							<p>No working times configured. Click "Add Working Time" to create one.</p>
+						</div>
+					}
+					else
+					{
+						<div class="working-times-list">
+							@for (int i = 0; i < _workingTimeEntries.Count; i++)
+							{
+								var entry = _workingTimeEntries[i];
+								var index = i;
+
+								<div class="working-time-entry">
+									<div class="entry-header">
+										<span class="entry-number">#@(index + 1)</span>
+										<button type="button" class="btn-remove-entry" @onclick="() => RemoveWorkingTimeEntry(index)">
+											🗑️ Remove
+										</button>
+									</div>
+
+									<div class="entry-fields">
+										<div class="form-group">
+											<label>Day of Week</label>
+											<select class="form-control" @bind="entry.DayOfWeek">
+												@foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+												{
+													<option value="@day">@day</option>
+												}
+											</select>
+										</div>
+
+										<div class="form-group">
+											<label>Loading Start</label>
+											<input type="time" class="form-control" @bind="entry.StartLoadingHours" />
+										</div>
+
+										<div class="form-group">
+											<label>Loading End</label>
+											<input type="time" class="form-control" @bind="entry.EndLoadingHours" />
+										</div>
+
+										<div class="form-group">
+											<label>Working Start</label>
+											<input type="time" class="form-control" @bind="entry.StartWorkingHours" />
+										</div>
+
+										<div class="form-group">
+											<label>Working End</label>
+											<input type="time" class="form-control" @bind="entry.EndWorkingHours" />
+										</div>
+									</div>
+								</div>
+							}
+						</div>
+					}
+				</div>
+
+				@if (!string.IsNullOrEmpty(_errorMessage))
+				{
+					<div class="error-message">
+						⚠️ @_errorMessage
+					</div>
+				}
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
+				<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!IsValid)">
+					@(IsEditMode ? "Update" : "Create")
+				</button>
+			</div>
+		</div>
+	</div>
+}

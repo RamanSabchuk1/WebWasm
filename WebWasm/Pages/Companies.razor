@@ -1,40 +1,31 @@
 ﻿@page "/companies"
+@using WebWasm.Components
 
 <PageTitle>Companies</PageTitle>
 
 <div class="page-header">
-    <h1>🏢 Companies</h1>
-    <p class="page-subtitle">Manage registered companies</p>
+	<h1>🏢 Companies</h1>
+	<p class="page-subtitle">Manage registered companies</p>
 </div>
 
 <div class="content-card">
-    <div class="card-header">
-        <h3>Company List</h3>
-        <button class="btn-primary">+ Add Company</button>
-    </div>
-    <p class="empty-state">No companies registered yet.</p>
+	<div class="card-header">
+		<h3>Company List</h3>
+		<button class="btn-primary" @onclick="OpenAddCompanyModal">+ Add Company</button>
+	</div>
+	<CompaniesTable @ref="_companiesTableRef"
+					Companies="@_companies"
+					OnToggleActive="@HandleToggleActive" />
 </div>
 
-<style>
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--text-secondary, #7A7A7A); margin: 0; }
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .card-header h3 { margin: 0; }
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+<CompanyModal IsOpen="@_isCompanyModalOpen"
+			  OnClose="@CloseCompanyModal"
+			  OnSubmit="@HandleCompanySubmit" />
+
+<ConfirmDialog IsOpen="@_showConfirmDialog"
+			   Title="@_confirmTitle"
+			   Message="@_confirmMessage"
+			   ConfirmText="Confirm"
+			   CancelText="Cancel"
+			   OnConfirm="@HandleConfirm"
+			   OnCancel="@CloseConfirmDialog" />

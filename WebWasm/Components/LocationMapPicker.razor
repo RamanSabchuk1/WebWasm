@@ -1,0 +1,149 @@
+@using WebWasm.Models
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="location-picker-container">
+	<div class="map-wrapper">
+		<div @ref="_mapElement" class="leaflet-map"></div>
+	</div>
+	
+	<div class="location-info">
+		<div class="coordinates">
+			<div class="coord-group">
+				<label>Latitude:</label>
+				<input type="number" 
+					   step="0.000001" 
+					   @bind="_latitude" 
+					   @bind:event="oninput"
+					   @onchange="UpdateMarkerFromInput"
+					   class="coord-input" />
+			</div>
+			<div class="coord-group">
+				<label>Longitude:</label>
+				<input type="number" 
+					   step="0.000001" 
+					   @bind="_longitude" 
+					   @bind:event="oninput"
+					   @onchange="UpdateMarkerFromInput"
+					   class="coord-input" />
+			</div>
+		</div>
+		<p class="map-hint">💡 Click on the map to select a location</p>
+	</div>
+</div>
+
+@code {
+	[Parameter] public Location? InitialLocation { get; set; }
+	[Parameter] public EventCallback<Location> OnLocationChanged { get; set; }
+
+	private ElementReference _mapElement;
+	private IJSObjectReference? _jsModule;
+	private IJSObjectReference? _mapInstance;
+	private double _latitude;
+	private double _longitude;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			if (InitialLocation is not null)
+			{
+				_latitude = InitialLocation.Latitude;
+				_longitude = InitialLocation.Longitude;
+			}
+			else
+			{
+				// Default to Minsk, Belarus
+				_latitude = 53.9045;
+				_longitude = 27.5615;
+			}
+
+			await LoadMapScript();
+			await InitializeMap();
+		}
+	}
+
+	private async Task LoadMapScript()
+	{
+		try
+		{
+			_jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/location-picker.js");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error loading location picker script: {ex.Message}");
+		}
+	}
+
+	private async Task InitializeMap()
+	{
+		if (_jsModule is null)
+			return;
+
+		try
+		{
+			_mapInstance = await _jsModule.InvokeAsync<IJSObjectReference>(
+				"initLocationPicker",
+				_mapElement,
+				_latitude,
+				_longitude,
+				DotNetObjectReference.Create(this)
+			);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error initializing location picker: {ex.Message}");
+		}
+	}
+
+	[JSInvokable]
+	public async Task OnMapClick(double lat, double lng)
+	{
+		_latitude = lat;
+		_longitude = lng;
+		await NotifyLocationChanged();
+		StateHasChanged();
+	}
+
+	private async Task UpdateMarkerFromInput()
+	{
+		if (_mapInstance is not null)
+		{
+			try
+			{
+				await _mapInstance.InvokeVoidAsync("updateMarker", _latitude, _longitude);
+				await NotifyLocationChanged();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error updating marker: {ex.Message}");
+			}
+		}
+	}
+
+	private async Task NotifyLocationChanged()
+	{
+		var location = new Location(_longitude, _latitude);
+		await OnLocationChanged.InvokeAsync(location);
+	}
+
+	public Location GetLocation() => new Location(_longitude, _latitude);
+
+	async ValueTask IAsyncDisposable.DisposeAsync()
+	{
+		if (_mapInstance is not null)
+		{
+			try
+			{
+				await _mapInstance.InvokeVoidAsync("dispose");
+				await _mapInstance.DisposeAsync();
+			}
+			catch { }
+		}
+
+		if (_jsModule is not null)
+		{
+			await _jsModule.DisposeAsync();
+		}
+	}
+}

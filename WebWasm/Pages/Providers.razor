@@ -1,40 +1,44 @@
 ﻿@page "/providers"
+@using WebWasm.Components
 
 <PageTitle>Providers</PageTitle>
 
 <div class="page-header">
-    <h1>📦 Providers</h1>
-    <p class="page-subtitle">Manage service providers</p>
+	<h1>📦 Providers</h1>
+	<p class="page-subtitle">Manage service providers and loading places</p>
 </div>
 
 <div class="content-card">
-    <div class="card-header">
-        <h3>Provider List</h3>
-        <button class="btn-primary">+ Add Provider</button>
-    </div>
-    <p class="empty-state">No providers registered yet.</p>
+	<div class="card-header">
+		<h3>Producer List</h3>
+		<button class="btn-primary" @onclick="OpenAddProducerModal">+ Add Producer</button>
+	</div>
+	<ProducersTable @ref="_producersTableRef"
+					Producers="@_producers"
+					Companies="@_companies"
+					OnEditProducer="@HandleEditProducer"
+					OnDeleteProducer="@HandleDeleteProducer"
+					OnAddLoadingPlace="@HandleAddLoadingPlace"
+					OnEditLoadingPlace="@HandleEditLoadingPlace"
+					OnDeleteLoadingPlace="@HandleDeleteLoadingPlace" />
 </div>
 
-<style>
-    .page-header { margin-bottom: 2rem; }
-    .page-header h1 { margin-bottom: 0.5rem; }
-    .page-subtitle { color: var(--text-secondary, #7A7A7A); margin: 0; }
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-    .card-header h3 { margin: 0; }
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+<ProducerModal IsOpen="@_isProducerModalOpen"
+			   EditingProducer="@_editingProducer"
+			   Companies="@_companies"
+			   OnClose="@CloseProducerModal"
+			   OnSubmit="@HandleProducerSubmit" />
+
+<LoadingPlaceModal IsOpen="@_isLoadingPlaceModalOpen"
+				   EditingLoadingPlace="@_editingLoadingPlace"
+				   MaterialTypes="@_materialTypes"
+				   OnClose="@CloseLoadingPlaceModal"
+				   OnSubmit="@HandleLoadingPlaceSubmit" />
+
+<ConfirmDialog IsOpen="@_showConfirmDialog"
+			   Title="@_confirmTitle"
+			   Message="@_confirmMessage"
+			   ConfirmText="Delete"
+			   CancelText="Cancel"
+			   OnConfirm="@HandleConfirm"
+			   OnCancel="@CloseConfirmDialog" />

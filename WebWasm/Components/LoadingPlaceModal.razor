@@ -1,0 +1,76 @@
+@using WebWasm.Models
+
+@if (IsOpen)
+{
+	<div class="modal-overlay" @onclick="CloseModal">
+		<div class="modal-container" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>@(IsEditMode ? "Edit Loading Place" : "Add New Loading Place")</h2>
+				<button class="btn-close" @onclick="CloseModal">×</button>
+			</div>
+
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Name *</label>
+					<input type="text"
+						   class="form-control"
+						   @bind="_name"
+						   placeholder="Enter loading place name" />
+				</div>
+
+				<div class="form-group">
+					<label>Material Type *</label>
+					<select class="form-control" @bind="_materialTypeId">
+						<option value="@Guid.Empty">Select material type...</option>
+						@foreach (var material in MaterialTypes)
+						{
+							<option value="@material.Id">@material.Name (@material.Solidity)</option>
+						}
+					</select>
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label>Cost ($) *</label>
+						<input type="number"
+							   step="0.01"
+							   min="0"
+							   class="form-control"
+							   @bind="_cost"
+							   placeholder="0.00" />
+					</div>
+
+					<div class="form-group">
+						<label>Volume (m³) *</label>
+						<input type="number"
+							   min="1"
+							   class="form-control"
+							   @bind="_volume"
+							   placeholder="0" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label>Location *</label>
+					<LocationMapPicker @ref="_locationPicker"
+									   InitialLocation="@_location"
+									   OnLocationChanged="HandleLocationChanged" />
+				</div>
+
+				@if (!string.IsNullOrEmpty(_errorMessage))
+				{
+					<div class="error-message">
+						⚠️ @_errorMessage
+					</div>
+				}
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
+				<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!IsValid)">
+					@(IsEditMode ? "Update" : "Create")
+				</button>
+			</div>
+		</div>
+	</div>
+}

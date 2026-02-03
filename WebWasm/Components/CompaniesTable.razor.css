@@ -1,0 +1,456 @@
+.data-grid-container {
+	background: var(--bg-primary, #FFFBF5);
+	border-radius: 12px;
+	padding: 1rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+}
+
+.data-grid-search {
+	margin-bottom: 1rem;
+}
+
+.search-input {
+	width: 100%;
+	padding: 0.75rem;
+	border: 2px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	font-size: 1rem;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	transition: border-color 0.2s;
+	font-family: inherit;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--accent-primary, #8B7355);
+}
+
+::deep .data-grid-scroll {
+	overflow-x: auto;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(139, 115, 85, 0.05);
+}
+
+::deep .data-grid {
+	width: 100%;
+	background: var(--bg-surface, #FAF7F2);
+	border-collapse: collapse;
+}
+
+	::deep .data-grid thead {
+		background: linear-gradient(135deg, rgba(201, 168, 108, 0.1) 0%, rgba(139, 115, 85, 0.1) 100%);
+	}
+
+	::deep .data-grid th {
+		padding: 1rem;
+		text-align: left;
+		font-weight: 600;
+		color: var(--text-primary, #3D3D3D);
+		border-bottom: 2px solid rgba(139, 115, 85, 0.2);
+		font-size: 0.875rem;
+		white-space: nowrap;
+	}
+
+		::deep .data-grid th button {
+			background: none;
+			border: none;
+			color: var(--text-primary, #3D3D3D);
+			font-weight: 600;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0;
+			font-size: 0.875rem;
+		}
+
+			::deep .data-grid th button:hover {
+				color: var(--accent-primary, #C9A86C);
+			}
+
+	::deep .data-grid tbody td {
+		padding: 0.75rem 1rem !important;
+		border-bottom: 1px solid var(--border-color, #E5D5C0);
+		color: var(--text-primary, #3D2E1F);
+		vertical-align: top;
+	}
+
+	::deep .data-grid tbody tr:hover {
+		background: var(--bg-primary, #FFFBF5);
+	}
+
+	::deep .data-grid tbody tr:last-child td {
+		border-bottom: none;
+	}
+
+/* Company Cell */
+.company-cell {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+}
+
+.btn-expand {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 1rem;
+	color: var(--accent-primary, #8B7355);
+	padding: 0.25rem;
+	min-width: 24px;
+	transition: transform 0.2s;
+}
+
+.btn-expand:hover {
+	transform: scale(1.1);
+}
+
+.company-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.company-name {
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary, #3D2E1F);
+}
+
+.company-unp {
+	font-size: 0.85rem;
+	color: var(--text-secondary, #7A7A7A);
+	font-family: monospace;
+}
+
+/* Expanded Content */
+.company-expanded {
+	margin-top: 1rem;
+	padding-left: 2rem;
+	border-left: 3px solid var(--accent-primary, #8B7355);
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.info-section {
+	background: var(--bg-surface, #FAF7F2);
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	padding: 1rem;
+}
+
+.info-section h4 {
+	margin: 0 0 0.75rem 0;
+	font-size: 1rem;
+	color: var(--accent-primary, #8B7355);
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+	padding-bottom: 0.5rem;
+}
+
+.info-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 0.75rem;
+}
+
+.info-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.info-item.full-width {
+	grid-column: 1 / -1;
+}
+
+.info-label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--text-secondary, #7A7A7A);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.info-value {
+	font-size: 0.9rem;
+	color: var(--text-primary, #3D2E1F);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.info-value.location {
+	font-family: monospace;
+	font-size: 0.85rem;
+}
+
+.info-value.bank-number {
+	font-family: monospace;
+	font-weight: 600;
+	color: var(--accent-primary, #8B7355);
+}
+
+.badge {
+	display: inline-block;
+	padding: 0.25rem 0.6rem;
+	border-radius: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.badge-verified {
+	background: #E8F5E9;
+	color: #2E7D32;
+}
+
+.badge-unverified {
+	background: #FFF3E0;
+	color: #F57C00;
+}
+
+.badge-active {
+	background: #E8F5E9;
+	color: #2E7D32;
+}
+
+.badge-inactive {
+	background: #FFEBEE;
+	color: #C62828;
+}
+
+.phone-badge {
+	display: inline-block;
+	padding: 0.25rem 0.6rem;
+	background: var(--bg-primary, #FFFBF5);
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 6px;
+	font-size: 0.85rem;
+	font-family: monospace;
+}
+
+.company-photo {
+	margin-top: 0.5rem;
+	border-radius: 8px;
+	overflow: hidden;
+	max-width: 400px;
+}
+
+.company-photo img {
+	width: 100%;
+	height: auto;
+	display: block;
+	border-radius: 8px;
+}
+
+/* Status Badge */
+.status-badge {
+	display: inline-block;
+	padding: 0.5rem 1rem;
+	border-radius: 6px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.status-active {
+	background: #E8F5E9;
+	color: #2E7D32;
+}
+
+.status-inactive {
+	background: #FFEBEE;
+	color: #C62828;
+}
+
+/* Actions */
+.btn-action {
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 0.85rem;
+	font-weight: 500;
+	transition: all 0.2s;
+	white-space: nowrap;
+}
+
+.btn-activate {
+	background: #E8F5E9;
+	color: #2E7D32;
+}
+
+.btn-activate:hover {
+	background: #2E7D32;
+	color: white;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+}
+
+.btn-deactivate {
+	background: #FFF3E0;
+	color: #F57C00;
+}
+
+.btn-deactivate:hover {
+	background: #F57C00;
+	color: white;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(245, 124, 0, 0.2);
+}
+
+.empty-state {
+	text-align: center;
+	color: var(--text-secondary, #7A7A7A);
+	padding: 2rem 1rem;
+	font-size: 0.95rem;
+}
+
+::deep .data-grid-pagination {
+	margin-top: 1.5rem;
+	display: flex;
+	justify-content: center;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+	::deep .data-grid-container {
+		padding: 0.75rem;
+	}
+
+	.search-input {
+		padding: 0.6rem;
+		font-size: 0.95rem;
+	}
+
+	::deep .data-grid thead th {
+		padding: 0.75rem;
+		font-size: 0.85rem;
+	}
+
+	::deep .data-grid tbody td {
+		padding: 0.6rem 0.75rem !important;
+	}
+
+	.company-name {
+		font-size: 0.95rem;
+	}
+
+	.company-unp {
+		font-size: 0.8rem;
+	}
+
+	.company-expanded {
+		padding-left: 1rem;
+	}
+
+	.info-section {
+		padding: 0.75rem;
+	}
+
+	.info-section h4 {
+		font-size: 0.95rem;
+	}
+
+	.info-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.btn-action {
+		padding: 0.45rem 0.85rem;
+		font-size: 0.8rem;
+	}
+
+	.status-badge {
+		padding: 0.4rem 0.85rem;
+		font-size: 0.8rem;
+	}
+}
+
+@media (max-width: 480px) {
+	::deep .data-grid-container {
+		padding: 0.5rem;
+	}
+
+	.search-input {
+		padding: 0.55rem;
+		font-size: 0.9rem;
+	}
+
+	::deep .data-grid thead th {
+		padding: 0.6rem;
+		font-size: 0.75rem;
+	}
+
+	::deep .data-grid tbody td {
+		padding: 0.5rem !important;
+	}
+
+	.company-cell {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.company-name {
+		font-size: 0.9rem;
+	}
+
+	.company-unp {
+		font-size: 0.75rem;
+	}
+
+	.company-expanded {
+		padding-left: 0.5rem;
+		margin-top: 0.75rem;
+	}
+
+	.info-section {
+		padding: 0.6rem;
+	}
+
+	.info-section h4 {
+		font-size: 0.9rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.info-label {
+		font-size: 0.75rem;
+	}
+
+	.info-value {
+		font-size: 0.85rem;
+	}
+
+	.badge {
+		padding: 0.2rem 0.5rem;
+		font-size: 0.7rem;
+	}
+
+	.phone-badge {
+		padding: 0.2rem 0.5rem;
+		font-size: 0.8rem;
+	}
+
+	.btn-action {
+		padding: 0.4rem 0.75rem;
+		font-size: 0.75rem;
+		width: 100%;
+	}
+
+	.status-badge {
+		padding: 0.35rem 0.75rem;
+		font-size: 0.75rem;
+	}
+
+	.company-photo {
+		max-width: 100%;
+	}
+
+	.empty-state {
+		padding: 1.5rem 0.75rem;
+		font-size: 0.9rem;
+	}
+}

@@ -1,0 +1,149 @@
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using WebWasm.Models
+
+<div class="data-grid-container">
+	<div class="data-grid-search">
+		<input type="text"
+			   placeholder="Search producers, loading places, materials..."
+			   @bind="_searchText"
+			   @bind:event="oninput"
+			   class="search-input" />
+	</div>
+
+	@if (_hasItems)
+	{
+		<div class="data-grid-scroll">
+			<QuickGrid Items="@FilteredProducers" Pagination="@_pagination" class="data-grid">
+				<TemplateColumn Title="Producer" Sortable="false">
+					<div class="producer-cell">
+						<button class="btn-expand" @onclick="() => ToggleProducerExpand(context.Id)">
+							@(IsProducerExpanded(context.Id) ? "▼" : "▶")
+						</button>
+						<div class="producer-info">
+							<div class="producer-name">@context.Name</div>
+							<div class="producer-company">@GetCompanyName(context)</div>
+						</div>
+					</div>
+
+					@if (IsProducerExpanded(context.Id))
+					{
+						<div class="producer-expanded">
+							<!-- Working Hours Section -->
+							<div class="section-header">
+								<button class="btn-section-expand" @onclick="() => ToggleWorkingTimeExpand(context.Id)">
+									@(IsWorkingTimeExpanded(context.Id) ? "▼" : "▶") Working Hours (@context.ProducerWorkingTime.Count)
+								</button>
+							</div>
+
+							@if (IsWorkingTimeExpanded(context.Id) && context.ProducerWorkingTime.Count > 0)
+							{
+								<div class="working-times-table">
+									<table>
+										<thead>
+											<tr>
+												<th>Day</th>
+												<th>Loading Hours</th>
+												<th>Working Hours</th>
+											</tr>
+										</thead>
+										<tbody>
+											@foreach (var wt in context.ProducerWorkingTime.OrderBy(w => w.DayOfWeek))
+											{
+												<tr>
+													<td>@GetDayAbbreviation(wt.DayOfWeek)</td>
+													<td>@wt.StartLoadingHours.ToString("HH:mm") - @wt.EndLoadingHours.ToString("HH:mm")</td>
+													<td>@wt.StartWorkingHours.ToString("HH:mm") - @wt.EndWorkingHours.ToString("HH:mm")</td>
+												</tr>
+											}
+										</tbody>
+									</table>
+								</div>
+							}
+
+							<!-- Loading Places Section -->
+							<div class="section-header">
+								<button class="btn-section-expand" @onclick="() => ToggleLoadingPlacesExpand(context.Id)">
+									@(IsLoadingPlacesExpanded(context.Id) ? "▼" : "▶") Loading Places (@context.LoadingPlaces.Count)
+								</button>
+								<button class="btn-add-place" @onclick="() => OnAddLoadingPlace.InvokeAsync(context)">
+									+ Add Place
+								</button>
+							</div>
+
+							@if (IsLoadingPlacesExpanded(context.Id) && context.LoadingPlaces.Count > 0)
+							{
+								<div class="loading-places-list">
+									@foreach (var place in context.LoadingPlaces)
+									{
+										<div class="loading-place-item">
+											<div class="place-header">
+												<div class="place-main-info">
+													<h5>@place.Name</h5>
+													<span class="place-location">
+														📍 @place.Location.Latitude.ToString("F6"), @place.Location.Longitude.ToString("F6")
+													</span>
+												</div>
+												<div class="place-actions">
+													<button class="btn-action btn-edit" @onclick="() => OnEditLoadingPlace.InvokeAsync((context.Id, place))">
+														✏️ Edit
+													</button>
+													<button class="btn-action btn-delete" @onclick="() => OnDeleteLoadingPlace.InvokeAsync((context.Id, place.Id))">
+														🗑️ Delete
+													</button>
+												</div>
+											</div>
+											<div class="place-details">
+												<div class="detail-item">
+													<span class="detail-label">Cost:</span>
+													<span class="detail-value">$@place.Cost</span>
+												</div>
+												<div class="detail-item">
+													<span class="detail-label">Volume:</span>
+													<span class="detail-value">@place.Volume m³</span>
+												</div>
+												@if (place.MaterialType is not null)
+												{
+													<div class="detail-item material-type">
+														@if (!string.IsNullOrEmpty(place.MaterialType.Photo))
+														{
+															<img src="@place.MaterialType.Photo" alt="@place.MaterialType.Name" class="material-thumb" />
+														}
+														<span class="material-name">@place.MaterialType.Name</span>
+													</div>
+												}
+											</div>
+										</div>
+									}
+								</div>
+							}
+						</div>
+					}
+				</TemplateColumn>
+
+				<TemplateColumn Title="Actions" Sortable="false">
+					<div class="producer-actions">
+						<button class="btn-action btn-edit" @onclick="() => OnEditProducer.InvokeAsync(context)">
+							✏️ Edit
+						</button>
+						<button class="btn-action btn-delete" @onclick="() => OnDeleteProducer.InvokeAsync(context.Id)">
+							🗑️ Delete
+						</button>
+					</div>
+				</TemplateColumn>
+			</QuickGrid>
+		</div>
+
+		@if (_pagination.TotalItemCount.HasValue && _pagination.TotalItemCount.Value > _pagination.ItemsPerPage)
+		{
+			<div class="data-grid-pagination">
+				<CustomPaginator State="@_pagination" />
+			</div>
+		}
+	}
+	else
+	{
+		<div class="empty-state">
+			<p>No producers available</p>
+		</div>
+	}
+</div>
