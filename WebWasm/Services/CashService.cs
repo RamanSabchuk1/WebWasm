@@ -37,8 +37,9 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(Region)] = async _ => await apiClient.Get<JsonElement>("Regions"),
 		[nameof(MaterialType)] = async _ => await apiClient.Get<JsonElement>("MaterialTypes"),
 		[nameof(DeviceToken)] = async _ => await apiClient.Get<JsonElement>("DeviceTokens"),
-		[nameof(Suggestion)] = async _ => await apiClient.Get<JsonElement>("Supports/suggestion/all")
-	};
+		[nameof(Suggestion)] = async _ => await apiClient.Get<JsonElement>("Supports/suggestion/all"),
+		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("/Users")
+    };
 
 	private readonly ConcurrentDictionary<string, CashedInfo> _cachedData = [];
 
@@ -78,7 +79,61 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		return result;
 	}
 
-	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
+	public async ValueTask<UserInfo?> GetUserInfo(bool useCash = true)
+	{
+        var key = nameof(UserInfo);
+        if(!_typeFetch.TryGetValue(key, out var fetchFunc))
+        {
+            toastService.ShowError("Fetch user Info not found");
+			return null;
+        }
+
+        if(!_cachedData.TryGetValue(key, out var cachedInfo))
+        {
+            cachedInfo = new CashedInfo(DateTime.MinValue, default);
+        }
+
+        var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
+        if(DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
+        {
+            try
+            {
+				return cachedInfo.Data.Deserialize<UserInfo>(_serOptions);
+            }
+            catch(Exception ex)
+            {
+                toastService.ShowError($"Failed to deserialize {key}: {ex.Message}");
+                return null;
+            }
+        }
+
+		UserInfo? result = null;
+        await loadingService.ExecuteWithLoading(async () => {
+            try
+            {
+                var response = await fetchFunc(default);
+                var result = response.Deserialize<UserInfo>(_serOptions);
+                if(result is not null)
+                {
+                    cachedInfo = new CashedInfo(DateTime.UtcNow, response);
+                };
+            }
+            catch(Exception ex)
+            {
+                toastService.ShowError($"Failed to load {key}: {ex.Message}");
+            }
+        });
+
+
+        if(cachedInfo is not null)
+        {
+            _cachedData[key] = cachedInfo;
+        }
+
+        return result;
+    }
+
+    private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
 	{
 		T[] result = [];
 		CashedInfo? cashValue = null;
