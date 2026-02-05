@@ -172,3 +172,131 @@
 	.btn-delete:hover {
 		box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
 	}
+
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+	.page-header {
+		margin-bottom: 1.5rem;
+	}
+
+		.page-header h1 {
+			font-size: 1.5rem;
+			margin-bottom: 0.4rem;
+		}
+
+	.page-subtitle {
+		font-size: 0.9rem;
+	}
+
+	.content-card {
+		padding: 1rem;
+	}
+
+	.card-header {
+		margin-bottom: 1rem;
+		padding-bottom: 0.75rem;
+	}
+
+		.card-header h3 {
+			font-size: 1.1rem;
+		}
+
+	.data-grid-container {
+		padding: 0.75rem;
+	}
+
+	.data-grid-search {
+		margin-bottom: 0.75rem;
+	}
+
+	.search-input {
+		padding: 0.6rem;
+		font-size: 0.95rem;
+	}
+
+	::deep .data-grid thead th {
+		padding: 0.8rem;
+		font-size: 0.85rem;
+	}
+
+	::deep .data-grid tbody td {
+		padding: 0.8rem !important;
+		font-size: 0.9rem;
+	}
+
+	.btn-action {
+		padding: 0.4rem 0.8rem;
+		font-size: 0.8rem;
+	}
+
+	.empty-state {
+		padding: 1.5rem 0.75rem;
+		font-size: 0.9rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.page-header {
+		margin-bottom: 1.25rem;
+	}
+
+		.page-header h1 {
+			font-size: 1.25rem;
+		}
+
+	.page-subtitle {
+		font-size: 0.85rem;
+	}
+
+	.content-card {
+		padding: 0.75rem;
+		border-radius: 12px;
+	}
+
+	.card-header {
+		margin-bottom: 0.75rem;
+		padding-bottom: 0.5rem;
+	}
+
+		.card-header h3 {
+			font-size: 1rem;
+		}
+
+	.data-grid-container {
+		padding: 0.5rem;
+	}
+
+	.data-grid-search {
+		margin-bottom: 0.5rem;
+	}
+
+	.search-input {
+		padding: 0.55rem;
+		font-size: 0.9rem;
+	}
+
+	::deep .data-grid thead th {
+		padding: 0.6rem;
+		font-size: 0.8rem;
+	}
+
+	::deep .data-grid tbody td {
+		padding: 0.75rem !important;
+		font-size: 0.8rem;
+	}
+
+	.btn-action {
+		padding: 0.35rem 0.6rem;
+		font-size: 0.75rem;
+	}
+
+	.empty-state {
+		padding: 1.25rem 0.5rem;
+		font-size: 0.85rem;
+	}
+
+	.data-grid-pagination {
+		margin-top: 1rem;
+	}
+}
