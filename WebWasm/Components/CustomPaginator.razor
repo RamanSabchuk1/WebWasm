@@ -1,6 +1,6 @@
 @using Microsoft.AspNetCore.Components.QuickGrid
 
-@if (State != null && State.TotalItemCount > 0)
+@if (State != null && ResolvedTotalItems.HasValue && ResolvedTotalItems.Value > 0)
 {
 	<div class="pagination">
 		<button @onclick="GoToFirstPage" disabled="@(!CanGoToPreviousPage())">

@@ -1,263 +1,430 @@
 ﻿@page "/users"
+@using WebWasm.Models
+@using WebWasm.Services
+@using Microsoft.AspNetCore.Components.QuickGrid
 
 <PageTitle>Users</PageTitle>
 
 <div class="page-header">
-    <h1>👥 Users</h1>
-    <p class="page-subtitle">Manage user accounts and permissions</p>
+	<div>
+		<h1>👥 Users</h1>
+		<p class="page-subtitle">Manage user accounts and permissions</p>
+	</div>
 </div>
 
 <div class="stats-grid">
-    <div class="stat-card">
-        <span class="stat-icon">👤</span>
-        <div class="stat-content">
-            <span class="stat-value">@_users.Length</span>
-            <span class="stat-label">Total Users</span>
-        </div>
-    </div>
-    <div class="stat-card active">
-        <span class="stat-icon">✅</span>
-        <div class="stat-content">
-            <span class="stat-value">@_users.Count(u => u.Status == "Active")</span>
-            <span class="stat-label">Active</span>
-        </div>
-    </div>
-    <div class="stat-card">
-        <span class="stat-icon">🔒</span>
-        <div class="stat-content">
-            <span class="stat-value">@_users.Count(u => u.Role == "Admin")</span>
-            <span class="stat-label">Admins</span>
-        </div>
-    </div>
+	<div class="stat-card">
+		<span class="stat-icon">👤</span>
+		<div class="stat-content">
+			<span class="stat-value">@TotalUsers</span>
+			<span class="stat-label">Total Users</span>
+		</div>
+	</div>
+	<div class="stat-card active">
+		<span class="stat-icon">✅</span>
+		<div class="stat-content">
+			<span class="stat-value">@ActiveUsers</span>
+			<span class="stat-label">Active</span>
+		</div>
+	</div>
+	<div class="stat-card">
+		<span class="stat-icon">🔒</span>
+		<div class="stat-content">
+			<span class="stat-value">@SuperAdminUsers</span>
+			<span class="stat-label">Admins</span>
+		</div>
+	</div>
+	<div class="stat-card">
+		<span class="stat-icon">🚚</span>
+		<div class="stat-content">
+			<span class="stat-value">@DriverCount</span>
+			<span class="stat-label">Drivers</span>
+		</div>
+	</div>
 </div>
 
 <div class="content-card">
-    <div class="card-header">
-        <h3>User List</h3>
-        <button class="btn-primary">+ Add User</button>
-    </div>
-    
-    @if (_users == null || _users.Length == 0)
-    {
-        <p class="empty-state"><em>Loading...</em></p>
-    }
-    else
-    {
-        <div class="table-container">
-            <table class="styled-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in _users)
-                    {
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <span class="user-avatar-sm">@user.Name[0]</span>
-                                    @user.Name
-                                </div>
-                            </td>
-                            <td>@user.Email</td>
-                            <td><span class="badge role-@user.Role.ToLower()">@user.Role</span></td>
-                            <td><span class="status-badge @user.Status.ToLower()">@user.Status</span></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+	<div class="card-header">
+		<h3>User List</h3>
+		<div class="header-actions">
+			<button class="btn-primary" @onclick="OpenCreateUserModal">+ Add User</button>
+			<button class="btn-secondary" @onclick="OpenCreateDriverModal">+ Add Driver</button>
+		</div>
+	</div>
+
+	@if (_users is null)
+	{
+		<p class="empty-state"><em>Loading...</em></p>
+	}
+	else if (_users.Length == 0)
+	{
+		<p class="empty-state">No users registered yet.</p>
+	}
+	else
+	{
+		<div class="table-container">
+			<table class="styled-table">
+				<thead>
+					<tr>
+						<th>Login</th>
+						<th>Roles</th>
+						<th>Status</th>
+						<th>Actions</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					@{
+						var itemsToShow = _users
+							.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage)
+							.Take(_pagination.ItemsPerPage)
+							.ToArray();
+					}
+					@foreach (var user in itemsToShow)
+					{
+						var driver = GetDriver(user);
+						var company = GetCompany(user, driver);
+						var hasCompany = company is not null;
+						<tr>
+							<td>
+								<div class="user-cell">
+									<span>@user.Login</span>
+									@if(driver is not null)
+									{
+										<span>🚚</span>
+									}
+									else
+									{
+										var displayName = GetDisplayName(user.UserInfo);
+										<span>@displayName</span>
+									}
+								</div>
+							</td>
+							<td>
+								<div class="roles-list">
+									@foreach (var role in user.Roles.OrderBy(r => r))
+									{
+										<span class="role-pill">@role</span>
+									}
+								</div>
+							</td>
+							<td>
+								<div class="status-stack">
+									<span class="status-badge @(user.IsActive ? "active" : "inactive")">
+										@(user.IsActive ? "Active" : "Inactive")
+									</span>
+									<span>
+										@(user.UserVerified ? "✅" : "⚠️")
+									</span>
+								</div>
+							</td>
+							<td>
+								<div class="action-buttons">
+									<button class="btn-action @(user.IsActive ? "btn-delete" : "btn-edit")" @onclick="() => ToggleUserActive(user)">
+										@(user.IsActive ? "Deactivate" : "Activate")
+									</button>
+									<button class="btn-action @(user.UserVerified ? "btn-warn" : "btn-edit")" @onclick="() => ToggleUserVerified(user)">
+										@(user.UserVerified ? "Unverify" : "Verify")
+									</button>
+									<button class="btn-action" @onclick="() => OpenRolesModal(user)">Edit Roles</button>
+									@if (driver is not null && hasCompany)
+									{
+										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">+ Slot</button>
+									}
+								</div>
+							</td>
+							<td>
+								@if(driver is not null)
+								{
+									<button class="btn-expand" @onclick="() => ToggleExpanded(user.Id)">
+										@(IsExpanded(user.Id) ? "▼" : "▶")
+									</button>
+                                }
+								else
+								{
+									<button class="btn-expand">
+										⛔
+									</button>
+								}
+							</td>
+						</tr>
+						@if (IsExpanded(user.Id) && driver is not null)
+						{
+							var displayName = GetDisplayName(user.UserInfo);
+							var slots = driver is null ? [] : GetDriverSlots(driver.Id).ToArray();
+							<tr class="details-row">
+								<td colspan="5">
+									<div class="details-grid">
+										<div class="details-section">
+											<h4>User Info</h4>
+											<div class="detail-item">
+												<span class="detail-label">Name</span>
+												<span class="detail-value">@displayName</span>
+											</div>
+											<div class="detail-item">
+												<span class="detail-label">Phone</span>
+												<span class="detail-value">@user.UserInfo.MobilePhone</span>
+											</div>
+										</div>
+										<div class="details-section">
+											<h4>Driver</h4>
+											<div class="driver-details">
+												<div class="driver-avatar-container">
+													@if (!string.IsNullOrWhiteSpace(driver.Photo))
+													{
+														<img src="@driver.Photo" alt="Driver" class="driver-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+														<div class="driver-avatar-fallback" style="display:none;">
+															<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+																<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+															</svg>
+														</div>
+													}
+													else
+													{
+														<div class="driver-avatar-fallback">
+															<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+																<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+															</svg>
+														</div>
+													}
+												</div>
+												<div>
+													<div class="driver-name">@GetDisplayName(driver.UserInfo)</div>
+													@if (company is not null)
+													{
+														<div class="driver-company">@company.LegalName</div>
+													}
+													else
+													{
+														<div class="driver-company text-muted">No company</div>
+													}
+												</div>
+											</div>
+										</div>
+										<div class="details-section">
+											<h4>Available Slots</h4>
+											@if (!hasCompany)
+											{
+												<span class="text-muted">No slots available</span>
+											}
+											else if (!slots.Any())
+											{
+												<span class="text-muted">No slots configured</span>
+											}
+											else
+											{
+												<div class="slot-list">
+													@foreach (var slot in slots)
+													{
+														<span class="slot-pill">@FormatSlot(slot)</span>
+													}
+												</div>
+											}
+										</div>
+									</div>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+
+		@if (_users.Length > _pagination.ItemsPerPage)
+		{
+			<div class="data-grid-pagination">
+				<CustomPaginator State="@_pagination" TotalItems="@_users.Length" AfterNavigate="() => StateHasChanged()" />
+			</div>
+		}
+	}
 </div>
 
-<style>
-    .page-header {
-        margin-bottom: 2rem;
-    }
-    
-    .page-header h1 {
-        margin-bottom: 0.5rem;
-    }
-    
-    .page-subtitle {
-        color: var(--text-secondary, #7A7A7A);
-        margin: 0;
-    }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1.5rem;
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    
-    .stat-icon {
-        font-size: 2rem;
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(201, 168, 108, 0.2) 0%, rgba(139, 115, 85, 0.2) 100%);
-        border-radius: 12px;
-    }
-    
-    .stat-content {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-primary, #3D3D3D);
-    }
-    
-    .stat-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary, #7A7A7A);
-    }
-    
-    .content-card {
-        background: var(--bg-surface, #FAF7F2);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
-    }
-    
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .card-header h3 {
-        margin: 0;
-    }
-    
-    .table-container {
-        overflow-x: auto;
-    }
-    
-    .styled-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .styled-table thead th {
-        text-align: left;
-        padding: 1rem;
-        background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
-        color: white;
-        font-weight: 500;
-    }
-    
-    .styled-table thead th:first-child {
-        border-radius: 12px 0 0 0;
-    }
-    
-    .styled-table thead th:last-child {
-        border-radius: 0 12px 0 0;
-    }
-    
-    .styled-table tbody td {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(139, 115, 85, 0.1);
-    }
-    
-    .styled-table tbody tr:hover {
-        background: rgba(201, 168, 108, 0.08);
-    }
-    
-    .user-cell {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .user-avatar-sm {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-    
-    .badge {
-        padding: 0.375rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .role-admin {
-        background: rgba(139, 115, 85, 0.2);
-        color: #8B7355;
-    }
-    
-    .role-user {
-        background: rgba(201, 168, 108, 0.2);
-        color: #C9A86C;
-    }
-    
-    .status-badge {
-        padding: 0.375rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .status-badge.active {
-        background: rgba(76, 175, 80, 0.2);
-        color: #388E3C;
-    }
-    
-    .status-badge.inactive {
-        background: rgba(158, 158, 158, 0.2);
-        color: #757575;
-    }
-    
-    .empty-state {
-        text-align: center;
-        color: var(--text-secondary, #7A7A7A);
-        padding: 2rem;
-    }
-</style>
+@if (_showCreateUserModal)
+{
+	<div class="modal-overlay" @onclick="CloseCreateUserModal">
+		<div class="modal-container" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>Add User</h2>
+				<button class="btn-close" @onclick="CloseCreateUserModal">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Company *</label>
+					<select class="form-control" @bind="_selectedCompanyId">
+						<option value="">Select company</option>
+						@foreach (var company in _companies.OrderBy(c => c.LegalName))
+						{
+							<option value="@company.Id">@company.LegalName</option>
+						}
+					</select>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>First Name</label>
+						<input class="form-control" @bind="_userFirstName" />
+					</div>
+					<div class="form-group">
+						<label>Middle Name</label>
+						<input class="form-control" @bind="_userMiddleName" />
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Last Name</label>
+						<input class="form-control" @bind="_userLastName" />
+					</div>
+					<div class="form-group">
+						<label>Mobile Phone</label>
+						<input class="form-control" @bind="_userMobilePhone" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label>Roles *</label>
+					<div class="roles-options">
+						@foreach (var role in _roleOptions)
+						{
+							<label class="checkbox">
+								<input type="checkbox" checked="@_selectedRoles.Contains(role)" @onchange="e => ToggleRole(role, e)" />
+								<span>@role</span>
+							</label>
+						}
+					</div>
+				</div>
+				@if (!string.IsNullOrWhiteSpace(_userErrorMessage))
+				{
+					<div class="error-message">⚠️ @_userErrorMessage</div>
+				}
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseCreateUserModal">Cancel</button>
+				<button class="btn-primary" @onclick="CreateUser">Create User</button>
+			</div>
+		</div>
+	</div>
+}
 
-@code {
-    private UserInfo[] _users = [];
+@if (_showCreateDriverModal)
+{
+	<div class="modal-overlay" @onclick="CloseCreateDriverModal">
+		<div class="modal-container" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>Add Driver</h2>
+				<button class="btn-close" @onclick="CloseCreateDriverModal">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Company</label>
+					<select class="form-control" @bind="_selectedDriverCompanyId">
+						<option value="">No company</option>
+						@foreach (var company in _companies.OrderBy(c => c.LegalName))
+						{
+							<option value="@company.Id">@company.LegalName</option>
+						}
+					</select>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>First Name</label>
+						<input class="form-control" @bind="_driverFirstName" />
+					</div>
+					<div class="form-group">
+						<label>Middle Name</label>
+						<input class="form-control" @bind="_driverMiddleName" />
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label>Last Name</label>
+						<input class="form-control" @bind="_driverLastName" />
+					</div>
+					<div class="form-group">
+						<label>Mobile Phone</label>
+						<input class="form-control" @bind="_driverMobilePhone" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label>Photo URL</label>
+					<input class="form-control" @bind="_driverPhoto" />
+				</div>
+				@if (!string.IsNullOrWhiteSpace(_driverErrorMessage))
+				{
+					<div class="error-message">⚠️ @_driverErrorMessage</div>
+				}
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseCreateDriverModal">Cancel</button>
+				<button class="btn-primary" @onclick="CreateDriver">Create Driver</button>
+			</div>
+		</div>
+	</div>
+}
 
-    protected override void OnInitialized()
-    {
-        _users = new UserInfo[]
-        {
-            new("John Smith", "john.smith@example.com", "Admin", "Active"),
-            new("Jane Doe", "jane.doe@example.com", "User", "Active"),
-            new("Mike Johnson", "mike.j@example.com", "User", "Inactive"),
-            new("Sarah Wilson", "sarah.w@example.com", "Admin", "Active"),
-            new("Tom Brown", "tom.b@example.com", "User", "Active")
-        };
-    }
+@if (_showDriverSlotModal)
+{
+	<div class="modal-overlay" @onclick="CloseDriverSlotModal">
+		<div class="modal-container" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>Add Driver Slot</h2>
+				<button class="btn-close" @onclick="CloseDriverSlotModal">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-row">
+					<div class="form-group">
+						<label>Date</label>
+						<input type="date" class="form-control" @bind="_slotDate" />
+					</div>
+					<div class="form-group">
+						<label>Start Time</label>
+						<input type="time" class="form-control" @bind="_slotStartTime" />
+					</div>
+					<div class="form-group">
+						<label>End Time</label>
+						<input type="time" class="form-control" @bind="_slotEndTime" />
+					</div>
+				</div>
+				@if (!string.IsNullOrWhiteSpace(_slotErrorMessage))
+				{
+					<div class="error-message">⚠️ @_slotErrorMessage</div>
+				}
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseDriverSlotModal">Cancel</button>
+				<button class="btn-primary" @onclick="CreateDriverSlot">Create Slot</button>
+			</div>
+		</div>
+	</div>
+}
 
-    public record UserInfo(string Name, string Email, string Role, string Status);
+@if (_showRolesModal)
+{
+	<div class="modal-overlay" @onclick="CloseRolesModal">
+		<div class="modal-container" @onclick:stopPropagation="true">
+			<div class="modal-header">
+				<h2>Edit Roles</h2>
+				<button class="btn-close" @onclick="CloseRolesModal">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Roles</label>
+					<div class="roles-options">
+						@foreach (var role in _roleOptions)
+						{
+							<label class="checkbox">
+								<input type="checkbox" checked="@_roleEditSelection.Contains(role)" @onchange="e => ToggleRoleEdit(role, e)" />
+								<span>@role</span>
+							</label>
+						}
+					</div>
+				</div>
+				@if (!string.IsNullOrWhiteSpace(_rolesErrorMessage))
+				{
+					<div class="error-message">⚠️ @_rolesErrorMessage</div>
+				}
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseRolesModal">Cancel</button>
+				<button class="btn-primary" @onclick="UpdateRoles">Save Roles</button>
+			</div>
+		</div>
+	</div>
 }

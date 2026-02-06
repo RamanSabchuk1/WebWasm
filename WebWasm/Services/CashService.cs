@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text;
 using System.Text.Json;
 using WebWasm.Helpers;
 using WebWasm.Models;
@@ -38,7 +39,8 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(MaterialType)] = async _ => await apiClient.Get<JsonElement>("MaterialTypes"),
 		[nameof(DeviceToken)] = async _ => await apiClient.Get<JsonElement>("DeviceTokens"),
 		[nameof(Suggestion)] = async _ => await apiClient.Get<JsonElement>("Supports/suggestion/all"),
-		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("/Users")
+		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("/Users"),
+		[nameof(DriverSlot)] = async args => await apiClient.Get<JsonElement>($"/Drivers/slots/filter{args as string ?? throw new NotSupportedException()}")
     };
 
 	private readonly ConcurrentDictionary<string, CashedInfo> _cachedData = [];
@@ -167,7 +169,20 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			return new CalculationInfoRequest([.. orders.Select(o => o.Id)]);
 		}
 
-		return null;
+        if(key == nameof(DriverSlot))
+        {
+            var drivers = await GetData<Driver>(useCash);
+			var strBuilder = new StringBuilder("?");
+            for(var i = 0; i < drivers.Length; i++)
+			{
+                var driver = drivers[i];
+				strBuilder.Append(i == 0 ? $"driverIds={driver.Id}" : $"&driverIds={driver.Id}");
+            }
+
+            return strBuilder.ToString();
+        }
+
+        return null;
 	}
 }
 

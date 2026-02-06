@@ -31,7 +31,7 @@
 		@if (_pagination.TotalItemCount.HasValue && _pagination.TotalItemCount.Value > _pagination.ItemsPerPage)
 		{
 			<div class="data-grid-pagination">
-				<CustomPaginator State="@_pagination" />
+				<CustomPaginator State="@_pagination" AfterNavigate="() => StateHasChanged()"/>
 			</div>
 		}
 	}
