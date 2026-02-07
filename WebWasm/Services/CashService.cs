@@ -71,15 +71,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
 		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
-			try
-			{
-				return cachedInfo.Data.Deserialize<T[]>(_serOptions) ?? [];
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Failed to deserialize {key}: {ex.Message}");
-				return [];
-			}
+			return cachedInfo.Data.Deserialize<T[]>(_serOptions) ?? [];
 		}
 
 		var (cashValue, result) = await FetchData<T>(key, fetchFunc, useCash);
@@ -108,15 +100,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
 		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
-			try
-			{
-				return cachedInfo.Data.Deserialize<UserInfo>(_serOptions);
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Failed to deserialize {key}: {ex.Message}");
-				return null;
-			}
+			return cachedInfo.Data.Deserialize<UserInfo>(_serOptions);
 		}
 
 		UserInfo? result = null;
@@ -163,15 +147,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
 		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
-			try
-			{
-				return cachedInfo.Data.Deserialize<CountsInfo>(_serOptions);
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Failed to deserialize {key}: {ex.Message}");
-				return null;
-			}
+			return cachedInfo.Data.Deserialize<CountsInfo>(_serOptions);
 		}
 
 		CountsInfo? result = null;
@@ -249,6 +225,19 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		}
 
 		return null;
+	}
+
+	public static string Stringify(object? args)
+	{
+		if (args is null)
+		{
+			return string.Empty;
+		}
+		return args switch
+		{
+			string str => str,
+			_ => JsonSerializer.Serialize(args, _serOptions)
+		};
 	}
 }
 

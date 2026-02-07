@@ -5,24 +5,29 @@ namespace WebWasm.Pages;
 
 public partial class Home(CashService cashService)
 {
+	public CountsInfo? Info => countsInfo;
 	private CountsInfo? countsInfo;
+
+	int count = 0;
+	protected override async Task OnInitializedAsync()
+	{
+		countsInfo = await cashService.GetCounts();
+		StateHasChanged();
+	}
+
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		if (firstRender)
-		{
-			countsInfo = await cashService.GetCounts();
-			StateHasChanged();
-		}
+		countsInfo = await cashService.GetCounts();
 	}
 
 	private string GetRevenue()
 	{
-		return countsInfo is null ? string.Empty : $"{countsInfo.Turnover:F2} BYN";
+		return Info is null ? string.Empty : $"{Info.Turnover:F2} BYN";
 	}
 
 	private ActivityRecord[] GetActivities()
 	{
-		return countsInfo?.Activities.ToArray() ?? [];
+		return Info?.Activities.ToArray() ?? [];
 	}
 
 	private static string GetDate(ActivityRecord record)
