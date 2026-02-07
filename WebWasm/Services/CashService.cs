@@ -40,14 +40,14 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(MaterialType)] = async _ => await apiClient.Get<JsonElement>("MaterialTypes"),
 		[nameof(DeviceToken)] = async _ => await apiClient.Get<JsonElement>("DeviceTokens"),
 		[nameof(Suggestion)] = async _ => await apiClient.Get<JsonElement>("Supports/suggestion/all"),
-		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("/Users"),
-		[nameof(DriverSlot)] = async args => await apiClient.Get<JsonElement>($"/Drivers/slots/filter{args as string ?? throw new NotSupportedException()}"),
+		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("Users"),
+		[nameof(DriverSlot)] = async args => await apiClient.Get<JsonElement>($"Drivers/slots/filter{args as string ?? throw new NotSupportedException()}"),
 		[nameof(CountsInfo)] = async _ => {
-			var orders = await apiClient.Get<int>("/Counts/orders-today");
-			var users = await apiClient.Get<int>("/Counts/users");
-			var companies = await apiClient.Get<int>("/Counts/companies");
-			var turnover = await apiClient.Get<decimal>("/Counts/turnover");
-			var activities = await apiClient.Get<ActivityRecord[]>("/Counts/activities");
+			var orders = await apiClient.Get<int>("Counts/orders-today");
+			var users = await apiClient.Get<int>("Counts/users");
+			var companies = await apiClient.Get<int>("Counts/companies");
+			var turnover = await apiClient.Get<decimal>("Counts/turnover");
+			var activities = await apiClient.Get<ActivityRecord[]>("Counts/activities");
 			var counts = new CountsInfo(orders, users, companies, turnover, activities);
 			return JsonSerializer.SerializeToElement(counts, _serOptions);
 		}
