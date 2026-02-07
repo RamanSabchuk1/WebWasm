@@ -48,6 +48,7 @@ public partial class Users : ComponentBase
 	private DateOnly _slotDate = DateOnly.FromDateTime(DateTime.Today);
 	private TimeOnly _slotStartTime = new(8, 0);
 	private TimeOnly _slotEndTime = new(17, 0);
+	private readonly List<CreateDriverSlot> _newSlots = [];
 	private string _slotErrorMessage = string.Empty;
 
 	private User? _rolesTargetUser;
@@ -146,6 +147,14 @@ public partial class Users : ComponentBase
 		return $"{date} {start} - {end}";
 	}
 
+	private static string FormatSlot(CreateDriverSlot slot)
+	{
+		var date = slot.WorkingDay.ToString("yyyy-MM-dd");
+		var start = slot.StartTime.ToString("HH:mm");
+		var end = slot.EndTime.ToString("HH:mm");
+		return $"{date} {start} - {end}";
+	}
+
 	private void OpenCreateUserModal()
 	{
 		_userErrorMessage = string.Empty;
@@ -191,13 +200,12 @@ public partial class Users : ComponentBase
 			return;
 		}
 
+		SetInitialSlotTimes(GetDriverSlots(driver.Id));
 		_slotDriverId = driver.Id;
 		_slotCompanyId = company.Id;
-		_slotDate = DateOnly.FromDateTime(DateTime.Today);
-		_slotStartTime = new TimeOnly(8, 0);
-		_slotEndTime = new TimeOnly(17, 0);
 		_slotErrorMessage = string.Empty;
 		_showDriverSlotModal = true;
+		_newSlots.Clear();
 	}
 
 	private void CloseDriverSlotModal()
@@ -337,18 +345,18 @@ public partial class Users : ComponentBase
 			return;
 		}
 
-		if (_slotEndTime <= _slotStartTime)
+		AddNewSlot();
+		if (_newSlots.Count == 0)
 		{
-			_slotErrorMessage = "End time must be after start time.";
+			_slotErrorMessage = "There are now new slots.";
 			return;
 		}
 
-		var createSlot = new CreateDriverSlot(_slotStartTime, _slotEndTime, _slotDate);
 		await LoadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
-				await ApiClient.Post($"/Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", createSlot);
+				await ApiClient.Post($"/Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", _newSlots);
 				ToastService.ShowSuccess("Driver slot created successfully");
 				await LoadData(false);
 				CloseDriverSlotModal();
@@ -358,6 +366,34 @@ public partial class Users : ComponentBase
 				ToastService.ShowError($"Failed to create driver slot: {ex.Message}");
 			}
 		});
+
+		_newSlots.Clear();
+	}
+
+	private void AddNewSlot()
+	{
+		if (_slotDriverId is null || _slotCompanyId is null)
+		{
+			_slotErrorMessage = "Driver and company are required.";
+			return;
+		}
+
+		if (_slotEndTime <= _slotStartTime)
+		{
+			_slotErrorMessage = "End time must be after start time.";
+			return;
+		}
+
+		var now = DateOnly.FromDateTime(DateTime.Now);
+		if (_slotDate < now)
+		{
+			_slotErrorMessage = "Working day cannot be in the past.";
+			return;
+		}
+
+		var newSlot = new CreateDriverSlot(_slotStartTime, _slotEndTime, _slotDate);
+		_newSlots.Add(newSlot);
+		SetInitialSlotTimes([]);
 	}
 
 	private async Task ToggleUserActive(User user)
@@ -425,5 +461,31 @@ public partial class Users : ComponentBase
 				ToastService.ShowError($"Failed to update roles: {ex.Message}");
 			}
 		});
+	}
+
+	private void SetInitialSlotTimes(IEnumerable<DriverSlot> slots)
+	{
+		var now = DateOnly.FromDateTime(DateTime.Now);
+		if (slots.Any())
+		{
+			var lastSlot = slots.MaxBy(s => s.WorkingDay)!;
+			_slotDate = lastSlot.WorkingDay < DateOnly.FromDateTime(DateTime.Now) ? now : lastSlot.WorkingDay.AddDays(1);
+			_slotStartTime = lastSlot.StartTime;
+			_slotEndTime = lastSlot.EndTime;
+
+		}
+		else if(_newSlots.Count > 0)
+		{
+			var lastNewSlot = _newSlots.MaxBy(s => s.WorkingDay)!;
+			_slotDate = lastNewSlot.WorkingDay.AddDays(1);
+			_slotStartTime = lastNewSlot.StartTime;
+			_slotEndTime = lastNewSlot.EndTime;
+		}
+		else
+		{
+			_slotDate = now;
+			_slotStartTime = new TimeOnly(8, 0);
+			_slotEndTime = new TimeOnly(20, 0);
+		}
 	}
 }

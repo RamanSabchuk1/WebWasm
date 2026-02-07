@@ -518,6 +518,14 @@
 	margin-top: 1rem;
 }
 
+.modal-container .action-buttons {
+	padding: 0.5rem;
+}
+
+.modal-container .slot-list {
+	padding: 0.5rem;
+}
+
 @media (max-width: 768px) {
 	.card-header {
 		flex-direction: column;

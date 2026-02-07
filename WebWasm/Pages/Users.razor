@@ -139,7 +139,7 @@
 									<button class="btn-expand" @onclick="() => ToggleExpanded(user.Id)">
 										@(IsExpanded(user.Id) ? "▼" : "▶")
 									</button>
-                                }
+								}
 								else
 								{
 									<button class="btn-expand">
@@ -387,6 +387,20 @@
 					<div class="error-message">⚠️ @_slotErrorMessage</div>
 				}
 			</div>
+
+			<div class="action-buttons">
+				<button class="btn-action" @onclick="() => AddNewSlot()">
+					AddSlot 🎰
+				</button>
+			</div>
+
+			<div class="slot-list">
+				@foreach (var slot in _newSlots)
+				{
+					<span class="slot-pill">Slot: @FormatSlot(slot)</span>
+				}
+			</div>
+
 			<div class="modal-footer">
 				<button class="btn-secondary" @onclick="CloseDriverSlotModal">Cancel</button>
 				<button class="btn-primary" @onclick="CreateDriverSlot">Create Slot</button>
