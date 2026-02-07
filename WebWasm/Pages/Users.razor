@@ -151,7 +151,7 @@
 						@if (IsExpanded(user.Id) && driver is not null)
 						{
 							var displayName = GetDisplayName(user.UserInfo);
-							var slots = driver is null ? [] : GetDriverSlots(driver.Id).ToArray();
+							var slots = GetDriverSlots(driver.Id).ToArray();
 							<tr class="details-row">
 								<td colspan="5">
 									<div class="details-grid">

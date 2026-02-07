@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using WebWasm.Helpers;
 using WebWasm.Models;
+using WebWasm.Pages;
 
 namespace WebWasm.Services;
 
@@ -40,7 +41,16 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(DeviceToken)] = async _ => await apiClient.Get<JsonElement>("DeviceTokens"),
 		[nameof(Suggestion)] = async _ => await apiClient.Get<JsonElement>("Supports/suggestion/all"),
 		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("/Users"),
-		[nameof(DriverSlot)] = async args => await apiClient.Get<JsonElement>($"/Drivers/slots/filter{args as string ?? throw new NotSupportedException()}")
+		[nameof(DriverSlot)] = async args => await apiClient.Get<JsonElement>($"/Drivers/slots/filter{args as string ?? throw new NotSupportedException()}"),
+		[nameof(CountsInfo)] = async _ => {
+			var orders = await apiClient.Get<int>("/Counts/orders-today");
+			var users = await apiClient.Get<int>("/Counts/users");
+			var companies = await apiClient.Get<int>("/Counts/companies");
+			var turnover = await apiClient.Get<decimal>("/Counts/turnover");
+			var activities = await apiClient.Get<ActivityRecord[]>("/Counts/activities");
+			var counts = new CountsInfo(orders, users, companies, turnover, activities);
+			return JsonSerializer.SerializeToElement(counts, _serOptions);
+		}
 	};
 
 	private readonly ConcurrentDictionary<string, CashedInfo> _cachedData = [];
@@ -84,25 +94,25 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 	public async ValueTask<UserInfo?> GetUserInfo(bool useCash = true)
 	{
 		var key = nameof(UserInfo);
-		if(!_typeFetch.TryGetValue(key, out var fetchFunc))
+		if (!_typeFetch.TryGetValue(key, out var fetchFunc))
 		{
 			toastService.ShowError("Fetch user Info not found");
 			return null;
 		}
 
-		if(!_cachedData.TryGetValue(key, out var cachedInfo))
+		if (!_cachedData.TryGetValue(key, out var cachedInfo))
 		{
 			cachedInfo = new CashedInfo(DateTime.MinValue, default);
 		}
 
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
-		if(DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
+		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
 			try
 			{
 				return cachedInfo.Data.Deserialize<UserInfo>(_serOptions);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				toastService.ShowError($"Failed to deserialize {key}: {ex.Message}");
 				return null;
@@ -115,19 +125,75 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			{
 				var response = await fetchFunc(default);
 				var result = response.Deserialize<UserInfo>(_serOptions);
-				if(result is not null)
+				if (result is not null)
 				{
 					cachedInfo = new CashedInfo(DateTime.UtcNow, response);
-				};
+				}
+				;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				toastService.ShowError($"Failed to load {key}: {ex.Message}");
 			}
 		});
 
 
-		if(cachedInfo is not null)
+		if (cachedInfo is not null)
+		{
+			_cachedData[key] = cachedInfo;
+		}
+
+		return result;
+	}
+
+	public async ValueTask<CountsInfo?> GetCounts(bool useCash = true)
+	{
+		var key = nameof(CountsInfo);
+		if (!_typeFetch.TryGetValue(key, out var fetchFunc))
+		{
+			toastService.ShowError("Fetch user Info not found");
+			return null;
+		}
+
+		if (!_cachedData.TryGetValue(key, out var cachedInfo))
+		{
+			cachedInfo = new CashedInfo(DateTime.MinValue, default);
+		}
+
+		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
+		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
+		{
+			try
+			{
+				return cachedInfo.Data.Deserialize<CountsInfo>(_serOptions);
+			}
+			catch (Exception ex)
+			{
+				toastService.ShowError($"Failed to deserialize {key}: {ex.Message}");
+				return null;
+			}
+		}
+
+		CountsInfo? result = null;
+		await loadingService.ExecuteWithLoading(async () => {
+			try
+			{
+				var response = await fetchFunc(default);
+				var result = response.Deserialize<UserInfo>(_serOptions);
+				if (result is not null)
+				{
+					cachedInfo = new CashedInfo(DateTime.UtcNow, response);
+				}
+				;
+			}
+			catch (Exception ex)
+			{
+				toastService.ShowError($"Failed to load {key}: {ex.Message}");
+			}
+		});
+
+
+		if (cachedInfo is not null)
 		{
 			_cachedData[key] = cachedInfo;
 		}
@@ -169,11 +235,11 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			return new CalculationInfoRequest([.. orders.Select(o => o.Id)]);
 		}
 
-		if(key == nameof(DriverSlot))
+		if (key == nameof(DriverSlot))
 		{
 			var drivers = await GetData<Driver>(useCash);
 			var strBuilder = new StringBuilder("?");
-			for(var i = 0; i < drivers.Length; i++)
+			for (var i = 0; i < drivers.Length; i++)
 			{
 				var driver = drivers[i];
 				strBuilder.Append(i == 0 ? $"driverIds={driver.Id}" : $"&driverIds={driver.Id}");
