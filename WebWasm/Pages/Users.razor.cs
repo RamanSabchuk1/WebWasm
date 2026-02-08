@@ -205,7 +205,6 @@ public partial class Users : ComponentBase
 		_slotCompanyId = company.Id;
 		_slotErrorMessage = string.Empty;
 		_showDriverSlotModal = true;
-		_newSlots.Clear();
 	}
 
 	private void CloseDriverSlotModal()
@@ -214,6 +213,7 @@ public partial class Users : ComponentBase
 		_slotErrorMessage = string.Empty;
 		_slotDriverId = null;
 		_slotCompanyId = null;
+		_newSlots.Clear();
 	}
 
 	private void OpenRolesModal(User user)
@@ -396,6 +396,12 @@ public partial class Users : ComponentBase
 		SetInitialSlotTimes([]);
 	}
 
+	private void RemoveNewSlot(CreateDriverSlot slot)
+	{
+		_newSlots.Remove(slot);
+		SetInitialSlotTimes([]);
+	}
+
 	private async Task ToggleUserActive(User user)
 	{
 		var targetState = !user.IsActive;
@@ -463,11 +469,13 @@ public partial class Users : ComponentBase
 		});
 	}
 
-	private void SetInitialSlotTimes(IEnumerable<DriverSlot> slots)
+	private async void SetInitialSlotTimes(IEnumerable<DriverSlot> slots)
 	{
 		var now = DateOnly.FromDateTime(DateTime.Now);
 		if (slots.Any())
 		{
+			var initialSlots = slots.Select(s => new CreateDriverSlot(s.StartTime, s.EndTime, s.WorkingDay));
+			_newSlots.AddRange(initialSlots);
 			var lastSlot = slots.MaxBy(s => s.WorkingDay)!;
 			_slotDate = lastSlot.WorkingDay < DateOnly.FromDateTime(DateTime.Now) ? now : lastSlot.WorkingDay.AddDays(1);
 			_slotStartTime = lastSlot.StartTime;

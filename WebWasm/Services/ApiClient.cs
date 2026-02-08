@@ -3,11 +3,13 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using WebWasm.Components;
+using WebWasm.Helpers;
 
 namespace WebWasm.Services;
 
 public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthStateProvider authStateProvider)
 {
+	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
 	public const string Authorization = nameof(Authorization);
 	private const string Bearer = nameof(Bearer);
 	private const string BaseAddress = "https://kliffort.com/api/dev/";
@@ -31,13 +33,13 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		var response = await client.SendAsync(request);
 
 		await CheckResponseHeader(response, endpoint);
-		return await response.Content.ReadFromJsonAsync<TResponse>() ?? throw new Exception($"Failed to get {endpoint}.");
+		return await response.Content.ReadFromJsonAsync<TResponse>(_jsonOptions) ?? throw new Exception($"Failed to get {endpoint}.");
 	}
 
 	public async ValueTask<TResponse> Post<TRequest, TResponse>(string endpoint, TRequest data)
 	{
 		var response = await PostInternal(endpoint, data);
-		return await response.Content.ReadFromJsonAsync<TResponse>() ?? throw new Exception($"Failed to get {endpoint}.");
+		return await response.Content.ReadFromJsonAsync<TResponse>(_jsonOptions) ?? throw new Exception($"Failed to get {endpoint}.");
 	}
 
 	public async ValueTask Post<TRequest>(string endpoint, TRequest data)
@@ -63,7 +65,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 		var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
 		{
-			Content = JsonContent.Create(data)
+			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
 		};
 
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
@@ -91,7 +93,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 		var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
 		{
-			Content = JsonContent.Create(data)
+			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
 		};
 
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
@@ -147,14 +149,18 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 			var newToken = rawToken is null || rawToken.Length < 10 ? string.Empty : rawToken[7..];
 			if (newToken != string.Empty)
 			{
-				await authStateProvider.MarkUserAsAuthenticated(newToken);
+				var currentToken = await authStateProvider.GetRawJwt();
+				if (currentToken != newToken)
+				{
+					await authStateProvider.MarkUserAsAuthenticated(newToken);
+				}
 			}
 		}
 	}
 
 	private static StringContent CreateJsonContent<T>(T data)
 	{
-		var json = JsonSerializer.Serialize(data);
+		var json = JsonSerializer.Serialize(data, _jsonOptions);
 		return new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 	}
 }

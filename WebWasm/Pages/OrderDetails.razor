@@ -1,0 +1,225 @@
+@page "/orders/{Id:guid}"
+@using WebWasm.Models
+@using WebWasm.Components
+
+<PageTitle>Order Details</PageTitle>
+
+<ConfirmDialog IsOpen="@_isConfirmOpen"
+			   Title="@_confirmTitle"
+			   Message="@_confirmMessage"
+			   OnConfirm="@OnConfirmDialog"
+			   OnCancel="@OnCancelDialog" />
+
+@if (_order == null)
+{
+	<p>Loading details...</p>
+}
+else
+{
+	<div class="page-header">
+		<h1>Order @_order.Name</h1>
+		<p class="page-subtitle">@_order.Id</p>
+	</div>
+
+	<!-- Actions -->
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Management</h3>
+		</div>
+		<div class="controls-row">
+			<button class="btn btn-warning" @onclick="RequestResetPayments">Reset Payments</button>
+			
+			<div class="status-control">
+				<select @bind="_newStatus" class="form-control">
+					@foreach (var status in Enum.GetValues<OrderStatus>())
+					{
+						<option value="@status">@status</option>
+					}
+				</select>
+				<input @bind="_newState" class="form-control" placeholder="State message (optional)" />
+				<button class="btn btn-primary" @onclick="RequestUpdateStatus">Update Status</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Info -->
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Order Information</h3>
+		</div>
+		<div class="info-grid">
+			<div class="info-item"><label>State</label><span>@_order.State</span></div>
+			<div class="info-item"><label>Status</label><span>@_order.Status</span></div>
+			<div class="info-item"><label>Address</label><span>@_order.Address</span></div>
+			<div class="info-item"><label>Cost</label><span>@_order.Cost.ToString("F2") BYN</span></div>
+			<div class="info-item"><label>Created</label><span>@_order.Created</span></div>
+			<div class="info-item"><label>Preferred Delivery</label><span>@_order.PreferredDeliveryTime</span></div>
+			<div class="info-item"><label>Duration</label><span>@_order.Duration</span></div>
+			<div class="info-item"><label>Total Weight</label><span>@_order.TotalWeight</span></div>
+			<div class="info-item"><label>Total Km</label><span>@_order.TotalKm</span></div>
+			<div class="info-item"><label>Region Level</label><span>@_order.RegionLevelId</span></div>
+			<div class="info-item"><label>Loading Place</label><span>@(_order.LoadingPlace?.Name ?? "-")</span></div>
+			<div class="info-item"><label>User</label><span>@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.LastName ?? "")</span></div>
+		</div>
+	</div>
+
+	<!-- Calculation Info -->
+	@if (_calculationInfo != null)
+	{
+		<div class="content-card">
+			<div class="card-header">
+				<h3>Cost Calculation</h3>
+			</div>
+			<div class="info-grid">
+				<div class="info-item"><label>Total Cost</label><span>@_calculationInfo.TotalCost.ToString("F2") BYN</span></div>
+				<div class="info-item"><label>Material Cost</label><span>@_calculationInfo.MaterialCost.ToString("F2") BYN</span></div>
+				<div class="info-item"><label>Commission</label><span>@_calculationInfo.Commission.ToString("F2") BYN</span></div>
+			</div>
+		</div>
+	}
+
+	<!-- Deliveries -->
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Deliveries</h3>
+		</div>
+		@if (_order.Deliveries != null && _order.Deliveries.Any())
+		{
+			<div style="overflow-x: auto;">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>State</th>
+							<th>Cost</th>
+							<th>Weight (Net/Gross)</th>
+							<th>Est. Time</th>
+							<th>Est. Distance</th>
+							<th>Driver</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var d in _order.Deliveries)
+						{
+							<tr>
+								<td data-label="State">@d.State</td>
+								<td data-label="Cost">@d.DeliveryCost.ToString("F2") BYN</td>
+								<td data-label="Weight">@d.NetoWeight / @d.GrossWeight</td>
+								<td data-label="Est. Time">@d.EstimatedTime</td>
+								<td data-label="Est. Distance">@d.EstimatedDistance</td>
+								<td data-label="Driver">
+									@if (d.Driver != null)
+									{
+										 <div>
+											<div>@d.Driver.UserInfo?.FirstName @d.Driver.UserInfo?.LastName</div>
+											@if (d.Driver.Vehicle != null)
+											{
+												<div style="font-size: 0.85em; color: #666;">
+													🚗 @d.Driver.Vehicle.Model <span style="font-family: monospace;">(@d.Driver.Vehicle.RegistrationNumber)</span>
+												</div>
+											}
+										 </div>
+									}
+									else
+									{
+										 <span>-</span>
+									}
+								</td>
+								<td data-label="Action">
+									@if (d.Driver == null)
+									{
+										<div class="accept-form">
+											<select value="@(_selectedCompanies.TryGetValue(d.Id, out var cid) ? cid : Guid.Empty)" 
+													@onchange="@(e => { if(Guid.TryParse(e.Value?.ToString(), out var g)) _selectedCompanies[d.Id] = g; })"
+													class="form-control">
+												<option value="@Guid.Empty">Company...</option>
+												@foreach (var c in _companies)
+												{
+													<option value="@c.Id">@c.LegalName</option>
+												}
+											</select>
+											<select value="@(_selectedDrivers.TryGetValue(d.Id, out var did) ? did : Guid.Empty)" 
+													@onchange="@(e => { if(Guid.TryParse(e.Value?.ToString(), out var g)) _selectedDrivers[d.Id] = g; })"
+													class="form-control">
+												<option value="@Guid.Empty">Driver...</option>
+												@foreach (var dr in _drivers)
+												{
+													<option value="@dr.Id">@GetDriverName(dr)</option>
+												}
+											</select>
+											<button class="btn btn-success btn-sm" 
+													@onclick="() => RequestAcceptDelivery(d.Id, _selectedCompanies.GetValueOrDefault(d.Id), _selectedDrivers.GetValueOrDefault(d.Id))">
+												Accept
+											</button>
+										</div>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		else
+		{
+			<p>No deliveries found.</p>
+		}
+	</div>
+
+	<!-- Transactions -->
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Transactions</h3>
+		</div>
+		@if (_order.Transactions != null && _order.Transactions.Any())
+		{
+			<div style="overflow-x: auto;">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Date</th>
+							<th>Amount</th>
+							<th>Status</th>
+							<th>Method</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var t in _order.Transactions)
+						{
+							<tr>
+								<td data-label="Date">@t.Date</td>
+								<td data-label="Amount">@t.Amount.ToString("F2")</td>
+								<td data-label="Status">@t.Status</td>
+								<td data-label="Method">@t.PaymentMethod</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		else
+		{
+			<p>No transactions found.</p>
+		}
+	</div>
+
+	<!-- Documents -->
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Documents</h3>
+		</div>
+		@if (_order.Documents != null && _order.Documents.Any())
+		{
+			<ul>
+				@foreach (var doc in _order.Documents)
+				{
+					<li><a href="@doc.PathOrId" target="_blank">@doc.FileName</a></li>
+				}
+			</ul>
+		}
+		else
+		{
+			<p>No documents found.</p>
+		}
+	</div>
+}

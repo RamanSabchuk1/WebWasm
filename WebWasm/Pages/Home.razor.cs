@@ -3,39 +3,30 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Home(CashService cashService)
+public partial class Home(CashService cashService, ApiClient api)
 {
-	public CountsInfo? Info => countsInfo;
-	private CountsInfo? countsInfo;
+	private int _ordersTodayCount;
+	private int _usersCount;
+	private int _companiesCount;
+	private decimal _turnover;
+	private ActivityRecord[] _activityRecords = [];
 
-	int count = 0;
 	protected override async Task OnInitializedAsync()
 	{
-		countsInfo = await cashService.GetCounts();
-		StateHasChanged();
+		await LoadData();
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	private async ValueTask LoadData()
 	{
-		countsInfo = await cashService.GetCounts();
+		_activityRecords = await cashService.GetData<ActivityRecord>();
+		_ordersTodayCount = await api.Get<int>("Counts/orders-today");
+		_usersCount = await api.Get<int>("Counts/users");
+		_companiesCount = await api.Get<int>("Counts/companies");
+		_turnover = await api.Get<decimal>("Counts/turnover");
 	}
 
-	private string GetRevenue()
-	{
-		return Info is null ? string.Empty : $"{Info.Turnover:F2} BYN";
-	}
-
-	private ActivityRecord[] GetActivities()
-	{
-		return Info?.Activities.ToArray() ?? [];
-	}
-
-	private static string GetDate(ActivityRecord record)
-	{
-		var date = record.Date.ToString("MM.dd");
-		var start = record.Date.ToString("HH:mm");
-		return $"{date} - {start}";
-	}
+	private string GetRevenue() => $"{_turnover:F2} BYN";
+	private static string GetDate(ActivityRecord record) => record.Date.ToString("MM.dd - HH:mm");
 }
 
 public record CountsInfo(int Orders, int Users, int Companies, decimal Turnover, ICollection<ActivityRecord> Activities);

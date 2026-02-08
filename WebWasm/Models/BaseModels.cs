@@ -19,7 +19,8 @@ public record Level(Guid Id, byte CalculationAlgorithm, LevelType Type, ICollect
 public record LevelInfo(Guid Id, Guid LevelId, Dictionary<uint, PriceInfo> Info);
 public record LoadingPlace(Guid Id, string Name, Location Location, decimal Cost, int Volume, MaterialType? MaterialType, Producer? Producer);
 public record MaterialType(Guid Id, Guid? ParentId, string Name, string Description, string Solidity, string Photo);
-public record Order(Guid Id, string Address, Guid RegionLevelId, double TotalWeight, double TotalKm, decimal Cost, DateTime PreferredDeliveryTime, TimeSpan Duration, Location Location, LoadingPlace? LoadingPlace, string State, OrderStatus Status, UserInfo? UserInfo, DateTime Created, ICollection<Delivery> Deliveries, ICollection<Document> Documents);
+public record Order(Guid Id, string Name, string Address, Guid RegionLevelId, double TotalWeight, double TotalKm, decimal Cost, DateTime PreferredDeliveryTime, TimeSpan Duration, Location Location, LoadingPlace? LoadingPlace, string State, OrderStatus Status, UserInfo? UserInfo, DateTime Created, ICollection<Delivery> Deliveries, ICollection<Transaction> Transactions, ICollection<Document> Documents);
+public record Transaction(Guid Id, decimal Amount, DateTime Date, PaymentMethodType PaymentMethod, PaymentTransactionType Status);
 public record Producer(Guid Id, Company? Company, string Name, ICollection<ProducerWorkingTime> ProducerWorkingTime, ICollection<LoadingPlace> LoadingPlaces);
 public record Region(Guid Id, string Name, ICollection<Level> Levels);
 public record Triangle(Location Point1, Location Point2, Location Point3);
@@ -45,6 +46,12 @@ public record CreateLevel(LevelType Type, byte CalculationAlgorithm, ICollection
 public record CreateUser(Guid CompanyId, string FirstName, string MiddleName, string LastName, string MobilePhone, RoleType[] Roles);
 public record CreateVehicle(string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Guid DriverId);
 public record CreateRegion(string Name);
+public record SetUserNames(string FirstName, string? MiddleName, string LastName)
+{
+	public string FirstName { get; set; } = FirstName;
+	public string? MiddleName { get; set; } = MiddleName;
+	public string LastName { get; set; } = LastName;
+}
 
 public enum LevelType
 {
@@ -72,4 +79,30 @@ public enum OrderStatus
 	Cancelled,
 	Archived,
 	Deleted
+}
+
+public enum PaymentMethodType
+{
+	None,
+	Card,
+	BindCard,
+	TokenizedCard,
+}
+
+public enum PaymentTransactionType
+{
+	None = 0,
+	Completed = 1,
+	Declined = 2,
+	Authorized = 4,
+	PartialRefunded = 5,
+	Voided = 7,
+	Failed = 8,
+	PartialVoided = 9,
+	Recurrent = 10,
+	Refunded = 11,
+	Blocked = 12,
+	Verification = 23,
+	Pending = 24,
+	Cancelled = 25
 }

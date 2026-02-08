@@ -1,49 +1,38 @@
-﻿using WebWasm.Services;
+﻿using WebWasm.Models;
+using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingService, CashService cashService)
+public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingService, CashService cashService, ToastService toastService)
 {
-    private UserInfoModel _userInfo = new();
-    private bool _isSaving = false;
-    private bool _saveSuccess = false;
+	private UserInfo? _userInfo;
+	private SetUserNames _updateUser = new(string.Empty, string.Empty, string.Empty);
 
-    protected override void OnInitialized()
-    {
-        // Load user data (in real app, fetch from API)
-        _userInfo = new UserInfoModel
-        {
-            FirstName = "Admin",
-            LastName = "User",
-            Email = "admin@example.com",
-            Role = "SuperAdmin"
-        };
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadData(true);
+	}
 
-    private async Task HandleSave()
-    {
-        _isSaving = true;
-        _saveSuccess = false;
+	private async Task LoadData(bool useCash)
+	{
+		_userInfo = await cashService.GetUserInfo(useCash);
+		_updateUser = new SetUserNames(_userInfo?.FirstName ?? string.Empty, _userInfo?.MiddleName, _userInfo?.LastName ?? string.Empty);
+		StateHasChanged();
+	}
 
-        // Simulate API call
-        await Task.Delay(500);
-
-        _isSaving = false;
-        _saveSuccess = true;
-
-        // Hide success message after 3 seconds
-        _ = Task.Delay(3000).ContinueWith(_ =>
-        {
-            _saveSuccess = false;
-            InvokeAsync(StateHasChanged);
-        });
-    }
-
-    public class UserInfoModel
-    {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
+	private async Task HandleSave()
+	{
+		await loadingService.ExecuteWithLoading(async () => {
+			try
+			{
+				await apiClient.Put("Users/user-info", _updateUser);
+				await LoadData(false);
+				toastService.ShowSuccess("Company created successfully!");
+			}
+			catch (Exception ex)
+			{
+				toastService.ShowError($"Failed to create company: {ex.Message}");
+			}
+		});
+	}
 }

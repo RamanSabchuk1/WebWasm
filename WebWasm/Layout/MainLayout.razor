@@ -2,38 +2,38 @@
 @inherits LayoutComponentBase
 
 <AuthorizeView>
-    <Authorized>
-        <div class="app-container">
-            <nav class="sidebar">
-                <NavMenu />
-            </nav>
+	<Authorized>
+		<div class="app-container">
+			<nav class="sidebar">
+				<NavMenu />
+			</nav>
 
-            <main class="main-content">
-                <header class="top-header mobile-only">
-                    <div class="header-content">
-                        <div class="brand-title">
-                            <span class="brand-icon">⚡</span>
-                            <span class="brand-text">Admin Panel</span>
-                        </div>
-                        <NavLink href="myuserinfo">
-                            <div class="user-info">
-                                <span class="user-avatar">👤</span>
-                            </div>
-                        </NavLink>
-                    </div>
-                </header>
+			<main class="main-content">
+				<header class="top-header mobile-only">
+					<div class="header-content">
+						<div class="brand-title">
+							<span class="brand-icon">⚡</span>
+							<span class="brand-text">Admin Panel</span>
+						</div>
+						<NavLink href="myuserinfo">
+							<div class="user-info">
+								<span class="user-avatar">👤</span>
+							</div>
+						</NavLink>
+					</div>
+				</header>
 
-                <article class="page-content">
-                    @Body
-                </article>
-            </main>
+				<article class="page-content">
+					@Body
+				</article>
+			</main>
 
-            <nav class="mobile-nav">
-                <NavMenu IsMobile="true" />
-            </nav>
-        </div>
-    </Authorized>
-    <NotAuthorized>
-        <Login />
-    </NotAuthorized>
+			<nav class="mobile-nav">
+				<NavMenu IsMobile="true" />
+			</nav>
+		</div>
+	</Authorized>
+	<NotAuthorized>
+		<Login />
+	</NotAuthorized>
 </AuthorizeView>

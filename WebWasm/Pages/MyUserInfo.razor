@@ -2,67 +2,50 @@
 
 <PageTitle>My Profile</PageTitle>
 
-<div class="profile-container">
-    <div class="profile-card">
-        <div class="profile-header">
-            <div class="profile-avatar">👤</div>
-            <h2>My Profile</h2>
-            <p class="profile-subtitle">Update your personal information</p>
-        </div>
+<div class="content-card">
+	<div class="profile-card">
+		<div class="profile-header">
+			<div class="profile-avatar">👤</div>
+			<h2>My Profile</h2>
+			<p class="profile-subtitle">Update your personal information @_userInfo?.MobilePhone</p>
+		</div>
 
-        <EditForm Model="@_userInfo" OnValidSubmit="HandleSave" class="profile-form">
-            <DataAnnotationsValidator />
-            
-            <div class="form-group">
-                <label for="firstName">First Name</label>
-                <InputText id="firstName" @bind-Value="_userInfo.FirstName" placeholder="Enter first name" class="form-input" />
-                <ValidationMessage For="@(() => _userInfo.FirstName)" />
-            </div>
-            
-            <div class="form-group">
-                <label for="lastName">Last Name</label>
-                <InputText id="lastName" @bind-Value="_userInfo.LastName" placeholder="Enter last name" class="form-input" />
-                <ValidationMessage For="@(() => _userInfo.LastName)" />
-            </div>
+		@if (_userInfo is not null)
+		{
+			<EditForm Model="@_updateUser" OnValidSubmit="HandleSave" class="profile-form">
+				<DataAnnotationsValidator />
+			
+				<div class="form-group">
+					<label for="firstName">First Name</label>
+					<InputText id="firstName" @bind-Value="_updateUser.FirstName" placeholder="Enter first name" class="form-input" />
+					<ValidationMessage For="@(() => _updateUser.FirstName)" />
+				</div>
+			
+				<div class="form-group">
+					<label for="middleName">Middle Name</label>
+					<InputText id="middleName" @bind-Value="_updateUser.MiddleName" placeholder="Enter middle name" class="form-input" />
+					<ValidationMessage For="@(() => _updateUser.MiddleName)" />
+				</div>
 
-            <div class="form-group readonly">
-                <label>Email</label>
-                <div class="readonly-value">@_userInfo.Email</div>
-            </div>
+				<div class="form-group">
+					<label for="lastName">Last Name</label>
+					<InputText id="lastName" @bind-Value="_updateUser.LastName" placeholder="Enter last name" class="form-input" />
+					<ValidationMessage For="@(() => _updateUser.LastName)" />
+				</div>
 
-            <div class="form-group readonly">
-                <label>Role</label>
-                <div class="readonly-value">
-                    <span class="role-badge">@_userInfo.Role</span>
-                </div>
-            </div>
+				<button type="submit" class="save-button">
+					<span>Save Changes</span>
+				</button>
+			</EditForm>
+		}
+	</div>
 
-            @if (_saveSuccess)
-            {
-                <div class="success-message">
-                    <span>👤</span> Profile updated successfully!
-                </div>
-            }
-
-            <button type="submit" class="save-button" disabled="@_isSaving">
-                @if (_isSaving)
-                {
-                    <span>Saving...</span>
-                }
-                else
-                {
-                    <span>Save Changes</span>
-                }
-            </button>
-        </EditForm>
-    </div>
-
-    <div class="notification-section">
-        <PushSubscription />
-    </div>
+	<div class="notification-section">
+		<PushSubscription />
+	</div>
 </div>
 
 
 @code {
-    
+	
 }

@@ -14,21 +14,21 @@
 	<div class="quick-stat-card primary">
 		<span class="quick-stat-icon">📦</span>
 		<div class="quick-stat-info">
-			<span class="quick-stat-value">@Info?.Orders</span>
+			<span class="quick-stat-value">@_ordersTodayCount</span>
 			<span class="quick-stat-label">Orders Today</span>
 		</div>
 	</div>
 	<div class="quick-stat-card">
 		<span class="quick-stat-icon">👥</span>
 		<div class="quick-stat-info">
-			<span class="quick-stat-value">@Info?.Users</span>
+			<span class="quick-stat-value">@_usersCount</span>
 			<span class="quick-stat-label">Total Users</span>
 		</div>
 	</div>
 	<div class="quick-stat-card">
 		<span class="quick-stat-icon">🏢</span>
 		<div class="quick-stat-info">
-			<span class="quick-stat-value">@Info?.Companies</span>
+			<span class="quick-stat-value">@_companiesCount</span>
 			<span class="quick-stat-label">Companies</span>
 		</div>
 	</div>
@@ -71,7 +71,7 @@
 			<h3>Recent Activity</h3>
 		</div>
 		<div class="activity-list">
-			@foreach (var item in GetActivities())
+			@foreach (var item in _activityRecords)
 			{
 				<div class="activity-item">
 					<span class="activity-icon">📇</span>

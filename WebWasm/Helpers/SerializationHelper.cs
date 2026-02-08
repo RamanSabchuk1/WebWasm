@@ -6,14 +6,14 @@ namespace WebWasm.Helpers;
 
 public static class SerializationHelper
 {
-    public static JsonSerializerOptions SerializerOptions() => new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-        Converters =
-        {
-            new JsonStringEnumConverter()
-        }
-    };
+	public static JsonSerializerOptions SerializerOptions() => new()
+	{
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+		PropertyNameCaseInsensitive = true,
+		WriteIndented = true,
+		Converters =
+		{
+			new JsonStringEnumConverter()
+		}
+	};
 }

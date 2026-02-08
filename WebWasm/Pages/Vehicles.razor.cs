@@ -41,7 +41,7 @@ public partial class Vehicles
 	{
 		await LoadingService.ExecuteWithLoading(async () =>
 		{
-            try
+			try
 			{
 				var (companyId, createVehicle) = data;
 				await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
@@ -66,11 +66,11 @@ public partial class Vehicles
 	private async Task ConfirmDelete()
 	{
 		if (_vehicleToDelete == null)
-        {
-            return;
-        }
+		{
+			return;
+		}
 
-        await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
@@ -144,7 +144,7 @@ public partial class Vehicles
 	{
 		if (firstRender)
 		{
-            await LoadData(true);
-        }
-    }
+			await LoadData(true);
+		}
+	}
 }
