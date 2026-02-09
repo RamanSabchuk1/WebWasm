@@ -33,12 +33,6 @@
                         </td>
                         <td>
                             @item.Log.Message
-@*                             @if (item.IsExpanded && HasException(item.Log))
-                            {
-                                <div class="exception-details" @onclick:stopPropagation>
-                                    <pre>@item.Log.Exception</pre>
-                                </div>
-                            } *@
                         </td>
                         <td title="@item.Log.MessageTemplate" @onclick:stopPropagation>
                             <button class="btn-copy" @onclick="() => CopyToClipboard(item.Log.MessageTemplate)">📋</button>
@@ -146,7 +140,7 @@
 
     @@media (max-width: 480px) {
         .exception-details {
-            font-size: 0.2em;
+            font-size: 0.6em;
         }
     }
 </style>
