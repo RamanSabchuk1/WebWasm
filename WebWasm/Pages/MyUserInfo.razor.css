@@ -5,6 +5,10 @@
 	box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
 }
 
+::deep .notification-section{
+	margin-bottom: 1.5rem;
+}
+
 .profile-card {
 	background: var(--bg-surface, #FAF7F2);
 	border-radius: 24px;
@@ -101,6 +105,59 @@
 		opacity: 0.7;
 		cursor: not-allowed;
 	}
+
+.notification-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.notification-item {
+	padding: 12px;
+	border: 1px solid #eee;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.2s;
+	background: white;
+}
+
+	.notification-item:hover {
+		background-color: #f8f9fa;
+		border-color: #dee2e6;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+	}
+
+.note-header {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 6px;
+	font-size: 0.9em;
+}
+
+.note-title {
+	font-weight: 600;
+	color: #2c3e50;
+}
+
+.note-time {
+	color: #95a5a6;
+	font-size: 0.85em;
+}
+
+.note-body {
+	color: #5d6d7e;
+	font-size: 0.95em;
+	line-height: 1.4;
+}
+
+.empty-state {
+	color: #95a5a6;
+	font-style: italic;
+	padding: 20px;
+	text-align: center;
+}
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {

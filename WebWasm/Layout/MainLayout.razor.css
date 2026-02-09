@@ -39,6 +39,12 @@
     align-items: center;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .brand-title {
     display: flex;
     align-items: center;
@@ -53,6 +59,22 @@
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary, #3D3D3D);
+}
+
+.mobile-logs-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: #7A7A7A;
+    text-decoration: none;
+    font-size: 1.25rem;
+    transition: color 0.2s ease;
+}
+
+.mobile-logs-link:hover {
+    color: #8B7355; 
 }
 
 .user-info {

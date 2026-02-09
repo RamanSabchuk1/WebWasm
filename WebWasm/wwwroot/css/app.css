@@ -53,6 +53,22 @@ a:hover, .btn-link:hover {
     color: var(--color-accent);
 }
 
+.logs-btn {
+    padding: 0.875rem 1rem;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logs-btn:hover {
+    background: rgb(220 176 53 / 10%);
+    color: #dcb235;
+}
+
 .btn-primary {
     color: #fff;
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);

@@ -27,7 +27,7 @@ public record Triangle(Location Point1, Location Point2, Location Point3);
 public record UserInfo(Guid Id, string FirstName, string MiddleName, string LastName, string MobilePhone, Company? Company);
 public record Vehicle(Guid Id, Guid DriverId, Guid CompanyId, string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Driver? Driver) { public Driver? Driver { get; set; } = Driver; }
 public record ActivityRecord(string Description, DateTime Date);
-
+public record Log(string Level, string Message, string MessageTemplate, DateTime TimeStamp, string? Exception);
 public record struct ProducerWorkingTime(TimeOnly StartLoadingHours, TimeOnly EndLoadingHours, TimeOnly StartWorkingHours, TimeOnly EndWorkingHours, DayOfWeek DayOfWeek);
 public record struct PriceInfo(decimal MinPrice, decimal PricePerHour, decimal PricePerKm, decimal MaxPrice);
 

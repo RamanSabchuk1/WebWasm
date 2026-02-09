@@ -43,4 +43,29 @@
 	<div class="notification-section">
 		<PushSubscription />
 	</div>
+
+	<div class="content-card">
+		<div class="card-header">
+			<h4>Notification History</h4>
+		</div>
+		@if (_notifications.Any())
+		{
+			<div class="notification-list">
+				@foreach (var note in _notifications)
+				{
+					<div class="notification-item" @onclick="() => NavigateToNotification(note)">
+						<div class="note-header">
+							<span class="note-title">@note.Title</span>
+							<span class="note-time">@note.Timestamp.ToLocalTime().ToString("g")</span>
+						</div>
+						<div class="note-body">@note.Body</div>
+					</div>
+				}
+			</div>
+		}
+		else
+		{
+			<div class="empty-state">No recent notifications</div>
+		}
+	</div>
 </div>

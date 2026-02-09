@@ -76,6 +76,36 @@ window.serviceWorkerInterop = {
 		}
 	},
 
+	getNotifications: function () {
+		return new Promise((resolve, reject) => {
+			const request = indexedDB.open('webwasm-db', 1);
+
+			request.onupgradeneeded = function (event) {
+				const db = event.target.result;
+				if (!db.objectStoreNames.contains('notifications')) {
+					db.createObjectStore('notifications', { keyPath: 'id', autoIncrement: true });
+				}
+			};
+
+			request.onsuccess = function (event) {
+				const db = event.target.result;
+				const transaction = db.transaction(['notifications'], 'readonly');
+				const store = transaction.objectStore('notifications');
+				const getAllRequest = store.getAll();
+
+				getAllRequest.onsuccess = function () {
+					const items = getAllRequest.result.sort((a, b) => {
+						return new Date(b.timestamp) - new Date(a.timestamp);
+					});
+					resolve(items);
+				};
+				getAllRequest.onerror = () => resolve([]);
+			};
+
+			request.onerror = () => resolve([]);
+		});
+	},
+
 	dispose: function () {
 		this.dotNetReference = null;
 	}

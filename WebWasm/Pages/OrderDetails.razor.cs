@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -29,8 +28,6 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private string _confirmTitle = "Confirm Action";
 	private string _confirmMessage = "Are you sure you want to proceed?";
 	private Func<Task>? _pendingAction;
-
-    private LocationMapPicker? _locationPicker;
 
     protected override async Task OnInitializedAsync()
 	{
