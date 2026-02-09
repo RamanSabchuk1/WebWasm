@@ -100,7 +100,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			try
 			{
 				var response = await fetchFunc(default);
-				var result = response.Deserialize<UserInfo>(_serOptions);
+				result = response.Deserialize<UserInfo>(_serOptions);
 				if (result is not null)
 				{
 					cachedInfo = new CashedInfo(DateTime.UtcNow, response);

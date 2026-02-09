@@ -63,6 +63,83 @@ else
 		</div>
 	</div>
 
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Location</h3>
+		</div>
+		<div class="info-grid">
+			@RenderLocation(_order.Location, "Order location")
+			<div class="info-item">
+				@{
+                    var level = _levels.FirstOrDefault(l => l.Id == _order.RegionLevelId);
+					if(level is not null)
+					{
+						<TriangleMap Triangles="@level.Triangles"
+									 LevelType="@level.Type"
+									 ShowTitle="true"
+									 MapHeight="240px" />
+                    }
+				}
+			</div>
+		</div>
+	</div>
+
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Material Information</h3>
+		</div>
+		@if(_order.LoadingPlace?.MaterialType is not null)
+		{
+            var type = _order.LoadingPlace.MaterialType;
+			@if(!string.IsNullOrEmpty(type.Photo))
+			{
+				<div class="info-item full-width">
+					<span class="info-label">Photo:</span>
+					<div class="company-photo">
+						<img src="@type.Photo" alt="@type.Name" />
+					</div>
+				</div>
+			}
+			<div class="info-grid">
+				<div class="info-item"><label>Name</label><span>@type.Name</span></div>
+				<div class="info-item"><label>Description</label><span>@type.Description</span></div>
+				<div class="info-item"><label>Solidity</label><span>@type.Solidity</span></div>
+			</div>
+		}
+	</div>
+
+	<div class="content-card">
+		<div class="card-header">
+			<h3>Provider Information</h3>
+		</div>
+		@if(_order.LoadingPlace?.Producer?.Company?.CompanyInfo is not null)
+		{
+			@if(!string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo))
+			{
+				<div class="info-item full-width">
+					<span class="info-label">Photo:</span>
+					<div class="company-photo">
+						<img src="@_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo" alt="@_order.LoadingPlace.Producer.Company.LegalName" />
+					</div>
+				</div>
+			}
+			<div class="info-grid">
+				<div class="info-item"><label>Legal Type</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.LegalType</span></div>
+				<div class="info-item"><label>Name</label><span>@_order.LoadingPlace.Producer.Company.LegalName</span></div>
+				<div class="info-item"><label>Account</label><span>@_order.LoadingPlace.Producer.Company.BankAccount!.BankNumber @_order.LoadingPlace.Producer.Company.BankAccount?.BIC</span></div>
+				<div class="info-item"><label>Email</label><span>@(string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CorporateEmail) ? "-" : _order.LoadingPlace.Producer.Company.CorporateEmail)</span></div>
+				<div class="info-item"><label>Address</label><span>@_order.LoadingPlace.Producer.Company.LegalAddress</span></div>
+				<div class="info-item"><label>Unp</label><span>@_order.LoadingPlace.Producer.Company.UNP</span></div>
+				<div class="info-item"><label>Producer Name</label><span>@_order.LoadingPlace.Producer.Name</span></div>
+				<div class="info-item"><label>Loading Place</label><span>@_order.LoadingPlace.Name</span></div>
+				<div class="info-item"><label>Cost</label><span>@_order.LoadingPlace.Cost.ToString("F2")</span></div>
+				<div class="info-item"><label>Volume</label><span>@_order.LoadingPlace.Volume</span></div>
+				@RenderLocation(_order.LoadingPlace.Producer.Company.CompanyInfo!.Location, "Provider company Location")
+				@RenderLocation(_order.LoadingPlace.Location, "Loading Place Location")
+			</div>
+		}
+	</div>
+
 	<!-- Calculation Info -->
 	@if (_calculationInfo != null)
 	{
@@ -222,4 +299,17 @@ else
 			<p>No documents found.</p>
 		}
 	</div>
+}
+
+@code {
+	private RenderFragment RenderLocation(Location location, string title) => __builder =>
+	{
+		<div class="info-item">
+			<LocationMapPicker InitialLocation="@location"
+				MapHeight="240px"
+				ShowInputs="false"
+				Title="@title"
+				OnLocationChanged="_ => {}" />
+		</div>		
+	};
 }

@@ -58,7 +58,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 
 	private void NavigateToOrder(Guid id)
 	{
-		navigationManager.NavigateTo($"/orders/{id}");
+		navigationManager.NavigateTo($"orders/{id}");
 	}
 
 	protected override async Task OnInitializedAsync()

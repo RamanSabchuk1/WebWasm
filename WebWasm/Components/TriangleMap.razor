@@ -1,14 +1,21 @@
 @using WebWasm.Models
 @implements IAsyncDisposable
 
-<div class="map-container" style="height: @MapHeight">
-	<div @ref="_mapElement" class="leaflet-map"></div>
+<div class="location-picker-container">
+	@if(ShowTitle)
+	{
+		<p class="map-hint">📍 @LevelType</p>
+	}
+	<div class="map-container" style="height: @MapHeight">
+		<div @ref="_mapElement" class="leaflet-map"></div>
+	</div>
 </div>
 
 @code {
 	[Parameter] public ICollection<Triangle>? Triangles { get; set; }
 	[Parameter] public LevelType LevelType { get; set; }
 	[Parameter] public string MapHeight { get; set; } = "400px";
+	[Parameter] public bool ShowTitle { get; set; } = false;
 
 	private ElementReference _mapElement;
 	private IJSObjectReference? _jsModule;

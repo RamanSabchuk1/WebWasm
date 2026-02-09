@@ -105,6 +105,30 @@
 .btn-success { background-color: #28a745; color: white; }
 .btn-sm { padding: 0.2rem 0.5rem; font-size: 0.8rem; }
 
+.company-photo {
+	margin-top: 0.5rem;
+	border-radius: 8px;
+	overflow: hidden;
+	max-width: 150px;
+}
+
+	.company-photo img {
+		width: 100%;
+		height: auto;
+		display: block;
+		border-radius: 8px;
+	}
+
+.info-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+	.info-item.full-width {
+		grid-column: 1 / -1;
+	}
+
 @media (max-width: 768px) {
 	.status-control {
 		flex-direction: column;

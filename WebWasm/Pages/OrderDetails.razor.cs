@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -14,6 +15,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private CalculationInfo[] _allCalculationInfo = [];
 	private Company[] _companies = [];
 	private Driver[] _drivers = [];
+	private Level[] _levels = [];
 	
 	private Dictionary<Guid, Guid> _selectedCompanies = [];
 	private Dictionary<Guid, Guid> _selectedDrivers = [];
@@ -28,7 +30,9 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private string _confirmMessage = "Are you sure you want to proceed?";
 	private Func<Task>? _pendingAction;
 
-	protected override async Task OnInitializedAsync()
+    private LocationMapPicker? _locationPicker;
+
+    protected override async Task OnInitializedAsync()
 	{
 		await FetchData();
 		await LoadOrder();
@@ -79,7 +83,8 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_companies = await cashService.GetData<Company>();
 		_drivers = await cashService.GetData<Driver>();
 		_allCalculationInfo = await cashService.GetData<CalculationInfo>();
-	}
+		_levels = [.. (await cashService.GetData<Region>()).SelectMany(r => r.Levels)];
+    }
 
 	private void RequestResetPayments()
 	{

@@ -17,7 +17,6 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 	{
 		_userInfo = await cashService.GetUserInfo(useCash);
 		_updateUser = new SetUserNames(_userInfo?.FirstName ?? string.Empty, _userInfo?.MiddleName, _userInfo?.LastName ?? string.Empty);
-		StateHasChanged();
 	}
 
 	private async Task HandleSave()
@@ -27,11 +26,11 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 			{
 				await apiClient.Put("Users/user-info", _updateUser);
 				await LoadData(false);
-				toastService.ShowSuccess("Company created successfully!");
+				toastService.ShowSuccess("User successfully updated!");
 			}
 			catch (Exception ex)
 			{
-				toastService.ShowError($"Failed to create company: {ex.Message}");
+				toastService.ShowError($"Failed to Update user: {ex.Message}");
 			}
 		});
 	}
