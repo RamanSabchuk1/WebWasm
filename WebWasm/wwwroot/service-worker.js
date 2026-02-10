@@ -18,12 +18,15 @@ messaging.onBackgroundMessage(async (payload) => {
 
 	await saveNotification(payload);
 
-	const notificationTitle = payload.notification?.title || 'New Notification';
+	// Fallback to data properties if notification properties are missing (Data-only message support)
+	const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
+	const notificationBody = payload.notification?.body || payload.data?.body || '';
+
 	const notificationOptions = {
-		body: payload.notification?.body || '',
+		body: notificationBody,
 		icon: 'icon-192.png',
 		badge: 'icon-192.png',
-		data: payload.data,
+		data: payload.data, // Ensure data is passed for click handling
 		tag: payload.data?.orderId || payload.data?.tag || 'default',
 		renotify: true
 	};
@@ -36,11 +39,15 @@ self.addEventListener('notificationclick', (event) => {
 	event.notification.close();
 
 	const data = event.notification.data;
-	const action = data?.clickAction;
-	const orderId = data?.orderId;
-	let path = '';
 
-	if ((action === 'OPEN_ORDER_DETAILS' || action === 'OPEN_DELIVERY_DETAILS') && orderId) {
+	// Handle different data structures depending on how the notification was created
+	const action = data?.clickAction || data?.action;
+	const orderId = data?.orderId || data?.id;
+	let path = '/';
+
+	if (data?.url) {
+		path = data.url;
+	} else if ((action === 'OPEN_ORDER_DETAILS' || action === 'OPEN_DELIVERY_DETAILS') && orderId) {
 		path = `orders/${orderId}`;
 	}
 
@@ -59,29 +66,6 @@ self.addEventListener('notificationclick', (event) => {
 			}
 		})
 	);
-});
-
-self.addEventListener('push', (event) => {
-	console.log('[Service Worker] Push event received:', event);
-	
-	if (event.data) {
-		try {
-			const payload = event.data.json();
-			const notificationTitle = payload.notification?.title || 'New Notification';
-			const notificationOptions = {
-				body: payload.notification?.body || '',
-				icon: 'icon-192.png',
-				badge: 'icon-192.png',
-				data: payload.data
-			};
-
-			event.waitUntil(
-				self.registration.showNotification(notificationTitle, notificationOptions)
-			);
-		} catch (e) {
-			console.log('[Service Worker] Push data:', event.data.text());
-		}
-	}
 });
 
 self.addEventListener('fetch', () => { });

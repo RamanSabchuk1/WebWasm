@@ -73,8 +73,7 @@ message$.subscribe(event => {
 		return;
 	}
 
-	const payload = event.data.json ? event.data.json() : event.data;
-	event.waitUntil(onMessage(payload));
+	event.waitUntil(onMessage(event.data));
 });
 
 notificationClick$.subscribe(event => {
@@ -88,12 +87,15 @@ firebaseMessaging.onBackgroundMessage(async (payload) => {
 
 	await saveNotification(payload);
 
-	const notificationTitle = payload.notification?.title || 'New Notification';
+	// Fallback to data properties if notification properties are missing (Data-only message support)
+	const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
+	const notificationBody = payload.notification?.body || payload.data?.body || '';
+
 	const notificationOptions = {
-		body: payload.notification?.body || '',
+		body: notificationBody,
 		icon: 'icon-192.png',
 		badge: 'icon-192.png',
-		data: payload.data,
+		data: payload.data, // Ensure data is passed for click handling
 		tag: payload.data?.orderId || payload.data?.tag || 'firebase-notification',
 		renotify: true
 	};
@@ -195,23 +197,29 @@ async function onFetch(event) {
 		const cache = await caches.open(cacheName);
 		const cachedResponse = await cache.match(event.request);
 
-		// Update cache in background
-		const fetchPromise = fetch(event.request).then(response => {
+		if (cachedResponse) {
+			// Update cache in background, return cached response immediately
+			fetch(event.request).then(response => {
+				if (response.ok) {
+					cache.put(event.request, response.clone());
+				}
+			}).catch(() => {
+				// Ignore network errors for background update
+			});
+			return cachedResponse;
+		}
+
+		// No cache hit — must wait for network
+		try {
+			const response = await fetch(event.request);
 			if (response.ok) {
 				cache.put(event.request, response.clone());
 			}
 			return response;
-		}).catch(() => {
-			// Ignore network errors
-		});
-
-		// Return cached response immediately if available
-		if (cachedResponse) {
-			return cachedResponse;
+		} catch (error) {
+			// Network failed and nothing in cache
+			return new Response('Network error', { status: 408, headers: { 'Content-Type': 'text/plain' } });
 		}
-		
-		// Otherwise wait for network
-		return fetchPromise || fetch(event.request);
 	}
 
 	// For cross-origin requests, network only
@@ -236,15 +244,13 @@ function onMessage(payload) {
 
 async function onNotificationClick(event) {
 	const data = event.notification.data;
-	const action = data?.clickAction;
+	const action = data?.clickAction || data?.action;
 	const orderId = data?.orderId;
-	let path = '';
+	let path = '/';
 
 	if (data?.url) {
 		path = data.url;
-	}
-
-	if ((action === 'OPEN_ORDER_DETAILS' || action === 'OPEN_DELIVERY_DETAILS') && orderId) {
+	} else if ((action === 'OPEN_ORDER_DETAILS' || action === 'OPEN_DELIVERY_DETAILS') && orderId) {
 		path = `orders/${orderId}`;
 	}
 

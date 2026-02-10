@@ -60,6 +60,21 @@ window.serviceWorkerInterop = {
 				});
 			});
 		}
+
+		// Initialize Firebase foreground messaging
+		if (typeof firebase !== 'undefined') {
+			try {
+				const messaging = firebase.messaging();
+				messaging.onMessage((payload) => {
+					console.log('[Interop] Foreground message:', payload);
+					if (this.dotNetReference) {
+						this.dotNetReference.invokeMethodAsync('OnForegroundMessage', payload);
+					}
+				});
+			} catch (e) {
+				console.warn('Firebase messaging initialization failed in interop:', e);
+			}
+		}
 	},
 
 	checkForUpdates: function () {
@@ -71,8 +86,12 @@ window.serviceWorkerInterop = {
 	},
 
 	skipWaiting: function () {
-		if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-			navigator.serviceWorker.controller.postMessage('SKIP_WAITING');
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.ready.then((registration) => {
+				if (registration.waiting) {
+					registration.waiting.postMessage('SKIP_WAITING');
+				}
+			});
 		}
 	},
 
