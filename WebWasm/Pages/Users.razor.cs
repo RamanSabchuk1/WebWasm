@@ -356,7 +356,7 @@ public partial class Users : ComponentBase
 		{
 			try
 			{
-				await ApiClient.Post($"/Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", _newSlots);
+				await ApiClient.Post($"Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", _newSlots);
 				ToastService.ShowSuccess("Driver slot created successfully");
 				await LoadData(false);
 				CloseDriverSlotModal();
