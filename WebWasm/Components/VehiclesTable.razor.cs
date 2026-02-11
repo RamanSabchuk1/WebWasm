@@ -12,19 +12,24 @@ public partial class VehiclesTable
 	[Parameter]
 	public required EventCallback<Vehicle> OnDelete { get; set; }
 
-	private PaginationState _pagination = new() { ItemsPerPage = 10 };
+	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private string _searchText = string.Empty;
 	private readonly HashSet<Guid> _expandedPhotos = [];
 	private readonly HashSet<Guid> _expandedDrivers = [];
 
-	private bool _hasItems = false;
+	private bool HasItems => FilteredVehicles.Any();
 
-	protected override async Task OnInitializedAsync()
-	{
-		await ResetPagination();
-	}
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            await Task.Delay(100);
+            await _pagination.SetCurrentPageIndexAsync(0);
+            StateHasChanged();
+        }
+    }
 
-	private IQueryable<Vehicle> FilteredVehicles
+    private IQueryable<Vehicle> FilteredVehicles
 	{
 		get
 		{
@@ -64,13 +69,5 @@ public partial class VehiclesTable
 		{
 			_expandedDrivers.Add(vehicleId);
 		}
-	}
-
-	private async Task ResetPagination()
-	{
-		var itemCount = Items.Count();
-		_hasItems = itemCount > 0;
-		_pagination.ItemsPerPage = 10;
-		await Task.CompletedTask;
 	}
 }

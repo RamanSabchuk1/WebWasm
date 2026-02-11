@@ -11,7 +11,7 @@
 			   class="search-input" />
 	</div>
 
-	@if (_hasItems)
+	@if (HasItems)
 	{
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredVehicles" Pagination="@_pagination" class="data-grid">
@@ -95,7 +95,7 @@
 			</QuickGrid>
 		</div>
 
-		@if (_pagination.TotalItemCount.HasValue && _pagination.TotalItemCount.Value > _pagination.ItemsPerPage)
+		@if (FilteredVehicles.Count() > _pagination.ItemsPerPage)
 		{
 			<div class="data-grid-pagination">
 				<CustomPaginator State="@_pagination" />
