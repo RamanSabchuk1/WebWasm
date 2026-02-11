@@ -3,13 +3,15 @@ using Microsoft.AspNetCore.Components.QuickGrid;
 
 namespace WebWasm.Components;
 
-public partial class CustomPaginator : ComponentBase
+public partial class CustomPaginator : ComponentBase, IDisposable
 {
 	[Parameter] public PaginationState? State { get; set; }
 	[Parameter] public int? TotalItems { get; set; }
 	[Parameter] public Action? AfterNavigate { get; set; }
 
-    private int? ResolvedTotalItems => TotalItems ?? State?.TotalItemCount;
+	private PaginationState? _previousState;
+
+	private int? ResolvedTotalItems => TotalItems ?? State?.TotalItemCount;
 
 	private int CurrentPage => State != null ? (State.CurrentPageIndex + 1) : 0;
 	private int TotalPages => State != null && ResolvedTotalItems.HasValue
@@ -20,14 +22,37 @@ public partial class CustomPaginator : ComponentBase
 	private bool CanGoToNextPage() => State != null && ResolvedTotalItems.HasValue
 		&& (State.CurrentPageIndex + 1) * State.ItemsPerPage < ResolvedTotalItems.Value;
 
+	protected override void OnParametersSet()
+	{
+		if (State != _previousState)
+		{
+			if (_previousState is not null)
+			{
+				_previousState.TotalItemCountChanged -= OnTotalItemCountChanged;
+			}
+
+			_previousState = State;
+
+			if (State is not null)
+			{
+				State.TotalItemCountChanged += OnTotalItemCountChanged;
+			}
+		}
+	}
+
+	private void OnTotalItemCountChanged(object? sender, int? totalCount)
+	{
+		_ = InvokeAsync(StateHasChanged);
+	}
+
 	private async Task GoToFirstPage()
 	{
 		if (State != null && CanGoToPreviousPage())
 		{
 			await State.SetCurrentPageIndexAsync(0);
-            AfterNavigate?.Invoke();
-        }
-    }
+			AfterNavigate?.Invoke();
+		}
+	}
 
 	private async Task GoToPreviousPage()
 	{
@@ -43,9 +68,9 @@ public partial class CustomPaginator : ComponentBase
 		if (State != null && CanGoToNextPage())
 		{
 			await State.SetCurrentPageIndexAsync(State.CurrentPageIndex + 1);
-            AfterNavigate?.Invoke();
-        }
-    }
+			AfterNavigate?.Invoke();
+		}
+	}
 
 	private async Task GoToLastPage()
 	{
@@ -53,7 +78,15 @@ public partial class CustomPaginator : ComponentBase
 		{
 			var lastPage = TotalPages - 1;
 			await State.SetCurrentPageIndexAsync(lastPage);
-            AfterNavigate?.Invoke();
-        }
-    }
+			AfterNavigate?.Invoke();
+		}
+	}
+
+	public void Dispose()
+	{
+		if (_previousState is not null)
+		{
+			_previousState.TotalItemCountChanged -= OnTotalItemCountChanged;
+		}
+	}
 }

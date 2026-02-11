@@ -230,12 +230,9 @@
 			</table>
 		</div>
 
-		@if (_users.Length > _pagination.ItemsPerPage)
-		{
-			<div class="data-grid-pagination">
-				<CustomPaginator State="@_pagination" TotalItems="@_users.Length" AfterNavigate="() => StateHasChanged()" />
-			</div>
-		}
+		<div class="data-grid-pagination">
+			<CustomPaginator State="@_pagination" TotalItems="@_users.Length" AfterNavigate="() => StateHasChanged()" />
+		</div>
 	}
 </div>
 

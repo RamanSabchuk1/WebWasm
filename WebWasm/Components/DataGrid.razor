@@ -21,7 +21,7 @@
 			</QuickGrid>
 		</div>
 
-		@if (ShowPagination && _pagination.TotalItemCount > _pagination.ItemsPerPage)
+		@if (ShowPagination)
 		{
 			<div class="data-grid-pagination">
 				<CustomPaginator State="@_pagination" />

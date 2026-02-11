@@ -43,14 +43,4 @@ public partial class CompaniesTable : ComponentBase
 	{
 		return $"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}";
 	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await Task.Delay(100);
-			await _pagination.SetCurrentPageIndexAsync(0);
-			StateHasChanged();
-		}
-	}
 }

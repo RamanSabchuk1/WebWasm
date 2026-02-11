@@ -67,6 +67,7 @@ window.serviceWorkerInterop = {
 				const messaging = firebase.messaging();
 				messaging.onMessage((payload) => {
 					console.log('[Interop] Foreground message:', payload);
+					this.saveNotification(payload);
 					if (this.dotNetReference) {
 						this.dotNetReference.invokeMethodAsync('OnForegroundMessage', payload);
 					}
@@ -123,6 +124,56 @@ window.serviceWorkerInterop = {
 
 			request.onerror = () => resolve([]);
 		});
+	},
+
+	saveNotification: function (payload) {
+		try {
+			const request = indexedDB.open('webwasm-db', 1);
+
+			request.onupgradeneeded = function (event) {
+				const db = event.target.result;
+				if (!db.objectStoreNames.contains('notifications')) {
+					db.createObjectStore('notifications', { keyPath: 'id', autoIncrement: true });
+				}
+			};
+
+			request.onsuccess = function (event) {
+				const db = event.target.result;
+				const tx = db.transaction('notifications', 'readwrite');
+				const store = tx.objectStore('notifications');
+
+				const item = {
+					title: payload.notification?.title || payload.data?.title || 'Notification',
+					body: payload.notification?.body || payload.data?.body || '',
+					data: payload.data || null,
+					timestamp: new Date().toISOString(),
+					isRead: false
+				};
+				store.add(item);
+
+				const countReq = store.count();
+				countReq.onsuccess = function () {
+					if (countReq.result > 50) {
+						const keysReq = store.getAllKeys();
+						keysReq.onsuccess = function () {
+							const keys = keysReq.result;
+							const toRemoveCount = keys.length - 40;
+							if (toRemoveCount > 0) {
+								for (let i = 0; i < toRemoveCount; i++) {
+									store.delete(keys[i]);
+								}
+							}
+						};
+					}
+				};
+			};
+
+			request.onerror = function () {
+				console.warn('Failed to open IndexedDB for saving foreground notification');
+			};
+		} catch (e) {
+			console.error('Save foreground notification failed', e);
+		}
 	},
 
 	dispose: function () {

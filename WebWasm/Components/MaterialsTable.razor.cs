@@ -72,13 +72,4 @@ public partial class MaterialsTable : ComponentBase
 		_pendingDeleteId = Guid.Empty;
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await Task.Delay(100);
-			await _pagination.SetCurrentPageIndexAsync(0);
-			StateHasChanged();
-		}
 	}
-}

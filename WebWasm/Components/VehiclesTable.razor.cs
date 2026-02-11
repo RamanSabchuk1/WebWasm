@@ -19,17 +19,7 @@ public partial class VehiclesTable
 
 	private bool HasItems => FilteredVehicles.Any();
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if(firstRender)
-        {
-            await Task.Delay(100);
-            await _pagination.SetCurrentPageIndexAsync(0);
-            StateHasChanged();
-        }
-    }
-
-    private IQueryable<Vehicle> FilteredVehicles
+	private IQueryable<Vehicle> FilteredVehicles
 	{
 		get
 		{

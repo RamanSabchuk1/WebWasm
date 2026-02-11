@@ -40,14 +40,4 @@ public partial class RegionsTable : ComponentBase
 
 		return [.. types.OrderBy(t => t)];
 	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await Task.Delay(100);
-			await _pagination.SetCurrentPageIndexAsync(0);
-			StateHasChanged();
-		}
-	}
 }
