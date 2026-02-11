@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
-		<TargetFramework>net11.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!-- Enable C# preview language features -->
-		<LangVersion>preview</LangVersion>
+		<!--<LangVersion>preview</LangVersion>-->
 		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 
