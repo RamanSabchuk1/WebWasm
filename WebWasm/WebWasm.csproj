@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>net11.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!-- Enable C# preview language features -->
@@ -14,19 +14,25 @@
 		<!-- Optimization settings for size reduction -->
 		<PublishTrimmed>true</PublishTrimmed>
 		<!-- Possible values full, link, copyused, partial -->
-		<TrimMode>partial</TrimMode>
-		<RunAOTCompilation>true</RunAOTCompilation>
-		<WasmStripILAfterAOT>true</WasmStripILAfterAOT>
+		<TrimMode>full</TrimMode>
+		<RunAOTCompilation Condition="'$(PublishDir)' != ''">true</RunAOTCompilation>
+		<WasmStripILAfterAOT Condition="'$(PublishDir)' != ''">true</WasmStripILAfterAOT>
 		<!-- Keep globalization support for proper date/time and number formatting. Set to true to save ~200KB if not needed -->
 		<InvariantGlobalization>true</InvariantGlobalization>
+		<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
 
 		<!-- Enhanced debugging and analysis -->
+		<!--<Configuration>Release</Configuration>-->
+		<!--<DebuggerSupport>false</DebuggerSupport>-->
+		<BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
+		<EventSourceSupport>false</EventSourceSupport>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
 		<SelfContained>false</SelfContained>
 		<DebugType>embedded</DebugType>
 		<DebugSymbols>true</DebugSymbols>
-		<!--<GenerateDocumentationFile>true</GenerateDocumentationFile>-->
-		<!-- Enable stricter code analysis -->
+		<Features>runtime-async=on</Features>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<LangVersion>preview</LangVersion>
 		<AnalysisLevel>latest</AnalysisLevel>
 	</PropertyGroup>
 
@@ -37,12 +43,12 @@
 	<ItemGroup>
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
 		<PackageReference Include="BlazorWasmBrotliLoader.Build" Version="1.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.3" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.3" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.5" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
 	</ItemGroup>
 
 	<ItemGroup>
