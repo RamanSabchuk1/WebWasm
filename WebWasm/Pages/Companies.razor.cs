@@ -66,7 +66,7 @@ public partial class Companies : ComponentBase
 
 		var action = data.IsActive ? "activate" : "deactivate";
 		_confirmTitle = $"Confirm {action.ToUpper()} Company";
-		_confirmMessage = $"Are you sure you want to {action} company '{company.LegalName}'?";
+		_confirmMessage = $"Are you sure you want to {action} company '{company.Name}'?";
 		_confirmAction = async () => await ToggleActiveConfirmed(data.CompanyId, data.IsActive);
 		_showConfirmDialog = true;
 	}

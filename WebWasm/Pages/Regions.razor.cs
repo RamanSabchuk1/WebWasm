@@ -87,7 +87,7 @@ public partial class Regions : ComponentBase
                 }
                 else
                 {
-                    var createRegion = new CreateRegion(regionData.Name);
+                    var createRegion = new CreateRegion(regionData.Name, "");
                     await ApiClient.Post("Regions", createRegion);
                     ToastService.ShowSuccess("Region created successfully!");
                 }

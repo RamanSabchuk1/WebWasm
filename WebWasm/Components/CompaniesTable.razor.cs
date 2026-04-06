@@ -21,10 +21,10 @@ public partial class CompaniesTable : ComponentBase
 			var filtered = string.IsNullOrWhiteSpace(_searchText)
 				? Companies
 				: Companies.Where(c =>
-					c.LegalName.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-					c.UNP.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-					c.CorporateEmail.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-					c.LegalAddress.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+					c.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+					(c.CompanyInfo?.UNP ?? "").Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+					(c.CompanyInfo?.CorporateEmail ?? "").Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+					(c.CompanyInfo?.Address ?? "").Contains(_searchText, StringComparison.OrdinalIgnoreCase)
 				).ToList();
 
 			return filtered.AsQueryable();
@@ -37,10 +37,5 @@ public partial class CompaniesTable : ComponentBase
 	{
 		if (!_expandedCompanies.Remove(id))
 			_expandedCompanies.Add(id);
-	}
-
-	private string FormatTimeSpan(TimeSpan timeSpan)
-	{
-		return $"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}";
 	}
 }

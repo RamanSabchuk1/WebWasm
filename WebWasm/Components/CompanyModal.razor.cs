@@ -9,19 +9,16 @@ public partial class CompanyModal : ComponentBase
 	[Parameter] public EventCallback OnClose { get; set; }
 	[Parameter] public EventCallback<CreateCompany> OnSubmit { get; set; }
 
-	private string _legalName = string.Empty;
-	private string _legalAddress = string.Empty;
+	private string _name = string.Empty;
+	private string _address = string.Empty;
 	private string _corporateEmail = string.Empty;
 	private string _unp = string.Empty;
 	private string _legalType = string.Empty;
 	private string _bankNumber = string.Empty;
 	private string _bic = string.Empty;
 	private string _photo = string.Empty;
+	private double _rebate;
 	private Location? _location;
-	private TimeOnly _startWorkingHours = new TimeOnly(8, 0);
-	private TimeOnly _endWorkingHours = new TimeOnly(17, 0);
-	private List<string> _contactPhones = [];
-	private string _newPhone = string.Empty;
 	private string _errorMessage = string.Empty;
 	private LocationMapPicker? _locationPicker;
 
@@ -35,19 +32,16 @@ public partial class CompanyModal : ComponentBase
 
 	private void ResetForm()
 	{
-		_legalName = string.Empty;
-		_legalAddress = string.Empty;
+		_name = string.Empty;
+		_address = string.Empty;
 		_corporateEmail = string.Empty;
 		_unp = string.Empty;
 		_legalType = string.Empty;
 		_bankNumber = string.Empty;
 		_bic = string.Empty;
 		_photo = string.Empty;
+		_rebate = 0;
 		_location = null;
-		_startWorkingHours = new TimeOnly(8, 0);
-		_endWorkingHours = new TimeOnly(17, 0);
-		_contactPhones = [];
-		_newPhone = string.Empty;
 		_errorMessage = string.Empty;
 	}
 
@@ -56,33 +50,15 @@ public partial class CompanyModal : ComponentBase
 		_location = location;
 	}
 
-	private void AddPhone()
-	{
-		if (!string.IsNullOrWhiteSpace(_newPhone))
-		{
-			_contactPhones.Add(_newPhone.Trim());
-			_newPhone = string.Empty;
-		}
-	}
-
-	private void RemovePhone(int index)
-	{
-		if (index >= 0 && index < _contactPhones.Count)
-		{
-			_contactPhones.RemoveAt(index);
-		}
-	}
-
 	private bool IsValid =>
-		!string.IsNullOrWhiteSpace(_legalName) &&
-		!string.IsNullOrWhiteSpace(_legalAddress) &&
+		!string.IsNullOrWhiteSpace(_name) &&
+		!string.IsNullOrWhiteSpace(_address) &&
 		!string.IsNullOrWhiteSpace(_corporateEmail) &&
 		!string.IsNullOrWhiteSpace(_unp) &&
 		!string.IsNullOrWhiteSpace(_legalType) &&
 		!string.IsNullOrWhiteSpace(_bankNumber) &&
 		!string.IsNullOrWhiteSpace(_bic) &&
-		_location is not null &&
-		_startWorkingHours < _endWorkingHours;
+		_location is not null;
 
 	private async Task HandleSubmit()
 	{
@@ -100,22 +76,16 @@ public partial class CompanyModal : ComponentBase
 
 		var bankAccount = new BankAccount(_bankNumber, _bic);
 
-		// Convert TimeOnly to TimeSpan
-		var startWorkingHours = _startWorkingHours.ToTimeSpan();
-		var endWorkingHours = _endWorkingHours.ToTimeSpan();
-
 		var createCompany = new CreateCompany(
 			_location,
 			bankAccount,
-			startWorkingHours,
-			endWorkingHours,
 			_photo,
-			_contactPhones,
-			_legalName,
-			_legalAddress,
+			_name,
+			_address,
 			_corporateEmail,
 			_unp,
-			_legalType
+			_legalType,
+			_rebate
 		);
 
 		await OnSubmit.InvokeAsync(createCompany);

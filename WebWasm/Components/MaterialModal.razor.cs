@@ -13,15 +13,14 @@ public partial class MaterialModal : ComponentBase
 
 	private string _name = string.Empty;
 	private string _description = string.Empty;
-	private string _solidity = string.Empty;
+	private double _solidity;
 	private string _photo = string.Empty;
 	private string _parentId = string.Empty;
 	private string _errorMessage = string.Empty;
 
 	private bool IsEditMode => EditingMaterial is not null;
 	private bool IsValid => !string.IsNullOrWhiteSpace(_name) 
-		&& !string.IsNullOrWhiteSpace(_description) 
-		&& !string.IsNullOrWhiteSpace(_solidity);
+		&& !string.IsNullOrWhiteSpace(_description);
 
 	// Simplified logic for v0/v1:
 	// - New materials: can only select root materials as parent
@@ -66,7 +65,7 @@ public partial class MaterialModal : ComponentBase
 			parentId,
 			_name.Trim(),
 			_description.Trim(),
-			_solidity.Trim(),
+			_solidity,
 			_photo.Trim()
 		);
 
@@ -84,7 +83,7 @@ public partial class MaterialModal : ComponentBase
 	{
 		_name = string.Empty;
 		_description = string.Empty;
-		_solidity = string.Empty;
+		_solidity = 0;
 		_photo = string.Empty;
 		_parentId = string.Empty;
 		_errorMessage = string.Empty;

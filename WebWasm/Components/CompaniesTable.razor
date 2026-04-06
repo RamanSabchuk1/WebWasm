@@ -20,8 +20,8 @@
 							@(IsExpanded(context.Id) ? "▼" : "▶")
 						</button>
 						<div class="company-info">
-							<div class="company-name">@context.LegalName</div>
-							<div class="company-unp">UNP: @context.UNP</div>
+							<div class="company-name">@context.Name</div>
+							<div class="company-unp">UNP: @context.CompanyInfo?.UNP</div>
 						</div>
 					</div>
 
@@ -33,22 +33,12 @@
 								<h4>Company Information</h4>
 								<div class="info-grid">
 									<div class="info-item">
-										<span class="info-label">Legal Address:</span>
-										<span class="info-value">@context.LegalAddress</span>
+										<span class="info-label">Address:</span>
+										<span class="info-value">@context.CompanyInfo?.Address</span>
 									</div>
 									<div class="info-item">
 										<span class="info-label">Corporate Email:</span>
-										<span class="info-value">
-											@context.CorporateEmail
-											@if (context.EmailVerified)
-											{
-												<span class="badge badge-verified">✓ Verified</span>
-											}
-											else
-											{
-												<span class="badge badge-unverified">✗ Not Verified</span>
-											}
-										</span>
+										<span class="info-value">@context.CompanyInfo?.CorporateEmail</span>
 									</div>
 									<div class="info-item">
 										<span class="info-label">Status:</span>
@@ -62,6 +52,10 @@
 												<span class="badge badge-inactive">Inactive</span>
 											}
 										</span>
+									</div>
+									<div class="info-item">
+										<span class="info-label">Rebate:</span>
+										<span class="info-value">@context.Rebate</span>
 									</div>
 								</div>
 							</div>
@@ -79,62 +73,44 @@
 										<div class="info-item">
 											<span class="info-label">Location:</span>
 											<span class="info-value location">
-												📍 @context.CompanyInfo.Location.Latitude.ToString("F6"), @context.CompanyInfo.Location.Longitude.ToString("F6")
+												📍 @context.Location.Latitude.ToString("F6"), @context.Location.Longitude.ToString("F6")
 											</span>
 										</div>
-										<div class="info-item">
-											<span class="info-label">Working Hours:</span>
-											<span class="info-value">
-												@FormatTimeSpan(context.CompanyInfo.StartWorkingHours) - @FormatTimeSpan(context.CompanyInfo.EndWorkingHours)
-											</span>
-										</div>
-										@if (context.CompanyInfo.ContactPhones.Count > 0)
-										{
-											<div class="info-item">
-												<span class="info-label">Contact Phones:</span>
-												<span class="info-value">
-													@foreach (var phone in context.CompanyInfo.ContactPhones)
-													{
-														<span class="phone-badge">📞 @phone</span>
-													}
-												</span>
-											</div>
-										}
 										@if (!string.IsNullOrEmpty(context.CompanyInfo.Photo))
 										{
 											<div class="info-item full-width">
 												<span class="info-label">Photo:</span>
 												<div class="company-photo">
-													<img src="@context.CompanyInfo.Photo" alt="@context.LegalName" />
+													<img src="@context.CompanyInfo.Photo" alt="@context.Name" />
 												</div>
 											</div>
 										}
 									</div>
 								</div>
-							}
 
-							<!-- Bank Account Section -->
-							@if (context.BankAccount is not null)
-							{
-								<div class="info-section">
-									<h4>Bank Account</h4>
-									<div class="info-grid">
-										<div class="info-item">
-											<span class="info-label">Bank Number:</span>
-											<span class="info-value bank-number">@context.BankAccount.BankNumber</span>
-										</div>
-										<div class="info-item">
-											<span class="info-label">BIC:</span>
-											<span class="info-value">@context.BankAccount.BIC</span>
+								<!-- Bank Account Section -->
+								@if (context.CompanyInfo.BankAccount is not null)
+								{
+									<div class="info-section">
+										<h4>Bank Account</h4>
+										<div class="info-grid">
+											<div class="info-item">
+												<span class="info-label">Bank Number:</span>
+												<span class="info-value bank-number">@context.CompanyInfo.BankAccount.BankNumber</span>
+											</div>
+											<div class="info-item">
+												<span class="info-label">BIC:</span>
+												<span class="info-value">@context.CompanyInfo.BankAccount.BIC</span>
+											</div>
 										</div>
 									</div>
-								</div>
+								}
 							}
 						</div>
 					}
 				</TemplateColumn>
 
-				<PropertyColumn Property="@(c => c.CorporateEmail)" Title="Email" Sortable="true" />
+				<PropertyColumn Property="@(c => c.CompanyInfo != null ? c.CompanyInfo.CorporateEmail : "")" Title="Email" Sortable="true" />
 
 				<TemplateColumn Title="Status" Sortable="false">
 					@if (context.IsActive)

@@ -62,7 +62,7 @@ public partial class ProducersTable : ComponentBase
 
 	private string GetCompanyName(Producer producer)
 	{
-		return producer.Company?.LegalName ?? "(No Company)";
+		return producer.Company?.Name ?? "(No Company)";
 	}
 
 	private string GetDayAbbreviation(DayOfWeek day) => day switch

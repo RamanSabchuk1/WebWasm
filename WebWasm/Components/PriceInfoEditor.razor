@@ -27,7 +27,7 @@
 								{
 									<span class="entry-status-error">⚠️</span>
 								}
-								else if (entry.MinPrice > 0 || entry.PricePerHour > 0 || entry.PricePerKm > 0 || entry.MaxPrice > 0)
+								else if (entry.MinPrice > 0 || entry.MaxPrice > 0)
 								{
 									<span class="entry-status-ok">✓</span>
 								}
@@ -56,28 +56,6 @@
 										<input type="number"
 											   class="form-control"
 											   @bind="entry.MinPrice"
-											   @bind:event="onchange"
-											   step="0.01"
-											   min="0"
-											   placeholder="0.00" />
-									</div>
-
-									<div class="price-field">
-										<label>Price Per Hour *</label>
-										<input type="number"
-											   class="form-control"
-											   @bind="entry.PricePerHour"
-											   @bind:event="onchange"
-											   step="0.01"
-											   min="0"
-											   placeholder="0.00" />
-									</div>
-
-									<div class="price-field">
-										<label>Price Per KM *</label>
-										<input type="number"
-											   class="form-control"
-											   @bind="entry.PricePerKm"
 											   @bind:event="onchange"
 											   step="0.01"
 											   min="0"

@@ -192,7 +192,7 @@
 													<div class="driver-name">@GetDisplayName(driver.UserInfo)</div>
 													@if (company is not null)
 													{
-														<div class="driver-company">@company.LegalName</div>
+														<div class="driver-company">@company.Name</div>
 													}
 													else
 													{
@@ -249,16 +249,16 @@
 					<label>Company *</label>
 					<select class="form-control" @bind="_selectedCompanyId">
 						<option value="">Select company</option>
-						@foreach (var company in _companies.OrderBy(c => c.LegalName))
-						{
-							<option value="@company.Id">@company.LegalName</option>
-						}
-					</select>
-				</div>
-				<div class="form-row">
-					<div class="form-group">
-						<label>First Name</label>
-						<input class="form-control" @bind="_userFirstName" />
+								@foreach (var company in _companies.OrderBy(c => c.Name))
+								{
+									<option value="@company.Id">@company.Name</option>
+								}
+							</select>
+						</div>
+						<div class="form-row">
+							<div class="form-group">
+								<label>First Name</label>
+								<input class="form-control" @bind="_userFirstName" />
 					</div>
 					<div class="form-group">
 						<label>Middle Name</label>
@@ -313,16 +313,16 @@
 					<label>Company</label>
 					<select class="form-control" @bind="_selectedDriverCompanyId">
 						<option value="">No company</option>
-						@foreach (var company in _companies.OrderBy(c => c.LegalName))
-						{
-							<option value="@company.Id">@company.LegalName</option>
-						}
-					</select>
-				</div>
-				<div class="form-row">
-					<div class="form-group">
-						<label>First Name</label>
-						<input class="form-control" @bind="_driverFirstName" />
+								@foreach (var company in _companies.OrderBy(c => c.Name))
+								{
+									<option value="@company.Id">@company.Name</option>
+								}
+							</select>
+						</div>
+						<div class="form-row">
+							<div class="form-group">
+								<label>First Name</label>
+								<input class="form-control" @bind="_driverFirstName" />
 					</div>
 					<div class="form-group">
 						<label>Middle Name</label>

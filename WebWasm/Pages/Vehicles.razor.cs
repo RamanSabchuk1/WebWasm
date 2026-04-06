@@ -109,18 +109,19 @@ public partial class Vehicles
 					userDict.TryGetValue(driver.UserInfo.Id, out var user))
 				{
 					enrichedDriver = new Driver(
-						driver.Id,
-						driver.Photo,
-						vehicle,
-						new UserInfo(
-							driver.UserInfo.Id,
-							user.UserInfo.FirstName,
-							user.UserInfo.MiddleName,
-							user.UserInfo.LastName,
-							user.UserInfo.MobilePhone,
-							driver.UserInfo.Company
-						)
-					);
+							driver.Id,
+							driver.Photo,
+							[vehicle],
+							new UserInfo(
+								driver.UserInfo.Id,
+								user.UserInfo.FirstName,
+								user.UserInfo.MiddleName,
+								user.UserInfo.LastName,
+								user.UserInfo.MobilePhone,
+								user.IsActive,
+								driver.UserInfo.Company
+							)
+						);
 				}
 
 				// Create new vehicle instance with mapped driver

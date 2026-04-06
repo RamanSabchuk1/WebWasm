@@ -119,22 +119,22 @@ else
 				<div class="info-item full-width">
 					<span class="info-label">Photo:</span>
 					<div class="company-photo">
-						<img src="@_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo" alt="@_order.LoadingPlace.Producer.Company.LegalName" />
+						<img src="@_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo" alt="@_order.LoadingPlace.Producer.Company.Name" />
 					</div>
 				</div>
 			}
 			<div class="info-grid">
 				<div class="info-item"><label>Legal Type</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.LegalType</span></div>
-				<div class="info-item"><label>Name</label><span>@_order.LoadingPlace.Producer.Company.LegalName</span></div>
-				<div class="info-item"><label>Account</label><span>@_order.LoadingPlace.Producer.Company.BankAccount!.BankNumber @_order.LoadingPlace.Producer.Company.BankAccount?.BIC</span></div>
-				<div class="info-item"><label>Email</label><span>@(string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CorporateEmail) ? "-" : _order.LoadingPlace.Producer.Company.CorporateEmail)</span></div>
-				<div class="info-item"><label>Address</label><span>@_order.LoadingPlace.Producer.Company.LegalAddress</span></div>
-				<div class="info-item"><label>Unp</label><span>@_order.LoadingPlace.Producer.Company.UNP</span></div>
+				<div class="info-item"><label>Name</label><span>@_order.LoadingPlace.Producer.Company.Name</span></div>
+				<div class="info-item"><label>Account</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.BankAccount.BankNumber @_order.LoadingPlace.Producer.Company.CompanyInfo?.BankAccount.BIC</span></div>
+				<div class="info-item"><label>Email</label><span>@(string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo?.CorporateEmail) ? "-" : _order.LoadingPlace.Producer.Company.CompanyInfo.CorporateEmail)</span></div>
+				<div class="info-item"><label>Address</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo?.Address</span></div>
+				<div class="info-item"><label>Unp</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo?.UNP</span></div>
 				<div class="info-item"><label>Producer Name</label><span>@_order.LoadingPlace.Producer.Name</span></div>
 				<div class="info-item"><label>Loading Place</label><span>@_order.LoadingPlace.Name</span></div>
 				<div class="info-item"><label>Cost</label><span>@_order.LoadingPlace.Cost.ToString("F2")</span></div>
 				<div class="info-item"><label>Volume</label><span>@_order.LoadingPlace.Volume</span></div>
-				@RenderLocation(_order.LoadingPlace.Producer.Company.CompanyInfo!.Location, "Provider company Location")
+				@RenderLocation(_order.LoadingPlace.Producer.Company.Location, "Provider company Location")
 				@RenderLocation(_order.LoadingPlace.Location, "Loading Place Location")
 			</div>
 		}
@@ -169,8 +169,6 @@ else
 							<th>State</th>
 							<th>Cost</th>
 							<th>Weight (Net/Gross)</th>
-							<th>Est. Time</th>
-							<th>Est. Distance</th>
 							<th>Driver</th>
 							<th>Action</th>
 						</tr>
@@ -182,17 +180,16 @@ else
 								<td data-label="State">@d.State</td>
 								<td data-label="Cost">@d.DeliveryCost.ToString("F2") BYN</td>
 								<td data-label="Weight">@d.NetoWeight / @d.GrossWeight</td>
-								<td data-label="Est. Time">@d.EstimatedTime</td>
-								<td data-label="Est. Distance">@d.EstimatedDistance</td>
 								<td data-label="Driver">
 									@if (d.Driver != null)
 									{
 										 <div>
 											<div>@d.Driver.UserInfo?.FirstName @d.Driver.UserInfo?.LastName</div>
-											@if (d.Driver.Vehicle != null)
+											@{ var driverVehicle = d.Driver.Vehicles?.FirstOrDefault(); }
+											@if (driverVehicle != null)
 											{
 												<div style="font-size: 0.85em; color: #666;">
-													🚗 @d.Driver.Vehicle.Model <span style="font-family: monospace;">(@d.Driver.Vehicle.RegistrationNumber)</span>
+													🚗 @driverVehicle.Model <span style="font-family: monospace;">(@driverVehicle.RegistrationNumber)</span>
 												</div>
 											}
 										 </div>
@@ -212,7 +209,7 @@ else
 												<option value="@Guid.Empty">Company...</option>
 												@foreach (var c in _companies)
 												{
-													<option value="@c.Id">@c.LegalName</option>
+													<option value="@c.Id">@c.Name</option>
 												}
 											</select>
 											<select value="@(_selectedDrivers.TryGetValue(d.Id, out var did) ? did : Guid.Empty)" 
@@ -277,26 +274,6 @@ else
 		else
 		{
 			<p>No transactions found.</p>
-		}
-	</div>
-
-	<!-- Documents -->
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Documents</h3>
-		</div>
-		@if (_order.Documents != null && _order.Documents.Any())
-		{
-			<ul>
-				@foreach (var doc in _order.Documents)
-				{
-					<li><a href="@doc.PathOrId" target="_blank">@doc.FileName</a></li>
-				}
-			</ul>
-		}
-		else
-		{
-			<p>No documents found.</p>
 		}
 	</div>
 }

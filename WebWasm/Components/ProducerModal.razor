@@ -29,7 +29,7 @@
 						<option value="">No Company</option>
 						@foreach (var company in Companies)
 						{
-							<option value="@company.Id">@company.LegalName</option>
+							<option value="@company.Id">@company.Name</option>
 						}
 					</select>
 					@if (IsEditMode)

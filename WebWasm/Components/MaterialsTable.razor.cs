@@ -29,7 +29,7 @@ public partial class MaterialsTable : ComponentBase
 				: Materials.Where(m =>
 					m.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
 					m.Description.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-					m.Solidity.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+					m.Solidity.ToString().Contains(_searchText, StringComparison.OrdinalIgnoreCase)
 				).ToList();
 
 			// Only show root items (no parent) for pagination

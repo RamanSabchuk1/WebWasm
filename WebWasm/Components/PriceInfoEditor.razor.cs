@@ -17,8 +17,6 @@ public partial class PriceInfoEditor : ComponentBase
 	{
 		public uint Key { get; set; }
 		public decimal MinPrice { get; set; }
-		public decimal PricePerHour { get; set; }
-		public decimal PricePerKm { get; set; }
 		public decimal MaxPrice { get; set; }
 		public string Error { get; set; } = string.Empty;
 
@@ -30,7 +28,7 @@ public partial class PriceInfoEditor : ComponentBase
 				return false;
 			}
 
-			if (MinPrice < 0 || PricePerHour < 0 || PricePerKm < 0 || MaxPrice < 0)
+			if (MinPrice < 0 || MaxPrice < 0)
 			{
 				Error = "All prices must be >= 0";
 				return false;
@@ -48,7 +46,7 @@ public partial class PriceInfoEditor : ComponentBase
 
 		public PriceInfo ToPriceInfo()
 		{
-			return new PriceInfo(MinPrice, PricePerHour, PricePerKm, MaxPrice);
+			return new PriceInfo(MinPrice, MaxPrice);
 		}
 	}
 
@@ -79,14 +77,12 @@ public partial class PriceInfoEditor : ComponentBase
 			foreach (var kvp in ExistingPrices)
 			{
 				_entries.Add(new PriceEntryModel
-				{
-					Key = kvp.Key,
-					MinPrice = kvp.Value.MinPrice,
-					PricePerHour = kvp.Value.PricePerHour,
-					PricePerKm = kvp.Value.PricePerKm,
-					MaxPrice = kvp.Value.MaxPrice,
-					Error = string.Empty
-				});
+					{
+						Key = kvp.Key,
+						MinPrice = kvp.Value.MinPrice,
+						MaxPrice = kvp.Value.MaxPrice,
+						Error = string.Empty
+					});
 			}
 			// Expand first entry for convenience
 			_expandedIndex = 0;
