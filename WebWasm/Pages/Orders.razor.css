@@ -172,28 +172,53 @@
 	white-space: nowrap;
 }
 
-.badge-progress {
-	background: #FFF3E0;
-	color: #F57C00;
+.badge-completed {
+	background: #357e31;
+	color: #e4f5e3;
 }
 
-.badge-completed {
-	background: #E8F5E9;
-	color: #2E7D32;
+.badge-cancelled {
+	background: #b15d46;
+	color: #9fb1a0;
 }
 
 .badge-draft {
-	background: #FFEBEE;
-	color: #C62828;
+	background: #383737;
+	color: #eba6a6;
+}
+
+.badge-waiting-approve {
+	background: #d36c17;
+	color: #f3dc7f;
+}
+
+.badge-waiting-payment {
+	background: #ec590f;
+	color: #f3c598;
+}
+
+.badge-active {
+	background: #289833;
+	color: #b9eaf5;
+}
+
+.badge-corrupted {
+	background: #c93850;
+	color: #de81d8;
+}
+
+.badge-archived {
+	background: #4b373a;
+	color: #9f9999;
 }
 
 .badge-deleted {
-	background: #FFEBEE;
-	color: #C62828;
+	background: #631d7e;
+	color: #cacaca;
 }
 
-.badge-warning {
-	background: #FFF3E0;
+.badge-progress {
+	background: #e2d2c1;
 	color: #F57C00;
 }
 

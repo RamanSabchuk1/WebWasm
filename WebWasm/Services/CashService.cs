@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using WebWasm.Helpers;
@@ -7,6 +8,8 @@ using WebWasm.Pages;
 
 namespace WebWasm.Services;
 
+[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "All types are registered in AppJsonSerializerContext")]
+[UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "All types are registered in AppJsonSerializerContext")]
 public class CashService(ApiClient apiClient, ToastService toastService, LoadingService loadingService)
 {
 	private static readonly JsonSerializerOptions _serOptions = SerializationHelper.SerializerOptions();
@@ -41,7 +44,6 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(DeviceToken)] = async _ => await apiClient.Get<JsonElement>("DeviceTokens"),
 		[nameof(Suggestion)] = async _ => await apiClient.Get<JsonElement>("Supports/suggestion/all"),
 		[nameof(UserInfo)] = async _ => await apiClient.Get<JsonElement>("Users"),
-		[nameof(DriverSlot)] = async args => await apiClient.Get<JsonElement>($"Drivers/slots/filter{args as string ?? throw new NotSupportedException()}"),
 		[nameof(ActivityRecord)] = async _ => await apiClient.Get<JsonElement>("Counts/activities")
 	};
 
@@ -122,6 +124,59 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		return result;
 	}
 
+	public async ValueTask<DriverSlot[]> GetSlots(Dictionary<Guid, List<Guid>> driverIds, bool useCash = true)
+	{
+        var key = nameof(DriverSlot);
+        if (!_cachedData.TryGetValue(key, out var cachedInfo))
+        {
+            cachedInfo = new CashedInfo(DateTime.MinValue, default);
+        }
+
+        var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
+        if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
+        {
+            return cachedInfo.Data.Deserialize<DriverSlot[]>(_serOptions) ?? [];
+        }
+
+        List<DriverSlot> result = [];
+        await loadingService.ExecuteWithLoading(async () => {
+            try
+            {
+				foreach (var (regionId, drivers) in driverIds)
+				{
+                    var response = await apiClient.Get<DriverSlot[]>($"Drivers/slots/filter{GetArgs(drivers, regionId)}");
+					result.AddRange(response);
+				}
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError($"Failed to load {key}: {ex.Message}");
+            }
+        });
+
+        if (result is not null)
+        {
+            _cachedData[key] = cachedInfo;
+			return [.. result];
+        }
+
+		return [];
+
+		static string GetArgs(List<Guid> drivers, Guid regionId)
+		{
+			var sb = new StringBuilder($"?regionId={regionId}");
+
+			for (var i = 0; i < drivers.Count; i++)
+			{
+				var driver = drivers[i];
+                sb.Append($"&driverIds={driver}");
+			}
+
+			return sb.ToString();
+
+        }
+    }
+
 	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
 	{
 		T[] result = [];
@@ -156,18 +211,19 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			return new CalculationInfoRequest([.. orders.Select(o => o.Id)]);
 		}
 
-		if (key == nameof(DriverSlot))
-		{
-			var drivers = await GetData<Driver>(useCash);
-			var strBuilder = new StringBuilder("?");
-			for (var i = 0; i < drivers.Length; i++)
-			{
-				var driver = drivers[i];
-				strBuilder.Append(i == 0 ? $"driverIds={driver.Id}" : $"&driverIds={driver.Id}");
-			}
+		//Changed contract
+		//if (key == nameof(DriverSlot))
+		//{
+		//	var drivers = await GetData<Driver>(useCash);
+		//	var strBuilder = new StringBuilder("?");
+		//	for (var i = 0; i < drivers.Length; i++)
+		//	{
+		//		var driver = drivers[i];
+		//		strBuilder.Append(i == 0 ? $"driverIds={driver.Id}" : $"&driverIds={driver.Id}");
+		//	}
 
-			return strBuilder.ToString();
-		}
+		//	return strBuilder.ToString();
+		//}
 
 		return null;
 	}

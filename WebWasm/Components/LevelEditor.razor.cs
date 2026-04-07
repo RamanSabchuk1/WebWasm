@@ -9,7 +9,7 @@ public partial class LevelEditor : ComponentBase
 	[Parameter] public Region? Region { get; set; }
 	[Parameter] public Level? EditingLevel { get; set; }
 	[Parameter] public EventCallback OnClose { get; set; }
-	[Parameter] public EventCallback<CreateLevel> OnSubmit { get; set; }
+	[Parameter] public EventCallback<MutateLevel> OnSubmit { get; set; }
 
 	private PriceInfoEditor? _priceEditor;
 	private LevelType _levelType = LevelType.Neighborhood;
@@ -137,7 +137,7 @@ public partial class LevelEditor : ComponentBase
 
 		try
 		{
-			var createLevel = new CreateLevel(
+			var createLevel = new MutateLevel(
 				_levelType,
 				_algorithm,
 				_points,

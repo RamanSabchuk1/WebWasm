@@ -73,7 +73,7 @@ public partial class Users : ComponentBase
 		_users = await CashService.GetData<User>(useCash);
 		_companies = await CashService.GetData<Company>(useCash);
 		_drivers = await CashService.GetData<Driver>(useCash);
-		_driverSlots = await CashService.GetData<DriverSlot>(useCash);
+		_driverSlots = await GetSlots(CashService, _drivers, _companies);
 		BuildLookups();
 	}
 
@@ -485,5 +485,10 @@ public partial class Users : ComponentBase
 			_slotStartTime = new TimeOnly(8, 0);
 			_slotEndTime = new TimeOnly(20, 0);
 		}
+	}
+
+	private static async ValueTask<DriverSlot[]> GetSlots(CashService cashService, Driver[] drivers, Company[] companies)
+	{
+		return [];
 	}
 }

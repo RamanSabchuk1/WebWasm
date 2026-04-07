@@ -127,7 +127,7 @@ else
 				<div class="info-item"><label>Legal Type</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.LegalType</span></div>
 				<div class="info-item"><label>Name</label><span>@_order.LoadingPlace.Producer.Company.Name</span></div>
 				<div class="info-item"><label>Account</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.BankAccount.BankNumber @_order.LoadingPlace.Producer.Company.CompanyInfo?.BankAccount.BIC</span></div>
-				<div class="info-item"><label>Email</label><span>@(string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo?.CorporateEmail) ? "-" : _order.LoadingPlace.Producer.Company.CompanyInfo.CorporateEmail)</span></div>
+				<div class="info-item"><label>Email</label><span>@(string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo?.CorporateEmail) ? "-" : _order.LoadingPlace.Producer.Company.CompanyInfo?.CorporateEmail)</span></div>
 				<div class="info-item"><label>Address</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo?.Address</span></div>
 				<div class="info-item"><label>Unp</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo?.UNP</span></div>
 				<div class="info-item"><label>Producer Name</label><span>@_order.LoadingPlace.Producer.Name</span></div>

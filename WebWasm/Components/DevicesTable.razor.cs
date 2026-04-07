@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.JSInterop;
@@ -6,6 +7,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Components;
 
+[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
 public partial class DevicesTable : ComponentBase
 {
 	[Parameter, EditorRequired] public IEnumerable<DeviceTokenWithUser> Devices { get; set; } = [];

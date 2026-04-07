@@ -6,10 +6,11 @@ public record BankAccount(string BankNumber, string BIC);
 public record Location(double Longitude, double Latitude);
 public record DriverSlot(Guid Id, Guid DriverId, TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);
 public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] DeliveryInfo, decimal[] CommissionPercentages, decimal Commission, decimal TotalCost);
-public record DeliveryInfo(Guid DeliveryId, decimal Cost, uint Weight);
+public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat);
 public record CreditCardInfo(Guid Id, Guid UserInfoId, string MaskedCard, DateTime ExpirationDate, DateTime UnbindAt);
 public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
 public record User(Guid Id, string Login, bool UserVerified, bool IsActive, UserInfo UserInfo, ICollection<RoleType> Roles);
+public record UpdateCompany(Location Location, string Photo, string Name, string Address, string CorporateEmail, double Rebate);
 public record Company(Guid Id, string Name, double Rebate, bool IsActive, Guid RegionId, Location Location, CompanyInfo? CompanyInfo, ICollection<Vehicle> Vehicles, ICollection<Producer> Producers);
 public record CompanyInfo(Guid Id, string Address, string CorporateEmail, string UNP, BankAccount BankAccount, string LegalType, string Photo);
 public record Delivery(Guid Id, uint NetoWeight, uint GrossWeight, uint AppliedWeight, string State, string? BatchNumber, decimal DeliveryCost, Driver? Driver);
@@ -41,7 +42,7 @@ public record CreateCompany(Location Location, BankAccount BankAccount, string P
 public record CreateDriver(string Photo, string FirstName, string MiddleName, string LastName, string MobilePhone, Guid? CompanyId);
 public record CreateDriverSlot(TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);
 public record CreateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime, string Name);
-public record CreateLevel(LevelType Type, byte CalculationAlgorithm, ICollection<Location> Points, Dictionary<uint, PriceInfo> Info);
+public record MutateLevel(LevelType Type, byte CalculationAlgorithm, ICollection<Location> Points, Dictionary<uint, PriceInfo> Info);
 public record CreateUser(Guid CompanyId, string FirstName, string MiddleName, string LastName, string MobilePhone, RoleType[] Roles);
 public record CreateVehicle(string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Guid DriverId);
 public record CreateRegion(string Name, string TimeZone);
@@ -69,15 +70,16 @@ public enum RoleType
 
 public enum OrderStatus
 {
-	Draft,
-	WaitingApprove,
-	PaymentPending,
-	Active,
-	Completed,
-	CorruptedPayment,
-	Cancelled,
-	Archived,
-	Deleted
+    Draft,
+    WaitingApprove,
+    PaymentPending,
+    Active,
+    Completed,
+    CorruptedPayment,
+    Cancelled,
+    Archived,
+    Deleted,
+    PaymentInProgress
 }
 
 public enum PaymentMethodType

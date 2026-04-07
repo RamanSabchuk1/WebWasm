@@ -118,7 +118,7 @@ public partial class Regions : ComponentBase
         _isLevelEditorOpen = true;
     }
 
-    private async Task HandleLevelSubmit(CreateLevel levelData)
+    private async Task HandleLevelSubmit(MutateLevel levelData)
     {
         if (_editingLevelRegion is null)
         {

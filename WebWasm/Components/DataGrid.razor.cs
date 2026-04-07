@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using System.Linq.Expressions;
 
 namespace WebWasm.Components;
 
+[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
 public partial class DataGrid<TItem> : ComponentBase
 {
 	[Parameter] public IQueryable<TItem>? ItemsQueryable { get; set; }

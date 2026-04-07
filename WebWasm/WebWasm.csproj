@@ -28,12 +28,14 @@
 		<EventSourceSupport>false</EventSourceSupport>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
 		<SelfContained>false</SelfContained>
-		<DebugType>embedded</DebugType>
+		<!--<DebugType>embedded</DebugType>
 		<DebugSymbols>true</DebugSymbols>
-		<Features>runtime-async=on</Features>
+		<Features>runtime-async=on</Features>-->
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<LangVersion>preview</LangVersion>
 		<AnalysisLevel>latest</AnalysisLevel>
+		<!-- Suppress IL2111: Router.NotFoundPage is a known Blazor framework AOT issue that doesn't cause runtime problems -->
+		<NoWarn>$(NoWarn);IL2111</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

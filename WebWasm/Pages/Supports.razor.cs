@@ -19,7 +19,7 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 	{
 		var suggestions = await cashService.GetData<Suggestion>(useCash);
 		var users = await cashService.GetData<User>(useCash);
-		var userDict = users.ToDictionary(u => u.Id);
+		var userDict = users.ToDictionary(u => u.UserInfo.Id);
 		_suggestions = [.. suggestions.Select(s => new SuggestionsWithUser(s, userDict.TryGetValue(s.UserInfoId, out var user) ? user : null))];
 	}
 

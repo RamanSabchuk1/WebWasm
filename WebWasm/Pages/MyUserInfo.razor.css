@@ -66,7 +66,7 @@
 
 .form-input {
 	width: 100%;
-	padding: 1rem;
+	padding: .3rem .8rem;
 	border: 2px solid rgba(139, 115, 85, 0.2);
 	border-radius: 12px;
 	font-size: 1rem;

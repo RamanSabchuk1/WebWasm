@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -7,6 +8,8 @@ using WebWasm.Helpers;
 
 namespace WebWasm.Services;
 
+[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "All types are registered in AppJsonSerializerContext")]
+[UnconditionalSuppressMessage("AOT", "IL3050", Justification = "All types are registered in AppJsonSerializerContext")]
 public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthStateProvider authStateProvider)
 {
 	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
