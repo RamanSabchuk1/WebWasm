@@ -487,8 +487,21 @@ public partial class Users : ComponentBase
 		}
 	}
 
-	private static async ValueTask<DriverSlot[]> GetSlots(CashService cashService, Driver[] drivers, Company[] companies)
+	private static async ValueTask<DriverSlot[]> GetSlots(CashService cashService, User[] users, Driver[] drivers, Company[] companies)
 	{
-		return [];
+		var userIdsWithDrivers = drivers
+			.Where(d => d.UserInfo is not null)
+			.Select(d => (d.Id, d.UserInfo!.Id))
+			.Select(x => {
+				var user = users.FirstOrDefault(u => u.UserInfo?.Id == x.Item2);
+				rceturn user?.UserInfo?.Company is null
+					? default
+					: (x.Item1, user.UserInfo.Company.Id);
+			})
+			.ToHashSet();
+        var regionsCompanies = companies
+			.GroupBy(c => c.RegionId)
+			.ToDictionary(g => g.Key, g => g.Select(c => c.Id).ToList());
+        return await cashService.GetSlots(regionsCompanies);
 	}
 }
