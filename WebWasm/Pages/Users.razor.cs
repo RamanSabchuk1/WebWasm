@@ -73,7 +73,7 @@ public partial class Users : ComponentBase
 		_users = await CashService.GetData<User>(useCash);
 		_companies = await CashService.GetData<Company>(useCash);
 		_drivers = await CashService.GetData<Driver>(useCash);
-		_driverSlots = await GetSlots(CashService, _drivers, _companies);
+		_driverSlots = await GetSlots(CashService, _users ?? [], _drivers, _companies);
 		BuildLookups();
 	}
 
@@ -489,19 +489,22 @@ public partial class Users : ComponentBase
 
 	private static async ValueTask<DriverSlot[]> GetSlots(CashService cashService, User[] users, Driver[] drivers, Company[] companies)
 	{
-		var userIdsWithDrivers = drivers
+		var regionDrivers = drivers
 			.Where(d => d.UserInfo is not null)
-			.Select(d => (d.Id, d.UserInfo!.Id))
-			.Select(x => {
-				var user = users.FirstOrDefault(u => u.UserInfo?.Id == x.Item2);
-				rceturn user?.UserInfo?.Company is null
-					? default
-					: (x.Item1, user.UserInfo.Company.Id);
+			.Select(d => {
+				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
+				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
+				return (DriverId: d.Id, CompanyId: companyId);
 			})
-			.ToHashSet();
-        var regionsCompanies = companies
-			.GroupBy(c => c.RegionId)
-			.ToDictionary(g => g.Key, g => g.Select(c => c.Id).ToList());
-        return await cashService.GetSlots(regionsCompanies);
+			.Where(x => x.CompanyId.HasValue)
+			.Select(x => (x.DriverId, CompanyId: x.CompanyId!.Value))
+			.Join(companies, 
+				d => d.CompanyId, 
+				c => c.Id, 
+				(d, c) => new { d.DriverId, c.RegionId })
+			.GroupBy(x => x.RegionId)
+			.ToDictionary(g => g.Key, g => g.Select(x => x.DriverId).ToList());
+
+		return await cashService.GetSlots(regionDrivers);
 	}
 }

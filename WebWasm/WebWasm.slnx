@@ -1,3 +1,10 @@
 <Solution>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/agents/">
+    <File Path="../.github/agents/Beast.agent.md" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path="../.github/workflows/deploy-gh-pages.yml" />
+  </Folder>
   <Project Path="WebWasm.csproj" />
 </Solution>
