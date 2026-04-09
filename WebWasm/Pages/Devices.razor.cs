@@ -62,5 +62,5 @@ public record DeviceTokenWithUser(DeviceToken DeviceToken, User? User)
 			: string.IsNullOrEmpty(User.UserInfo.FirstName)
 				? User.Login
 				: $"{User.UserInfo.FirstName} {User.UserInfo.LastName}";
-	}
+    }
 }

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -87,7 +87,7 @@ public partial class Regions : ComponentBase
                 }
                 else
                 {
-                    var createRegion = new CreateRegion(regionData.Name, "");
+                    var createRegion = new CreateRegion(regionData.Name, regionData.TimeZone);
                     await ApiClient.Post("Regions", createRegion);
                     ToastService.ShowSuccess("Region created successfully!");
                 }
@@ -131,9 +131,7 @@ public partial class Regions : ComponentBase
             {
                 if (_editingLevel is not null)
                 {
-                    // Update existing level - first delete, then create (v1 approach)
-                    await ApiClient.Delete($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}");
-                    await ApiClient.Post($"Regions/{_editingLevelRegion.Id}/level", levelData);
+                    await ApiClient.Put($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}", levelData);
                     ToastService.ShowSuccess("Level updated successfully!");
                 }
                 else

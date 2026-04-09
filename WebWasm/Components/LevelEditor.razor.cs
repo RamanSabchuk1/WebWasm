@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -57,11 +57,11 @@ public partial class LevelEditor : ComponentBase
 			_priceInfo = null; // Reset first
 			if (EditingLevel.Info?.Info?.Count > 0)
 			{
-				_priceInfo = new Dictionary<uint, PriceInfo>(EditingLevel.Info.Info);
+				_priceInfo = [with(EditingLevel.Info.Info)];
 			}
 			else
 			{
-				_priceInfo = new Dictionary<uint, PriceInfo>();
+				_priceInfo = [];
 			}
 			
 			// Extract points from triangles
@@ -114,7 +114,7 @@ public partial class LevelEditor : ComponentBase
 
 	private async Task HandleDrawerConfirm(ICollection<Location> drawnPoints)
 	{
-		_points = drawnPoints.ToList();
+		_points = [.. drawnPoints];
 		_showDrawer = false;
 		StateHasChanged();
 		await Task.CompletedTask;

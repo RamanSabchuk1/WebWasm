@@ -37,7 +37,7 @@ public record OrderCostRequest(Guid LoadingPlaceId, TimeSpan Duration, decimal D
 public record OrderCostResponse(Guid LoadingPlaceId, decimal Cost);
 public record MaterialTypeInfo(Guid? ParentId, string Name, string Description, double Solidity, string Photo);
 public record UpdateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime);
-public record UpdateRegion(string Name);
+public record UpdateRegion(string Name, string TimeZone);
 public record CreateCompany(Location Location, BankAccount BankAccount, string Photo, string Name, string Address, string CorporateEmail, string UNP, string LegalType, double Rebate);
 public record CreateDriver(string Photo, string FirstName, string MiddleName, string LastName, string MobilePhone, Guid? CompanyId);
 public record CreateDriverSlot(TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);

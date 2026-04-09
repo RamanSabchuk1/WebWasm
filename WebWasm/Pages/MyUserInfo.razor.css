@@ -64,9 +64,9 @@
 		font-size: 0.875rem;
 	}
 
-.form-input {
+::deep .form-input {
 	width: 100%;
-	padding: .3rem .8rem;
+	padding: .5rem .9rem !important;
 	border: 2px solid rgba(139, 115, 85, 0.2);
 	border-radius: 12px;
 	font-size: 1rem;
@@ -76,7 +76,7 @@
 	box-sizing: border-box;
 }
 
-	.form-input:focus {
+	::deep .form-input:focus {
 		outline: none;
 		border-color: #C9A86C;
 		box-shadow: 0 0 0 4px rgba(201, 168, 108, 0.15);

@@ -1,17 +1,19 @@
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
 
 public partial class RegionModal : ComponentBase
 {
+	private const string Default = "Europe/Minsk";
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public Region? EditingRegion { get; set; }
 	[Parameter] public EventCallback OnClose { get; set; }
 	[Parameter] public EventCallback<UpdateRegion> OnSubmit { get; set; }
 
 	private string _name = string.Empty;
-	private string _errorMessage = string.Empty;
+	private string _timeZone = Default;
+    private string _errorMessage = string.Empty;
 	private List<Level> _existingLevels = [];
 
 	private bool IsEditMode => EditingRegion is not null;
@@ -24,6 +26,7 @@ public partial class RegionModal : ComponentBase
 			if (IsEditMode && EditingRegion is not null)
 			{
 				_name = EditingRegion.Name;
+				_timeZone = EditingRegion.TimeZone;
 				_existingLevels = EditingRegion.Levels?.ToList() ?? [];
 			}
 			else
@@ -43,7 +46,7 @@ public partial class RegionModal : ComponentBase
 			return;
 		}
 
-		var updateRegion = new UpdateRegion(_name.Trim());
+		var updateRegion = new UpdateRegion(_name.Trim(), _timeZone.Trim());
 		await OnSubmit.InvokeAsync(updateRegion);
 		ResetForm();
 	}
@@ -57,6 +60,7 @@ public partial class RegionModal : ComponentBase
 	private void ResetForm()
 	{
 		_name = string.Empty;
+		_timeZone = Default;
 		_errorMessage = string.Empty;
 		_existingLevels = [];
 	}
