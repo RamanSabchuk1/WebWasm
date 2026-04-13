@@ -6,8 +6,7 @@ namespace WebWasm.Pages;
 public partial class Vehicles
 {
 	private Vehicle[]? _vehicles;
-	private Company[] _companies = [];
-	private Driver[] _drivers = [];
+	private (Company, Driver)[] _driverWithCompany = [];
 	private readonly Guid _vehiclesKey = Guid.NewGuid();
 
 	private bool _showCreateModal = false;
@@ -18,12 +17,11 @@ public partial class Vehicles
 	private async Task LoadData(bool useCash)
 	{
 		var allVehicles = await CashService.GetData<Vehicle>(useCash);
-		_companies = await CashService.GetData<Company>(useCash);
-		_drivers = await CashService.GetData<Driver>(useCash);
 		var users = await CashService.GetData<User>(useCash);
+		_driverWithCompany = await CashService.GetDriverWithCompany();
 
 		// Map drivers to vehicles with user phone info
-		_vehicles = MapDriversToVehicles(allVehicles, _drivers, users);
+		_vehicles = MapDriversToVehicles(allVehicles, _driverWithCompany, users);
 		StateHasChanged();
 	}
 
@@ -44,7 +42,13 @@ public partial class Vehicles
 			try
 			{
 				var (companyId, createVehicle) = data;
-				await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
+				if (companyId == Guid.Empty)
+				{
+                    ToastService.ShowError("Cannot retreve a company ID");
+					return;
+                }
+
+                await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
 				ToastService.ShowSuccess("Vehicle created successfully");
 				CloseCreateModal();
 				await LoadData(false);
@@ -93,16 +97,17 @@ public partial class Vehicles
 		_deleteConfirmMessage = string.Empty;
 	}
 
-	private static Vehicle[] MapDriversToVehicles(Vehicle[] vehicles, Driver[] drivers, User[] users)
+	private static Vehicle[] MapDriversToVehicles(Vehicle[] vehicles, (Company Company, Driver Driver)[] driverWithCompany, User[] users)
 	{
-		var driverDict = drivers.ToDictionary(d => d.Id);
+		var driverDict = driverWithCompany.ToDictionary(d => d.Driver.Id);
 		var userDict = users.ToDictionary(u => u.UserInfo.Id);
 
 		return [.. vehicles.Select(vehicle =>
 		{
-			if (vehicle.DriverId != Guid.Empty && driverDict.TryGetValue(vehicle.DriverId, out var driver))
+			if (vehicle.DriverId != Guid.Empty && driverDict.TryGetValue(vehicle.DriverId, out var driverWithCompany))
 			{
 				// Enrich driver with phone from User/UserInfo
+				var (company, driver) = driverWithCompany;
 				var enrichedDriver = driver;
 				if (driver.UserInfo?.Id != Guid.Empty && 
 					driver.UserInfo != null &&
@@ -119,7 +124,7 @@ public partial class Vehicles
 								user.UserInfo.LastName,
 								user.UserInfo.MobilePhone,
 								user.IsActive,
-								driver.UserInfo.Company
+								company
 							)
 						);
 				}

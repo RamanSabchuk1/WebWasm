@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using WebWasm.Helpers;
 using WebWasm.Models;
+using WebWasm.Pages;
 
 namespace WebWasm.Services;
 
@@ -176,7 +177,45 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
         }
     }
 
-	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
+	public static string Stringify(object? args)
+	{
+		if (args is null)
+		{
+			return string.Empty;
+		}
+		return args switch
+		{
+			string str => str,
+			_ => JsonSerializer.Serialize(args, _serOptions)
+		};
+	}
+
+	public async ValueTask<(Company, Driver)[]> GetDriverWithCompany()
+	{
+        var companies = await GetData<Company>(true);
+        var users = await GetData<User>(true);
+        var drivers = await GetData<Driver>(true);
+
+		var driverWithComapny = drivers
+			.Where(d => d.UserInfo is not null)
+			.Select(d =>
+			{
+				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
+				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
+				return (Driver: d, CompanyId: companyId);
+			})
+			.Where(x => x.CompanyId.HasValue)
+			.Select(x => (x.Driver, CompanyId: x.CompanyId!.Value))
+			.Join(companies,
+				d => d.CompanyId,
+				c => c.Id,
+				(d, c) => (c, d.Driver));
+
+		return [.. driverWithComapny];
+
+    }
+
+    private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
 	{
 		T[] result = [];
 		CashedInfo? cashValue = null;
@@ -227,18 +266,6 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		return null;
 	}
 
-	public static string Stringify(object? args)
-	{
-		if (args is null)
-		{
-			return string.Empty;
-		}
-		return args switch
-		{
-			string str => str,
-			_ => JsonSerializer.Serialize(args, _serOptions)
-		};
-	}
 }
 
 public record CashedInfo(DateTime Cached, JsonElement Data)

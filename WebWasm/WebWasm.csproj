@@ -24,6 +24,8 @@
 		<!-- Enhanced debugging and analysis -->
 		<!--<Configuration>Release</Configuration>-->
 		<!--<DebuggerSupport>false</DebuggerSupport>-->
+		<WasmBuildNative>true</WasmBuildNative>
+		<UsingMicrosoftNETSdkBlazorWebAssembly>true</UsingMicrosoftNETSdkBlazorWebAssembly>
 		<BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
 		<EventSourceSupport>false</EventSourceSupport>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>

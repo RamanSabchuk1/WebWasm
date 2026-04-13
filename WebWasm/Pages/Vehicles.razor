@@ -34,8 +34,7 @@
 
 @if (_showCreateModal)
 {
-	<VehicleModal Companies="@_companies" 
-				   Drivers="@_drivers"
+	<VehicleModal DriversWithCompany="@_driverWithCompany"
 				   IsEditMode="false"
 				   OnSubmit="CreateVehicle" 
 				   OnCancel="CloseCreateModal" />

@@ -6,10 +6,7 @@ namespace WebWasm.Components;
 public partial class VehicleModal
 {
 	[Parameter]
-	public required Company[] Companies { get; set; }
-
-	[Parameter]
-	public required Driver[] Drivers { get; set; }
+	public required (Company, Driver)[] DriversWithCompany { get; set; }
 
 	[Parameter]
 	public bool IsEditMode { get; set; } = false;
@@ -40,8 +37,8 @@ public partial class VehicleModal
 			_vehicleWeight = InitialVehicle.VehicleWeight;
 			_loadCapacity = InitialVehicle.LoadCapacity;
 			_photo = InitialVehicle.Photo ?? string.Empty;
-			_selectedCompanyId = InitialVehicle.CompanyId;
 			_selectedDriverId = InitialVehicle.DriverId;
+            _selectedCompanyId = GetCompanyId(InitialVehicle.DriverId);
 		}
 		else
 		{
@@ -55,7 +52,6 @@ public partial class VehicleModal
 			   !string.IsNullOrWhiteSpace(_registrationNumber) &&
 			   _vehicleWeight > 0 &&
 			   _loadCapacity > 0 &&
-			   _selectedCompanyId != Guid.Empty &&
 			   _selectedDriverId != Guid.Empty;
 	}
 
@@ -67,7 +63,7 @@ public partial class VehicleModal
         }
 
         var createVehicle = new CreateVehicle(_model, _registrationNumber, _vehicleWeight, _loadCapacity, _photo, _selectedDriverId);
-		await OnSubmit.InvokeAsync((_selectedCompanyId, createVehicle));
+		await OnSubmit.InvokeAsync((GetCompanyId(_selectedDriverId), createVehicle));
 		Reset();
 	}
 
@@ -80,5 +76,18 @@ public partial class VehicleModal
 		_photo = string.Empty;
 		_selectedCompanyId = Guid.Empty;
 		_selectedDriverId = Guid.Empty;
+	}
+
+	private Guid GetCompanyId(Guid driverId)
+	{
+		foreach (var (company, driver) in DriversWithCompany)
+		{
+			if (driver.Id == driverId)
+			{
+				return company.Id;
+			}
+		}
+
+		return Guid.Empty;
 	}
 }
