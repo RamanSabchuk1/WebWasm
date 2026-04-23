@@ -94,6 +94,7 @@ public static class SerializationHelper
 [JsonSerializable(typeof(LevelInfo))]
 [JsonSerializable(typeof(DeliveryInfo))]
 [JsonSerializable(typeof(CashedInfo))]
+[JsonSerializable(typeof(DeviceTokenInfo))]
 [JsonSerializable(typeof(ProducerWorkingTime))]
 [JsonSerializable(typeof(Login.LoginModel))]
 [JsonSerializable(typeof(Login.TokenResponse))]

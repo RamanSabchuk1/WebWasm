@@ -1,5 +1,6 @@
 ﻿@inject ApiClient ApiClient
 @inject IJSRuntime JSRuntime
+@using WebWasm.Models
 
 @if (isLoading)
 {
@@ -99,10 +100,8 @@ else
 		}
 		finally
 		{
-			isSubscribing = false;
-			StateHasChanged();
-		}
-	}
-
-	private record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
-}
+					isSubscribing = false;
+						StateHasChanged();
+					}
+				}
+			}

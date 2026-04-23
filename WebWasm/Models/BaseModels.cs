@@ -2,6 +2,7 @@
 
 public record Suggestion(Guid Id, Guid UserInfoId, string Name, Dictionary<string, string> Data, DateTime Created, DateTime? Applied);
 public record DeviceToken(Guid Id, Guid UserInfoId, string Token, string Device, Dictionary<string, string>? AdditionalData);
+public record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string, string>? AdditionalData);
 public record BankAccount(string BankNumber, string BIC);
 public record Location(double Longitude, double Latitude);
 public record DriverSlot(Guid Id, Guid DriverId, TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);
