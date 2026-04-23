@@ -10,8 +10,9 @@ public partial class CompaniesTable : ComponentBase
 {
 	[Parameter] public List<Company> Companies { get; set; } = [];
 	[Parameter] public EventCallback<(Guid CompanyId, bool IsActive)> OnToggleActive { get; set; }
+    [Parameter] public EventCallback<Company> OnEditCompany { get; set; }
 
-	private string _searchText = string.Empty;
+    private string _searchText = string.Empty;
 	private bool _hasItems => FilteredCompanies.Any();
 	private HashSet<Guid> _expandedCompanies = [];
 	private PaginationState _pagination = new() { ItemsPerPage = 10 };

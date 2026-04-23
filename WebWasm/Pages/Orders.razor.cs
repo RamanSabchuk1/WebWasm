@@ -17,17 +17,122 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	private PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private Order[] _orders = [];
 
+	private double? _minWeight;
+	private double? _maxWeight;
+	private double _weightRangeMin;
+	private double _weightRangeMax;
+	private double _weightStep = 1;
+	private bool _weightFilterDisabled;
+	private List<OrderStatus> _selectedStatuses = new();
+	private bool _showFilters = false;
+
+	private double CurrentMinWeight => _minWeight ?? _weightRangeMin;
+	private double CurrentMaxWeight => _maxWeight ?? _weightRangeMax;
+
+	private void OnMinWeightChanged(ChangeEventArgs e)
+	{
+		if (double.TryParse(e.Value?.ToString(), System.Globalization.CultureInfo.InvariantCulture, out var value))
+		{
+			_minWeight = value;
+			if (_minWeight > CurrentMaxWeight)
+			{
+				_maxWeight = _minWeight;
+			}
+		}
+	}
+
+	private void OnMaxWeightChanged(ChangeEventArgs e)
+	{
+		if (double.TryParse(e.Value?.ToString(), System.Globalization.CultureInfo.InvariantCulture, out var value))
+		{
+			_maxWeight = value;
+			if (_maxWeight < CurrentMinWeight)
+			{
+				_minWeight = _maxWeight;
+			}
+		}
+	}
+
+	private void ClearWeightFilter()
+	{
+		_minWeight = null;
+		_maxWeight = null;
+	}
+
+	private void RecalculateWeightRange()
+	{
+		if (_orders.Length == 0)
+		{
+			_weightRangeMin = 0;
+			_weightRangeMax = 0;
+			_weightStep = 1;
+			_weightFilterDisabled = true;
+			return;
+		}
+
+		_weightRangeMin = _orders.Min(o => o.TotalWeight);
+		_weightRangeMax = _orders.Max(o => o.TotalWeight);
+		var range = _weightRangeMax - _weightRangeMin;
+
+		if (range <= 0)
+		{
+			_weightFilterDisabled = true;
+			_weightStep = 1;
+			return;
+		}
+
+		_weightFilterDisabled = false;
+
+		var distinctCount = _orders.Select(o => o.TotalWeight).Distinct().Count();
+		var stepCount = Math.Clamp(distinctCount - 1, 3, 10);
+		_weightStep = range / stepCount;
+	}
+
+	private void AddStatus(ChangeEventArgs e)
+	{
+		if (Enum.TryParse<OrderStatus>(e.Value?.ToString(), out var status))
+		{
+			if (!_selectedStatuses.Contains(status))
+			{
+				_selectedStatuses.Add(status);
+			}
+		}
+	}
+
+	private void RemoveStatus(OrderStatus status)
+	{
+		_selectedStatuses.Remove(status);
+	}
+
 	private IQueryable<Order> FilteredOrders
 	{
 		get
 		{
-			var filtered = string.IsNullOrWhiteSpace(_searchText)
-				? _orders
-				: [.. _orders.Where(o =>
+			var filtered = _orders.AsEnumerable();
+
+			if (!string.IsNullOrWhiteSpace(_searchText))
+			{
+				filtered = filtered.Where(o =>
 					o.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-					o.Address.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-					o.State.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
-				)];
+					(o.Address != null && o.Address.Contains(_searchText, StringComparison.OrdinalIgnoreCase)) ||
+					(o.State != null && o.State.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+				);
+			}
+
+			if (_selectedStatuses is not null && _selectedStatuses.Count > 0)
+			{
+				filtered = filtered.Where(o => _selectedStatuses.Contains(o.Status));
+			}
+
+			if (_minWeight.HasValue)
+			{
+				filtered = filtered.Where(o => o.TotalWeight >= _minWeight.Value);
+			}
+
+			if (_maxWeight.HasValue)
+			{
+				filtered = filtered.Where(o => o.TotalWeight <= _maxWeight.Value);
+			}
 
 			return filtered.AsQueryable();
 		}
@@ -39,6 +144,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 		_totalOrders = _orders.Length;
 		_pendingOrders = _orders.Count(o => o.Status == OrderStatus.PaymentPending || o.Status == OrderStatus.WaitingApprove);
 		_completedOrders = _orders.Count(o => o.Status == OrderStatus.Completed);
+		RecalculateWeightRange();
 	}
 
 	private static string GetStatus(OrderStatus status)

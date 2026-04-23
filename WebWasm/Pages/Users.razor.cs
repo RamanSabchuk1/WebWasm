@@ -55,6 +55,93 @@ public partial class Users : ComponentBase
 	private readonly HashSet<RoleType> _roleEditSelection = [];
 	private string _rolesErrorMessage = string.Empty;
 
+	private string _searchText = string.Empty;
+	private readonly List<RoleType> _filterRoles = [];
+	private UserKindFilter _userKindFilter = UserKindFilter.All;
+	private bool _showFilters = false;
+
+	private enum UserKindFilter
+	{
+		All,
+		DriversOnly,
+		UsersOnly
+	}
+
+	private void AddFilterRole(ChangeEventArgs e)
+	{
+		if (Enum.TryParse<RoleType>(e.Value?.ToString(), out var role))
+		{
+			if (!_filterRoles.Contains(role))
+			{
+				_filterRoles.Add(role);
+				_pagination.SetCurrentPageIndexAsync(0);
+			}
+		}
+	}
+
+	private void RemoveFilterRole(RoleType role)
+	{
+		_filterRoles.Remove(role);
+		_pagination.SetCurrentPageIndexAsync(0);
+	}
+
+	private void OnSearchTextChanged(ChangeEventArgs e)
+	{
+		_searchText = e.Value?.ToString() ?? string.Empty;
+		_pagination.SetCurrentPageIndexAsync(0);
+	}
+
+	private void OnUserKindFilterChanged(UserKindFilter value)
+	{
+		_userKindFilter = value;
+		_pagination.SetCurrentPageIndexAsync(0);
+	}
+
+	private int ActiveFilterCount =>
+		_filterRoles.Count
+		+ (_userKindFilter != UserKindFilter.All ? 1 : 0)
+		+ (string.IsNullOrWhiteSpace(_searchText) ? 0 : 1);
+
+	private User[] FilteredUsers
+	{
+		get
+		{
+			if (_users is null)
+			{
+				return [];
+			}
+
+			IEnumerable<User> filtered = _users;
+
+			if (_userKindFilter == UserKindFilter.DriversOnly)
+			{
+				filtered = filtered.Where(u => GetDriver(u) is not null);
+			}
+			else if (_userKindFilter == UserKindFilter.UsersOnly)
+			{
+				filtered = filtered.Where(u => GetDriver(u) is null);
+			}
+
+			if (_filterRoles.Count > 0)
+			{
+				filtered = filtered.Where(u => u.Roles.Any(r => _filterRoles.Contains(r)));
+			}
+
+			if (!string.IsNullOrWhiteSpace(_searchText))
+			{
+				var query = _searchText.Trim();
+				filtered = filtered.Where(u =>
+					(u.UserInfo.FirstName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+					(u.UserInfo.MiddleName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+					(u.UserInfo.LastName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+					(u.UserInfo.MobilePhone?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+					(u.Login?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false));
+			}
+
+			return [.. filtered];
+		}
+	}
+
 	private static readonly RoleType[] _roleOptions = Enum.GetValues<RoleType>();
 
 	protected override async Task OnInitializedAsync()
@@ -93,7 +180,7 @@ public partial class Users : ComponentBase
 	}
 
 	private int TotalUsers => _users?.Length ?? 0;
-	private int ActiveUsers => _users?.Count(user => user.IsActive) ?? 0;
+	private int ActiveUsers => _users?.Count(user => user.UserInfo.IsActive) ?? 0;
 	private int SuperAdminUsers => _users?.Count(user => user.Roles.Contains(RoleType.SuperAdmin)) ?? 0;
 	private int DriverCount => _drivers.Length;
 
@@ -394,7 +481,7 @@ public partial class Users : ComponentBase
 
 	private async Task ToggleUserActive(User user)
 	{
-		var targetState = !user.IsActive;
+		var targetState = !user.UserInfo.IsActive;
 		await LoadingService.ExecuteWithLoading(async () =>
 		{
 			try

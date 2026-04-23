@@ -15,10 +15,12 @@
 	</div>
 	<CompaniesTable @ref="_companiesTableRef"
 					Companies="@_companies"
-					OnToggleActive="@HandleToggleActive" />
+					OnToggleActive="@HandleToggleActive"
+					OnEditCompany="@HandleEditCompany" />
 </div>
 
 <CompanyModal IsOpen="@_isCompanyModalOpen"
+			  EditingCompany="@_editingCompany"
 			  OnClose="@CloseCompanyModal"
 			  OnSubmit="@HandleCompanySubmit" />
 

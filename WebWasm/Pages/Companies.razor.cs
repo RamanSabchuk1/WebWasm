@@ -13,7 +13,8 @@ public partial class Companies : ComponentBase
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
 
 	private List<Company> _companies = [];
-	private CompaniesTable? _companiesTableRef;
+	private Company? _editingCompany = null;
+    private CompaniesTable? _companiesTableRef;
 	private bool _isCompanyModalOpen = false;
 	private bool _showConfirmDialog = false;
 	private string _confirmTitle = string.Empty;
@@ -25,7 +26,13 @@ public partial class Companies : ComponentBase
 		await LoadCompanies(true);
 	}
 
-	private async Task LoadCompanies(bool useCash)
+    private void HandleEditCompany(Company company)
+    {
+        _editingCompany = company;
+        _isCompanyModalOpen = true;
+    }
+
+    private async Task LoadCompanies(bool useCash)
 	{
 		_companies = [.. await CashService.GetData<Company>(useCash)];
 	}
@@ -40,20 +47,36 @@ public partial class Companies : ComponentBase
 		_isCompanyModalOpen = false;
 	}
 
-	private async Task HandleCompanySubmit(CreateCompany createCompany)
+	private async Task HandleCompanySubmit((CreateCompany?, UpdateCompany?, Guid) submit)
 	{
+		var (createCompany, updateCompany, companyId) = submit;
+		if (createCompany is null && updateCompany is null)
+		{
+            ToastService.ShowWarning("There is no Company");
+            return;
+		}
+
 		await LoadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
-				await ApiClient.Post("Companies", createCompany);
-				ToastService.ShowSuccess("Company created successfully!");
+				if (createCompany is null)
+				{
+                    await ApiClient.Put($"Companies/{companyId}", updateCompany);
+                    ToastService.ShowSuccess("Company updated successfully!");
+                }
+				else
+				{
+					await ApiClient.Post("Companies", createCompany);
+					ToastService.ShowSuccess("Company created successfully!");
+				}
+
 				await LoadCompanies(false);
 				CloseCompanyModal();
 			}
 			catch (Exception ex)
 			{
-				ToastService.ShowError($"Failed to create company: {ex.Message}");
+				ToastService.ShowError($"Failed to call API with company: {ex.Message}");
 			}
 		});
 	}

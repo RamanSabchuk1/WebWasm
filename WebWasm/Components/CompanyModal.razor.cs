@@ -5,11 +5,13 @@ namespace WebWasm.Components;
 
 public partial class CompanyModal : ComponentBase
 {
-	[Parameter] public bool IsOpen { get; set; }
+    [Parameter] public Company? EditingCompany { get; set; }
+    [Parameter] public bool IsOpen { get; set; }
 	[Parameter] public EventCallback OnClose { get; set; }
-	[Parameter] public EventCallback<CreateCompany> OnSubmit { get; set; }
+	[Parameter] public EventCallback<(CreateCompany? Create, UpdateCompany? Update, Guid CompanyId)> OnSubmit { get; set; }
+    private bool IsEditMode => EditingCompany is not null;
 
-	private string _name = string.Empty;
+    private string _name = string.Empty;
 	private string _address = string.Empty;
 	private string _corporateEmail = string.Empty;
 	private string _unp = string.Empty;
@@ -26,7 +28,23 @@ public partial class CompanyModal : ComponentBase
 	{
 		if (IsOpen)
 		{
-			ResetForm();
+            if (EditingCompany is not null)
+            {
+                _name = EditingCompany.Name;
+				_address = EditingCompany.CompanyInfo!.Address;
+				_corporateEmail = EditingCompany.CompanyInfo!.CorporateEmail;
+				_unp = EditingCompany.CompanyInfo!.UNP;
+				_legalType = EditingCompany.CompanyInfo!.LegalType;
+				_bankNumber = EditingCompany.CompanyInfo!.BankAccount.BankNumber;
+				_bic = EditingCompany.CompanyInfo!.BankAccount.BIC;
+				_photo = EditingCompany.CompanyInfo!.Photo;
+                _rebate = EditingCompany.Rebate;
+				_location = EditingCompany.Location;
+            }
+			else
+			{
+				ResetForm();
+			}
 		}
 	}
 
@@ -76,7 +94,7 @@ public partial class CompanyModal : ComponentBase
 
 		var bankAccount = new BankAccount(_bankNumber, _bic);
 
-		var createCompany = new CreateCompany(
+		var createCompany = IsEditMode ? null : new CreateCompany(
 			_location,
 			bankAccount,
 			_photo,
@@ -88,7 +106,16 @@ public partial class CompanyModal : ComponentBase
 			_rebate
 		);
 
-		await OnSubmit.InvokeAsync(createCompany);
+		var updateCompany = !IsEditMode ? null : new UpdateCompany(
+            _location,
+            _photo,
+            _name,
+            _address,
+            _corporateEmail,
+            _rebate
+        );
+
+		await OnSubmit.InvokeAsync((createCompany, updateCompany, EditingCompany?.Id ?? default));
 		ResetForm();
 	}
 

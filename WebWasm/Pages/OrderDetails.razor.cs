@@ -12,12 +12,9 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private Order? _order;
 	private CalculationInfo? _calculationInfo;
 	private CalculationInfo[] _allCalculationInfo = [];
-	private Company[] _companies = [];
-	private Driver[] _drivers = [];
 	private Level[] _levels = [];
-	
-	private Dictionary<Guid, Guid> _selectedCompanies = [];
-	private Dictionary<Guid, Guid> _selectedDrivers = [];
+	private (Company, Driver)[] _driversWithCompany = [];
+	private readonly Dictionary<double, Guid> _selectedDriverIds = [];
 
 	// For Status Change
 	private OrderStatus _newStatus;
@@ -47,22 +44,6 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 					toastService.ShowError("Order NotFound");
 					return;
 				}
-				
-				if (_order.Deliveries != null)
-				{
-					foreach (var d in _order.Deliveries)
-					{
-						if (!_selectedDrivers.ContainsKey(d.Id))
-						{
-							_selectedDrivers[d.Id] = d.Driver?.Id ?? Guid.Empty;
-						}
-
-						if (!_selectedCompanies.ContainsKey(d.Id))
-						{
-							_selectedCompanies[d.Id] = Guid.Empty;
-						}
-					}
-				}
 
 				_calculationInfo = _allCalculationInfo.FirstOrDefault(c => c.Id == Id);
 				_newStatus = _order.Status;
@@ -77,10 +58,9 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 	private async ValueTask FetchData()
 	{
-		_companies = await cashService.GetData<Company>();
-		_drivers = await cashService.GetData<Driver>();
 		_allCalculationInfo = await cashService.GetData<CalculationInfo>();
 		_levels = [.. (await cashService.GetData<Region>()).SelectMany(r => r.Levels)];
+        _driversWithCompany = await cashService.GetDriverWithCompany();
     }
 
 	private void RequestResetPayments()
@@ -108,28 +88,38 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		});
 	}
 
-	private void RequestAcceptDelivery(Guid deliveryId, Guid companyId, Guid driverId)
+	private void RequestAcceptDelivery(double weight)
 	{
-		if (companyId == Guid.Empty || driverId == Guid.Empty)
+		_selectedDriverIds.TryGetValue(weight, out var selectedDriverId);
+
+		var companyId = GetCompanyId(selectedDriverId);
+		if (selectedDriverId == Guid.Empty)
 		{
-			toastService.ShowError("Please select a company and a driver.");
+			toastService.ShowError("Please select a driver.");
+			return;
+		}
+
+		if (companyId == Guid.Empty)
+		{
+			toastService.ShowError("Please select a company.");
 			return;
 		}
 
 		_confirmTitle = "Accept Delivery";
-		_confirmMessage = "Are you sure you want to assign this delivery to the selected driver?";
-		_pendingAction = async () => await AcceptDelivery(deliveryId, companyId, driverId);
+		_confirmMessage = $"Are you sure you want to assign this delivery with weight {weight} to the selected driver?";
+		_pendingAction = async () => await AcceptDelivery(weight, companyId, selectedDriverId);
 		_isConfirmOpen = true;
 	}
 
-	private async Task AcceptDelivery(Guid deliveryId, Guid companyId, Guid driverId)
+	private async Task AcceptDelivery(double weight, Guid companyId, Guid driverId)
 	{
 		await loadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
-				await apiClient.Post($"Orders/{Id}/accept?companyId={companyId}&deliveryId={deliveryId}&driverId={driverId}");
+				await apiClient.Post($"Orders/{Id}/accept?companyId={companyId}&weight={weight}&driverId={driverId}");
 				toastService.ShowSuccess("Delivery accepted successfully");
+				_selectedDriverIds.Remove(weight);
 				await LoadOrder();
 			}
 			catch (Exception ex)
@@ -180,14 +170,39 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_pendingAction = null;
 	}
 
-	private static string GetDriverName(Driver driver)
+    private Guid GetCompanyId(Guid driverId)
+    {
+        foreach (var (company, driver) in _driversWithCompany)
+        {
+            if (driver.Id == driverId)
+            {
+                return company.Id;
+            }
+        }
+
+        return Guid.Empty;
+    }
+
+    private string GetAdminState()
 	{
-		var name = $"{driver.UserInfo?.FirstName} {driver.UserInfo?.LastName}".Trim();
-		if (string.IsNullOrWhiteSpace(name))
+		if (_order is null)
 		{
-			name = string.IsNullOrEmpty(driver.UserInfo?.MobilePhone) ? "Unknown Driver" : driver.UserInfo.MobilePhone;
+			return string.Empty;
 		}
-	
-		return name;
+
+		return _order.Status switch
+        {
+            OrderStatus.Draft => "Заказ почемуто в мусорном статусе 🗑️",
+            OrderStatus.WaitingApprove => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ПРИНЯТ похоже это мусор" : _order.Created < DateTime.Now.AddHours(2) ? "Заказ всё еще не принимают 🧲" : "Новый заказ создан ✒️",
+            OrderStatus.PaymentPending => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ОПЛАЧЕН похоже это мусор" : "Заказ всё еще не оплачен 💸",
+            OrderStatus.Active => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? " Сегодня выполнение заказа 📦" : " Active order 📝",
+            OrderStatus.Completed => "Считаем наши денюзки 🤑, не забываем оплатить Перевозчикам/Поставщикам",
+            OrderStatus.CorruptedPayment => "💀 надо чтото сделать с этим ⏰",
+            OrderStatus.Cancelled => "Увы но отмена 😢",
+            OrderStatus.Archived => "Уже и не вспомнить что с ним было 😅",
+            OrderStatus.Deleted => "👷 уже нет",
+            OrderStatus.PaymentInProgress => "📣 обрабатываем платёж надеюсь всё ок 🤞 статус поменяется быстро",
+			_ => "There is no state 🗽"
+        };
 	}
 }

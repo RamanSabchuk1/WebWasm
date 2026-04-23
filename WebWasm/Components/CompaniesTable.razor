@@ -128,6 +128,10 @@
 							@onclick="() => OnToggleActive.InvokeAsync((context.Id, !context.IsActive))">
 						@(context.IsActive ? "🔒 Deactivate" : "✅ Activate")
 					</button>
+
+					<button class="btn-action btn-edit" @onclick="() => OnEditCompany.InvokeAsync(context)">
+						✏️ Edit
+					</button>
 				</TemplateColumn>
 			</QuickGrid>
 		</div>

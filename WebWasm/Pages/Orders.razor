@@ -43,13 +43,88 @@
 
 
 	<div class="data-grid-container">
-		<div class="data-grid-search">
+		<div class="data-grid-toolbar">
 			<input type="text"
-				   placeholder="Search producers, loading places, materials..."
+				   placeholder="Search..."
 				   @bind="_searchText"
 				   @bind:event="oninput"
 				   class="search-input" />
+
+			<button class="filter-toggle-btn" @onclick="() => _showFilters = !_showFilters">
+				<span>🔍 Filters</span>
+				@if (_selectedStatuses.Count > 0 || _minWeight.HasValue || _maxWeight.HasValue)
+				{
+					<span class="filter-count-badge">
+						@(_selectedStatuses.Count + (_minWeight.HasValue ? 1 : 0) + (_maxWeight.HasValue ? 1 : 0))
+					</span>
+				}
+				<span class="filter-toggle-icon">@(_showFilters ? "▲" : "▼")</span>
+			</button>
 		</div>
+
+		@if (_showFilters)
+		{
+			<div class="filters-panel">
+				<div class="filter-row">
+					<label class="filter-label">Weight Range</label>
+					<div class="filter-control range-control">
+						<div class="range-input-group">
+							<span class="range-value">@CurrentMinWeight.ToString("F2")</span>
+							<input type="range"
+								   value="@CurrentMinWeight.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   @onchange="OnMinWeightChanged"
+								   min="@_weightRangeMin.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   max="@_weightRangeMax.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   step="@_weightStep.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   disabled="@_weightFilterDisabled"
+								   class="range-slider" title="Min Weight" />
+							<span class="range-label">Min</span>
+						</div>
+						<div class="range-input-group">
+							<span class="range-value">@CurrentMaxWeight.ToString("F2")</span>
+							<input type="range"
+								   value="@CurrentMaxWeight.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   @onchange="OnMaxWeightChanged"
+								   min="@_weightRangeMin.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   max="@_weightRangeMax.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   step="@_weightStep.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+								   disabled="@_weightFilterDisabled"
+								   class="range-slider" title="Max Weight" />
+							<span class="range-label">Max</span>
+						</div>
+						@if (_minWeight.HasValue || _maxWeight.HasValue)
+						{
+							<button class="clear-filter-btn" @onclick="ClearWeightFilter" title="Clear">&times;</button>
+						}
+					</div>
+				</div>
+
+				<div class="filter-row">
+					<label class="filter-label">Statuses</label>
+					<div class="filter-control">
+						<select @onchange="AddStatus" class="search-input filter-select" value="">
+							<option value="" disabled selected hidden>Select Status...</option>
+							@foreach (var status in Enum.GetValues<OrderStatus>().Where(s => !_selectedStatuses.Contains(s)))
+							{
+								<option value="@status">@status</option>
+							}
+						</select>
+
+						@if (_selectedStatuses.Count > 0)
+						{
+							<div class="selected-statuses">
+								@foreach (var status in _selectedStatuses)
+								{
+									<span class="badge @GetStatus(status) status-pill" @onclick="() => RemoveStatus(status)" title="Click to remove">
+										@status <span class="pill-remove">&times;</span>
+									</span>
+								}
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+		}
 
 		@if (_hasItems)
 		{

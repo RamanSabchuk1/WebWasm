@@ -27,7 +27,8 @@ messaging.onBackgroundMessage(async (payload) => {
 		icon: 'icon-192.png',
 		badge: 'icon-192.png',
 		data: payload.data, // Ensure data is passed for click handling
-		tag: payload.data?.orderId || payload.data?.tag || 'default',
+		// Unique tag per push so notifications never collapse/replace each other.
+		tag: (payload.data?.tag || payload.data?.orderId || 'fcm') + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
 		renotify: true
 	};
 

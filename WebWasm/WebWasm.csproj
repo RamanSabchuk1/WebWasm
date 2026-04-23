@@ -15,8 +15,11 @@
 		<PublishTrimmed>true</PublishTrimmed>
 		<!-- Possible values full, link, copyused, partial -->
 		<TrimMode>full</TrimMode>
-		<RunAOTCompilation Condition="'$(PublishDir)' != ''">true</RunAOTCompilation>
-		<WasmStripILAfterAOT Condition="'$(PublishDir)' != ''">true</WasmStripILAfterAOT>
+		<!-- AOT and native build only during publish to keep dev iteration fast.
+			 '_IsPublishing' is set by Sdk targets during dotnet publish. -->
+		<RunAOTCompilation Condition="'$(_IsPublishing)' == 'true'">true</RunAOTCompilation>
+		<WasmStripILAfterAOT Condition="'$(_IsPublishing)' == 'true'">true</WasmStripILAfterAOT>
+		<WasmBuildNative Condition="'$(_IsPublishing)' == 'true'">true</WasmBuildNative>
 		<!-- Keep globalization support for proper date/time and number formatting. Set to true to save ~200KB if not needed -->
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
@@ -24,8 +27,6 @@
 		<!-- Enhanced debugging and analysis -->
 		<!--<Configuration>Release</Configuration>-->
 		<!--<DebuggerSupport>false</DebuggerSupport>-->
-		<WasmBuildNative>true</WasmBuildNative>
-		<UsingMicrosoftNETSdkBlazorWebAssembly>true</UsingMicrosoftNETSdkBlazorWebAssembly>
 		<BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
 		<EventSourceSupport>false</EventSourceSupport>
 		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>

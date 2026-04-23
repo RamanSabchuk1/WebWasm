@@ -52,6 +52,76 @@
 		</div>
 	</div>
 
+	<div class="data-grid-toolbar">
+		<input type="text"
+			   placeholder="Search by name or phone..."
+			   value="@_searchText"
+			   @oninput="OnSearchTextChanged"
+			   class="search-input" />
+
+		<button class="filter-toggle-btn" @onclick="() => _showFilters = !_showFilters">
+			<span>🔍 Filters</span>
+			@if (ActiveFilterCount > 0)
+			{
+				<span class="filter-count-badge">@ActiveFilterCount</span>
+			}
+			<span class="filter-toggle-icon">@(_showFilters ? "▲" : "▼")</span>
+		</button>
+	</div>
+
+	@if (_showFilters)
+	{
+		<div class="filters-panel">
+			<div class="filter-row">
+				<label class="filter-label">User Kind</label>
+				<div class="filter-control">
+					<div class="kind-switch">
+						<button type="button"
+								class="kind-switch-btn @(_userKindFilter == UserKindFilter.All ? "active" : "")"
+								@onclick="() => OnUserKindFilterChanged(UserKindFilter.All)">
+							All
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_userKindFilter == UserKindFilter.DriversOnly ? "active" : "")"
+								@onclick="() => OnUserKindFilterChanged(UserKindFilter.DriversOnly)">
+							🚚 Drivers
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_userKindFilter == UserKindFilter.UsersOnly ? "active" : "")"
+								@onclick="() => OnUserKindFilterChanged(UserKindFilter.UsersOnly)">
+							👤 Users
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="filter-row">
+				<label class="filter-label">Roles</label>
+				<div class="filter-control">
+					<select @onchange="AddFilterRole" class="search-input filter-select" value="">
+						<option value="" disabled selected hidden>Select Role...</option>
+						@foreach (var role in _roleOptions.Where(r => !_filterRoles.Contains(r)))
+						{
+							<option value="@role">@role</option>
+						}
+					</select>
+
+					@if (_filterRoles.Count > 0)
+					{
+						<div class="selected-statuses">
+							@foreach (var role in _filterRoles)
+							{
+								<span class="role-pill status-pill" @onclick="() => RemoveFilterRole(role)" title="Click to remove">
+									@role <span class="pill-remove">&times;</span>
+								</span>
+							}
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+	}
+
 	@if (_users is null)
 	{
 		<p class="empty-state"><em>Loading...</em></p>
@@ -62,11 +132,13 @@
 	}
 	else
 	{
+		var filteredUsers = FilteredUsers;
 		<div class="table-container">
 			<table class="styled-table">
 				<thead>
 					<tr>
 						<th>Login</th>
+						<th>Company</th>
 						<th>Roles</th>
 						<th>Status</th>
 						<th>Actions</th>
@@ -75,7 +147,7 @@
 				</thead>
 				<tbody>
 					@{
-						var itemsToShow = _users
+						var itemsToShow = filteredUsers
 							.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage)
 							.Take(_pagination.ItemsPerPage)
 							.ToArray();
@@ -101,6 +173,16 @@
 								</div>
 							</td>
 							<td>
+								@if (company is not null)
+								{
+									<span>@company.Name</span>
+								}
+								else
+								{
+									<span class="text-muted">—</span>
+								}
+							</td>
+							<td>
 								<div class="roles-list">
 									@foreach (var role in user.Roles.OrderBy(r => r))
 									{
@@ -110,8 +192,8 @@
 							</td>
 							<td>
 								<div class="status-stack">
-									<span class="status-badge @(user.IsActive ? "active" : "inactive")">
-										@(user.IsActive ? "Active" : "Inactive")
+									<span class="status-badge @(user.UserInfo.IsActive ? "active" : "inactive")">
+										@(user.UserInfo.IsActive ? "Active" : "Inactive")
 									</span>
 									<span>
 										@(user.UserVerified ? "✅" : "⚠️")
@@ -120,8 +202,8 @@
 							</td>
 							<td>
 								<div class="action-buttons">
-									<button class="btn-action @(user.IsActive ? "btn-delete" : "btn-edit")" @onclick="() => ToggleUserActive(user)">
-										@(user.IsActive ? "Deactivate" : "Activate")
+									<button class="btn-action @(user.UserInfo.IsActive ? "btn-delete" : "btn-edit")" @onclick="() => ToggleUserActive(user)">
+										@(user.UserInfo.IsActive ? "Deactivate" : "Activate")
 									</button>
 									<button class="btn-action @(user.UserVerified ? "btn-warn" : "btn-edit")" @onclick="() => ToggleUserVerified(user)">
 										@(user.UserVerified ? "Unverify" : "Verify")
@@ -153,7 +235,7 @@
 							var displayName = GetDisplayName(user.UserInfo);
 							var slots = GetDriverSlots(driver.Id).ToArray();
 							<tr class="details-row">
-								<td colspan="5">
+								<td colspan="6">
 									<div class="details-grid">
 										<div class="details-section">
 											<h4>User Info</h4>
@@ -231,7 +313,7 @@
 		</div>
 
 		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" TotalItems="@_users.Length" AfterNavigate="() => StateHasChanged()" />
+			<CustomPaginator State="@_pagination" TotalItems="@filteredUsers.Length" AfterNavigate="() => StateHasChanged()" />
 		</div>
 	}
 </div>

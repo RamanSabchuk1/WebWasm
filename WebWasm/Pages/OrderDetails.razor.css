@@ -15,11 +15,15 @@
 	margin-bottom: 1.5rem;
 }
 
-.card-header {
-	margin-bottom: 1rem;
-	border-bottom: 1px solid #eee;
-	padding-bottom: 0.5rem;
-}
+	.content-card > .info-item {
+		margin-bottom: 1.5rem;
+	}
+
+	.card-header {
+		margin-bottom: 1rem;
+		border-bottom: 1px solid #eee;
+		padding-bottom: 0.5rem;
+	}
 
 .card-header h3 {
 	margin: 0;

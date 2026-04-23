@@ -123,7 +123,7 @@ public partial class Vehicles
 								user.UserInfo.MiddleName,
 								user.UserInfo.LastName,
 								user.UserInfo.MobilePhone,
-								user.IsActive,
+								user.UserInfo.IsActive,
 								company
 							)
 						);

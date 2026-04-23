@@ -106,6 +106,18 @@
 	transform: scale(1.1);
 }
 
+.btn-edit {
+	background: var(--accent-light, #E5D5C0);
+	color: var(--accent-primary, #8B7355);
+}
+
+	.btn-edit:hover {
+		background: var(--accent-primary, #8B7355);
+		color: white;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(139, 115, 85, 0.2);
+	}
+
 .company-info {
 	display: flex;
 	flex-direction: column;

@@ -559,3 +559,196 @@
 		width: 100%;
 	}
 }
+
+/* Filters Toolbar */
+.data-grid-toolbar {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+}
+
+.data-grid-toolbar .search-input {
+	flex: 1;
+	min-width: 200px;
+	margin: 0;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	transition: border-color 0.2s;
+}
+
+	.data-grid-toolbar .search-input:focus {
+		outline: none;
+		border-color: var(--accent-primary, #8B7355);
+	}
+
+.filter-toggle-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: all 0.2s;
+}
+
+	.filter-toggle-btn:hover {
+		border-color: var(--accent-primary, #8B7355);
+		background: rgba(201, 168, 108, 0.05);
+	}
+
+.filter-toggle-icon {
+	font-size: 0.7rem;
+	color: var(--text-secondary, #7A7A7A);
+}
+
+.filter-count-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 6px;
+	background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+	color: white;
+	border-radius: 11px;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.filters-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1rem;
+	margin-bottom: 1rem;
+	background: var(--bg-surface, #FAF7F2);
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+}
+
+.filter-row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.filter-label {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary, #3D2E1F);
+}
+
+.filter-control {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.filter-select {
+	max-width: 250px;
+}
+
+.kind-switch {
+	display: inline-flex;
+	background: var(--bg-primary, #FFFBF5);
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	padding: 4px;
+	gap: 4px;
+}
+
+.kind-switch-btn {
+	padding: 0.5rem 1rem;
+	background: transparent;
+	color: var(--text-secondary, #7A7A7A);
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 0.85rem;
+	font-weight: 500;
+	transition: all 0.2s;
+}
+
+	.kind-switch-btn:hover {
+		color: var(--text-primary, #3D2E1F);
+	}
+
+	.kind-switch-btn.active {
+		background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+		color: white;
+		box-shadow: 0 2px 4px rgba(139, 115, 85, 0.2);
+	}
+
+.selected-statuses {
+	display: flex;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	cursor: pointer;
+	padding-right: 0.5rem;
+	transition: opacity 0.2s, transform 0.2s;
+}
+
+	.status-pill:hover {
+		opacity: 0.85;
+		transform: translateY(-1px);
+	}
+
+.pill-remove {
+	font-weight: 700;
+	font-size: 1.05rem;
+	line-height: 1;
+	opacity: 0.8;
+}
+
+
+/* Override - filter select inside panel needs same styling as toolbar search */
+.filters-panel .search-input,
+.filters-panel select.search-input {
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	width: 100%;
+	max-width: 250px;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	transition: border-color 0.2s;
+	cursor: pointer;
+}
+
+.filters-panel .search-input:focus {
+	outline: none;
+	border-color: var(--accent-primary, #8B7355);
+}
+
+/* Role pill in filter panel reuses badge look */
+.filters-panel .role-pill.status-pill {
+	background: linear-gradient(135deg, rgba(201, 168, 108, 0.25) 0%, rgba(139, 115, 85, 0.25) 100%);
+	color: var(--text-primary, #3D2E1F);
+	border: 1px solid rgba(139, 115, 85, 0.3);
+	padding: 0.35rem 0.75rem;
+	border-radius: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+

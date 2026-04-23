@@ -18,7 +18,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 	private const string BaseAddress = "https://kliffort.com/api/dev/";
 	//private const string BaseAddress = "https://localhost:7231/";
 
-	private const string Auth = nameof(Auth);
+    private const string Auth = nameof(Auth);
 
 	public async ValueTask Login(Login.LoginModel login)
 	{
