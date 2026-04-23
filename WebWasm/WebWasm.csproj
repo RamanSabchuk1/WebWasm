@@ -13,8 +13,11 @@
 
 		<!-- Optimization settings for size reduction -->
 		<PublishTrimmed>true</PublishTrimmed>
-		<!-- Possible values full, link, copyused, partial -->
-		<TrimMode>full</TrimMode>
+		<!-- Possible values full, link, copyused, partial.
+			 Use 'partial' for Blazor WebAssembly: 'full' aggressively removes
+			 framework members the WASM SDK substitutions still expect, which
+			 triggers a runtime AggregateException/InvalidCastException at startup. -->
+		<TrimMode>partial</TrimMode>
 		<!-- AOT and native build only during publish to keep dev iteration fast.
 			 '_IsPublishing' is set by Sdk targets during dotnet publish. -->
 		<RunAOTCompilation Condition="'$(_IsPublishing)' == 'true'">true</RunAOTCompilation>
@@ -37,8 +40,11 @@
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<LangVersion>preview</LangVersion>
 		<AnalysisLevel>latest</AnalysisLevel>
-		<!-- Suppress IL2111: Router.NotFoundPage is a known Blazor framework AOT issue that doesn't cause runtime problems -->
-		<NoWarn>$(NoWarn);IL2111</NoWarn>
+		<!-- Suppress:
+			 IL2111: Router.NotFoundPage is a known Blazor framework AOT issue that doesn't cause runtime problems.
+			 IL2007: WasmIntrinsics.xml references System.Private.CoreLib by a name the linker can't resolve;
+					this substitution is benign and emitted by the WebAssembly SDK itself. -->
+		<NoWarn>$(NoWarn);IL2111;IL2007</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -57,7 +57,7 @@ public partial class LevelEditor : ComponentBase
 			_priceInfo = null; // Reset first
 			if (EditingLevel.Info?.Info?.Count > 0)
 			{
-				_priceInfo = [with(EditingLevel.Info.Info)];
+				_priceInfo = new Dictionary<uint, PriceInfo>(EditingLevel.Info.Info);
 			}
 			else
 			{
