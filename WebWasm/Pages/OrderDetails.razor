@@ -155,14 +155,14 @@ else
 				<div class="info-item"><label>Material Cost</label><span>@_calculationInfo.MaterialCost.ToString("F2") BYN</span></div>
 				<div class="info-item"><label>Commission</label><span>@_calculationInfo.Commission.ToString("F2") BYN</span></div>
 			</div>
-			<div class="card-header">
+			<div class="card-header" style="padding-top: 1.5rem;">
 				<h3>Deliveries Calculation</h3>
 			</div>
 			@foreach (var d in _calculationInfo.DeliveryInfo)
 			{
 				<div class="info-grid">
-					<div class="info-item"><label>Rebate</label><span>@(d.DeliveryRebate * 100).ToString("F2")</span></div>
-					<div class="info-item"><label>Vat</label><span>@(d.Vat * 100).ToString("F2")</span></div>
+					<div class="info-item"><label>Rebate</label><span>@((d.DeliveryRebate * 100).ToString("F2"))</span></div>
+					<div class="info-item"><label>Vat</label><span>@((d.Vat * 100).ToString("F2"))</span></div>
 					<div class="info-item"><label>Netto Cost</label><span>@d.Cost.ToString("F2") BYN</span></div>
 					<div class="info-item"><label>Total Price</label><span>@d.TotalPrice.ToString("F2") BYN</span></div>
 					<div class="info-item"><label>Weight</label><span>@d.Weight.ToString("F2") KG</span></div>
