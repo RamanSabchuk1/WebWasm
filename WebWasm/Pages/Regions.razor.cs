@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -129,22 +129,13 @@ public partial class Regions : ComponentBase
         {
             try
             {
-                if (_editingLevel is not null)
-                {
-                    await ApiClient.Put($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}", levelData);
-                    ToastService.ShowSuccess("Level updated successfully!");
-                }
-                else
-                {
-                    // Create new level
-                    await ApiClient.Post($"Regions/{_editingLevelRegion.Id}/level", levelData);
-                    ToastService.ShowSuccess("Level created successfully!");
-                }
+                // Create-only path: edit goes through the split handlers below
+                await ApiClient.Post($"Regions/{_editingLevelRegion.Id}/level", levelData);
+                ToastService.ShowSuccess("Level created successfully!");
 
                 await LoadRegions(false);
                 CloseLevelEditor();
 
-                // Refresh details modal if still open
                 if (_isDetailsModalOpen)
                 {
                     _viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
@@ -153,6 +144,62 @@ public partial class Regions : ComponentBase
             catch (Exception ex)
             {
                 ToastService.ShowError($"Failed to save level: {ex.Message}");
+            }
+        });
+    }
+
+    private async Task HandleLevelSubmitPrices(UpdateLevelPriceInfo priceInfo)
+    {
+        if (_editingLevelRegion is null || _editingLevel is null)
+        {
+            return;
+        }
+
+        await LoadingService.ExecuteWithLoading(async () =>
+        {
+            try
+            {
+                await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/price-info", priceInfo);
+                ToastService.ShowSuccess("Prices updated successfully!");
+
+                await LoadRegions(false);
+
+                if (_isDetailsModalOpen)
+                {
+                    _viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Failed to update prices: {ex.Message}");
+            }
+        });
+    }
+
+    private async Task HandleLevelSubmitGeometry(UpdateLevelGeometry geometry)
+    {
+        if (_editingLevelRegion is null || _editingLevel is null)
+        {
+            return;
+        }
+
+        await LoadingService.ExecuteWithLoading(async () =>
+        {
+            try
+            {
+                await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/geometry", geometry);
+                ToastService.ShowSuccess("Geometry updated successfully!");
+
+                await LoadRegions(false);
+
+                if (_isDetailsModalOpen)
+                {
+                    _viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Failed to update geometry: {ex.Message}");
             }
         });
     }

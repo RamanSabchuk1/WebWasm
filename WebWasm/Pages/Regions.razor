@@ -36,7 +36,9 @@
 			 Region="@_editingLevelRegion"
 			 EditingLevel="@_editingLevel"
 			 OnClose="@CloseLevelEditor"
-			 OnSubmit="@HandleLevelSubmit" />
+			 OnSubmit="@HandleLevelSubmit"
+			 OnSubmitPrices="@HandleLevelSubmitPrices"
+			 OnSubmitGeometry="@HandleLevelSubmitGeometry" />
 
 <ConfirmDialog IsOpen="@_isConfirmOpen"
 			   Title="@_confirmTitle"

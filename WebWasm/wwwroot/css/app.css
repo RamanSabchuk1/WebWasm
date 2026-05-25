@@ -208,6 +208,68 @@ a:hover, .btn-link:hover {
         content: var(--blazor-load-percentage-text, "Loading");
     }
 
+/* ============================================
+   Modal Shell — Global Styles
+   Used by ModalShell.razor across all pages
+   ============================================ */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(61, 61, 61, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: modalFadeIn 0.15s ease;
+    outline: none;
+}
+
+.modal-overlay.modal-overlay-top {
+    z-index: 2000;
+}
+
+.modal-container {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-medium);
+    max-width: min(90vw, 860px);
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideUp 0.2s ease;
+}
+
+.modal-container.modal-sm {
+    max-width: min(90vw, 480px);
+}
+
+.modal-container.modal-large {
+    max-width: min(90vw, 1000px);
+}
+
+.modal-container.modal-fullscreen {
+    max-width: min(96vw, 1400px);
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 code {
     color: #c02d76;
 }
@@ -242,3 +304,106 @@ code {
     .form-input::placeholder {
         color: #9E9E9E;
     }
+/* Compact badge/label columns at smaller viewports */
+@media (max-width: 1200px) {
+.badge, .status-pill {
+font-size: clamp(0.6rem, 1.2vw, 0.75rem) !important;
+padding: 0.2rem 0.45rem !important;
+}
+}
+
+/* ============================================
+   Themed checkbox
+   ============================================ */
+label.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-primary, #3D2E1F);
+    user-select: none;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-surface, #FAF7F2);
+    border: 1px solid var(--border-color, #E5D5C0);
+    border-radius: 8px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+label.checkbox:hover {
+    border-color: var(--color-primary, #C9A86C);
+}
+
+label.checkbox input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1.5px solid var(--color-primary, #C9A86C);
+    border-radius: 4px;
+    background: var(--bg-surface, #FAF7F2);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+}
+
+label.checkbox input[type="checkbox"]:checked {
+    background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+    border-color: #8B7355;
+}
+
+label.checkbox input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+label.checkbox input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--color-accent, #E8A545);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Compact action buttons across all tables
+   ============================================ */
+.action-buttons {
+    display: inline-flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.action-buttons button,
+.action-buttons .btn-action,
+.btn-action {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .action-buttons button,
+    .action-buttons .btn-action,
+    .btn-action {
+        padding: 0.3rem 0.55rem;
+        font-size: 0.72rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-buttons button,
+    .action-buttons .btn-action,
+    .btn-action {
+        padding: 0.25rem 0.45rem;
+        font-size: 0.7rem;
+    }
+}

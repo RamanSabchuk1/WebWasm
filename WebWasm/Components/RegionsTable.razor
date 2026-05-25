@@ -6,6 +6,7 @@
 		<input type="text"
 			   placeholder="Search regions..."
 			   @bind="_searchText"
+			   @bind:after="SaveSearch"
 			   @bind:event="oninput"
 			   class="search-input" />
 	</div>

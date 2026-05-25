@@ -1,8 +1,7 @@
 @using WebWasm.Models
 @using WebWasm.Services
 
-<div class="modal-overlay" @onclick="() => OnCancel.InvokeAsync()">
-	<div class="modal-dialog vehicle-modal" @onclick:stopPropagation="true">
+<ModalShell IsOpen="true" ContainerClass="modal-large" OnClose="() => OnCancel.InvokeAsync()">
 		<div class="modal-header">
 			<h2>@(IsEditMode ? "Edit Vehicle" : "Create Vehicle")</h2>
 			<button class="btn-close" @onclick="() => OnCancel.InvokeAsync()">×</button>
@@ -85,5 +84,4 @@
 				@(IsEditMode ? "Update" : "Create")
 			</button>
 		</div>
-	</div>
-</div>
+</ModalShell>

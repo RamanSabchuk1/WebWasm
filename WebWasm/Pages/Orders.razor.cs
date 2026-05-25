@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Models;
@@ -7,7 +8,7 @@ using WebWasm.Services;
 namespace WebWasm.Pages;
 
 [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
-public partial class Orders(CashService cashService, NavigationManager navigationManager)
+public partial class Orders(CashService cashService, NavigationManager navigationManager, ILocalStorageService localStorage)
 {
 	private int _totalOrders = 0;
 	private int _pendingOrders = 0;
@@ -25,6 +26,9 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	private bool _weightFilterDisabled;
 	private List<OrderStatus> _selectedStatuses = new();
 	private bool _showFilters = false;
+
+	private DateOnly? _fromDate;
+	private DateOnly? _toDate;
 
 	private double CurrentMinWeight => _minWeight ?? _weightRangeMin;
 	private double CurrentMaxWeight => _maxWeight ?? _weightRangeMax;
@@ -57,38 +61,37 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	{
 		_minWeight = null;
 		_maxWeight = null;
+		_ = SaveFilters();
 	}
 
 	private void RecalculateWeightRange()
 	{
+		const double Step = 5000d;
+		_weightStep = Step;
+
 		if (_orders.Length == 0)
 		{
 			_weightRangeMin = 0;
 			_weightRangeMax = 0;
-			_weightStep = 1;
 			_weightFilterDisabled = true;
 			return;
 		}
 
-		_weightRangeMin = _orders.Min(o => o.TotalWeight);
-		_weightRangeMax = _orders.Max(o => o.TotalWeight);
-		var range = _weightRangeMax - _weightRangeMin;
+		var rawMin = _orders.Min(o => o.TotalWeight);
+		var rawMax = _orders.Max(o => o.TotalWeight);
 
-		if (range <= 0)
+		_weightRangeMin = Math.Floor(rawMin / Step) * Step;
+		_weightRangeMax = Math.Ceiling(rawMax / Step) * Step;
+
+		if (_weightRangeMax <= _weightRangeMin)
 		{
-			_weightFilterDisabled = true;
-			_weightStep = 1;
-			return;
+			_weightRangeMax = _weightRangeMin + Step;
 		}
 
-		_weightFilterDisabled = false;
-
-		var distinctCount = _orders.Select(o => o.TotalWeight).Distinct().Count();
-		var stepCount = Math.Clamp(distinctCount - 1, 3, 10);
-		_weightStep = range / stepCount;
+		_weightFilterDisabled = _weightRangeMax - _weightRangeMin <= 0;
 	}
 
-	private void AddStatus(ChangeEventArgs e)
+	private async Task AddStatus(ChangeEventArgs e)
 	{
 		if (Enum.TryParse<OrderStatus>(e.Value?.ToString(), out var status))
 		{
@@ -97,11 +100,13 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 				_selectedStatuses.Add(status);
 			}
 		}
+		await SaveFilters();
 	}
 
-	private void RemoveStatus(OrderStatus status)
+	private async Task RemoveStatus(OrderStatus status)
 	{
 		_selectedStatuses.Remove(status);
+		await SaveFilters();
 	}
 
 	private IQueryable<Order> FilteredOrders
@@ -132,6 +137,16 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 			if (_maxWeight.HasValue)
 			{
 				filtered = filtered.Where(o => o.TotalWeight <= _maxWeight.Value);
+			}
+
+			if (_fromDate.HasValue)
+			{
+				filtered = filtered.Where(o => o.Created.Date >= _fromDate.Value.ToDateTime(TimeOnly.MinValue));
+			}
+
+			if (_toDate.HasValue)
+			{
+				filtered = filtered.Where(o => o.Created.Date <= _toDate.Value.ToDateTime(TimeOnly.MaxValue));
 			}
 
 			return filtered.AsQueryable();
@@ -170,8 +185,50 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 		navigationManager.NavigateTo($"orders/{id}");
 	}
 
-	protected override async Task OnInitializedAsync()
-	{
-		await LoadData(true);
-	}
+protected override async Task OnInitializedAsync()
+{
+await LoadData(true);
+
+var savedFilters = await localStorage.GetItemAsync<OrdersFilterState>("orders_filters");
+if (savedFilters is not null)
+{
+_selectedStatuses = savedFilters.SelectedStatuses ?? [];
+_minWeight = savedFilters.MinWeight;
+_maxWeight = savedFilters.MaxWeight;
+_fromDate = savedFilters.FromDate;
+_toDate = savedFilters.ToDate;
+_searchText = savedFilters.SearchText ?? string.Empty;
+}
+}
+
+private async Task SaveFilters()
+{
+var state = new OrdersFilterState([.. _selectedStatuses], _minWeight, _maxWeight, _fromDate, _toDate, _searchText ?? string.Empty);
+await localStorage.SetItemAsync("orders_filters", state);
+}
+
+private async Task OnSearchTextChanged(ChangeEventArgs e)
+{
+_searchText = e.Value?.ToString() ?? string.Empty;
+await SaveFilters();
+}
+
+private async Task OnFromDateChanged(ChangeEventArgs e)
+{
+_fromDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null;
+await SaveFilters();
+}
+
+private async Task OnToDateChanged(ChangeEventArgs e)
+{
+_toDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null;
+await SaveFilters();
+}
+
+private void ClearDateFilter()
+{
+_fromDate = null;
+_toDate = null;
+_ = SaveFilters();
+}
 }

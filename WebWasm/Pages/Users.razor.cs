@@ -1,3 +1,4 @@
+﻿using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Models;
@@ -11,6 +12,7 @@ public partial class Users : ComponentBase
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
+	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
 	private User[]? _users;
 	private Driver[] _drivers = [];
@@ -58,48 +60,253 @@ public partial class Users : ComponentBase
 	private string _searchText = string.Empty;
 	private readonly List<RoleType> _filterRoles = [];
 	private UserKindFilter _userKindFilter = UserKindFilter.All;
+	private ActiveUserFilter _activeUserFilter = ActiveUserFilter.All;
+	private bool _showCustomersOnly = false;
+	private VerifiedUserFilter _verifiedFilter = VerifiedUserFilter.All;
 	private bool _showFilters = false;
 
-	private enum UserKindFilter
+	private bool _showConfirmDialog = false;
+	private string _confirmTitle = string.Empty;
+	private string _confirmMessage = string.Empty;
+	private Func<Task>? _confirmAction = null;
+
+	private bool _showAssignCompanyModal = false;
+	private User? _assignCompanyTargetUser;
+	private Guid _assignCompanyId = Guid.Empty;
+	private string _assignCompanyError = string.Empty;
+
+	private void OpenAssignCompanyModal(User user)
 	{
-		All,
-		DriversOnly,
-		UsersOnly
+		_assignCompanyTargetUser = user;
+		_assignCompanyId = Guid.Empty;
+		_assignCompanyError = string.Empty;
+		_showAssignCompanyModal = true;
 	}
 
-	private void AddFilterRole(ChangeEventArgs e)
+	private void CloseAssignCompanyModal()
+	{
+		_showAssignCompanyModal = false;
+		_assignCompanyTargetUser = null;
+		_assignCompanyId = Guid.Empty;
+		_assignCompanyError = string.Empty;
+	}
+
+	private async Task ConfirmAssignCompany()
+	{
+		if (_assignCompanyTargetUser is null || _assignCompanyId == Guid.Empty)
+		{
+			_assignCompanyError = "Please select a company.";
+			return;
+		}
+
+		var userInfoId = _assignCompanyTargetUser.UserInfo.Id;
+		var companyId = _assignCompanyId;
+		CloseAssignCompanyModal();
+
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Post($"Admin/user/{userInfoId}/company/{companyId}");
+				ToastService.ShowSuccess("User assigned to company successfully");
+				await LoadData(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to assign company: {ex.Message}");
+			}
+		});
+	}
+
+	private void RequestUnassignCompany(User user)
+	{
+		var name = GetDisplayName(user.UserInfo);
+		_confirmTitle = "Unassign Company";
+		_confirmMessage = $"Unassign '{name}' from their current company? Their CompanyId will be cleared.";
+		_confirmAction = async () => await UnassignCompanyConfirmed(user.UserInfo.Id);
+		_showConfirmDialog = true;
+	}
+
+	private async Task UnassignCompanyConfirmed(Guid userInfoId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Delete($"Admin/user/{userInfoId}/company");
+				ToastService.ShowSuccess("User unassigned from company successfully");
+				await LoadData(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to unassign company: {ex.Message}");
+			}
+		});
+	}
+
+	private void CloseConfirmDialog()
+	{
+		_showConfirmDialog = false;
+		_confirmTitle = string.Empty;
+		_confirmMessage = string.Empty;
+		_confirmAction = null;
+	}
+
+	private async Task HandleConfirm()
+	{
+		_showConfirmDialog = false;
+		if (_confirmAction is not null)
+		{
+			await _confirmAction.Invoke();
+		}
+		CloseConfirmDialog();
+	}
+
+	private void RequestDeleteUserInfo(User user)
+	{
+		var name = GetDisplayName(user.UserInfo);
+		_confirmTitle = "Soft Delete User";
+		_confirmMessage = $"Soft-delete user '{name}' (login: {user.Login})? This cascades to the driver record (if any) and all their vehicles. This action cannot be easily undone.";
+		_confirmAction = async () => await DeleteUserInfoConfirmed(user.UserInfo.Id);
+		_showConfirmDialog = true;
+	}
+
+	private async Task DeleteUserInfoConfirmed(Guid userInfoId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Delete($"Admin/user/{userInfoId}");
+				ToastService.ShowSuccess("User soft-deleted successfully");
+				await LoadData(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to delete user: {ex.Message}");
+			}
+		});
+	}
+
+	private void RequestDeleteDriver(User user, Driver driver)
+	{
+		var name = GetDisplayName(user.UserInfo);
+		_confirmTitle = "Soft Delete Driver";
+		_confirmMessage = $"Soft-delete the driver record for '{name}'? This cascades to all their vehicles. The user account itself will remain.";
+		_confirmAction = async () => await DeleteDriverConfirmed(driver.Id);
+		_showConfirmDialog = true;
+	}
+
+	private async Task DeleteDriverConfirmed(Guid driverId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Delete($"Admin/driver/{driverId}");
+				ToastService.ShowSuccess("Driver soft-deleted successfully");
+				await LoadData(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to delete driver: {ex.Message}");
+			}
+		});
+	}
+
+	private void RequestCreateDriver(User user)
+	{
+		var name = GetDisplayName(user.UserInfo);
+		_confirmTitle = "Create Driver";
+		_confirmMessage = $"Create a driver record for '{name}' (login: {user.Login})?";
+		_confirmAction = async () => await CreateDriverForUserConfirmed(user.UserInfo.Id);
+		_showConfirmDialog = true;
+	}
+
+	private async Task CreateDriverForUserConfirmed(Guid userInfoId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Post($"Admin/user/{userInfoId}/driver", new PhotoDto(string.Empty));
+				ToastService.ShowSuccess("Driver created successfully");
+				await LoadData(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to create driver: {ex.Message}");
+			}
+		});
+	}
+
+	private async Task AddFilterRole(ChangeEventArgs e)
 	{
 		if (Enum.TryParse<RoleType>(e.Value?.ToString(), out var role))
 		{
 			if (!_filterRoles.Contains(role))
 			{
 				_filterRoles.Add(role);
-				_pagination.SetCurrentPageIndexAsync(0);
+				_ = _pagination.SetCurrentPageIndexAsync(0);
+				await SaveFilters();
 			}
 		}
 	}
 
-	private void RemoveFilterRole(RoleType role)
+	private async Task RemoveFilterRole(RoleType role)
 	{
 		_filterRoles.Remove(role);
-		_pagination.SetCurrentPageIndexAsync(0);
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
 	}
 
-	private void OnSearchTextChanged(ChangeEventArgs e)
+	private async Task OnSearchTextChanged(ChangeEventArgs e)
 	{
 		_searchText = e.Value?.ToString() ?? string.Empty;
-		_pagination.SetCurrentPageIndexAsync(0);
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
 	}
 
-	private void OnUserKindFilterChanged(UserKindFilter value)
+	private async Task OnUserKindFilterChanged(UserKindFilter value)
 	{
 		_userKindFilter = value;
-		_pagination.SetCurrentPageIndexAsync(0);
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
+	}
+
+	private async Task OnActiveFilterChanged(ActiveUserFilter value)
+	{
+		_activeUserFilter = value;
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
+	}
+
+	private async Task OnVerifiedFilterChanged(VerifiedUserFilter value)
+	{
+		_verifiedFilter = value;
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
+	}
+
+	private async Task OnShowCustomersChanged(ChangeEventArgs e)
+	{
+		_showCustomersOnly = e.Value is bool b && b;
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
+	}
+
+	private async Task SaveFilters()
+	{
+		var state = new UsersFilterState(_userKindFilter, [.. _filterRoles], _activeUserFilter, _showCustomersOnly, _verifiedFilter, _searchText ?? string.Empty);
+		await LocalStorage.SetItemAsync("users_filters", state);
 	}
 
 	private int ActiveFilterCount =>
 		_filterRoles.Count
 		+ (_userKindFilter != UserKindFilter.All ? 1 : 0)
+		+ (_activeUserFilter != ActiveUserFilter.All ? 1 : 0)
+		+ (_showCustomersOnly ? 1 : 0)
+		+ (_verifiedFilter != VerifiedUserFilter.All ? 1 : 0)
 		+ (string.IsNullOrWhiteSpace(_searchText) ? 0 : 1);
 
 	private User[] FilteredUsers
@@ -122,10 +329,23 @@ public partial class Users : ComponentBase
 				filtered = filtered.Where(u => GetDriver(u) is null);
 			}
 
-			if (_filterRoles.Count > 0)
-			{
-				filtered = filtered.Where(u => u.Roles.Any(r => _filterRoles.Contains(r)));
-			}
+if (_filterRoles.Count > 0)
+{
+filtered = filtered.Where(u => u.Roles.Any(r => _filterRoles.Contains(r)));
+}
+
+if (_activeUserFilter == ActiveUserFilter.ActiveOnly)
+filtered = filtered.Where(u => u.UserInfo.IsActive);
+else if (_activeUserFilter == ActiveUserFilter.InactiveOnly)
+filtered = filtered.Where(u => !u.UserInfo.IsActive);
+
+if (_showCustomersOnly)
+filtered = filtered.Where(u => u.Roles.Count == 0);
+
+if (_verifiedFilter == VerifiedUserFilter.VerifiedOnly)
+filtered = filtered.Where(u => u.UserVerified);
+else if (_verifiedFilter == VerifiedUserFilter.UnverifiedOnly)
+filtered = filtered.Where(u => !u.UserVerified);
 
 			if (!string.IsNullOrWhiteSpace(_searchText))
 			{
@@ -151,8 +371,19 @@ public partial class Users : ComponentBase
 			return;
 		}
 
-		_isInitialized = true;
-		await LoadData(true);
+_isInitialized = true;
+await LoadData(true);
+
+var savedFilters = await LocalStorage.GetItemAsync<UsersFilterState>("users_filters");
+if (savedFilters is not null)
+{
+_userKindFilter = savedFilters.UserKindFilter;
+_filterRoles.AddRange(savedFilters.FilterRoles ?? []);
+_activeUserFilter = savedFilters.ActiveFilter;
+_showCustomersOnly = savedFilters.ShowCustomersOnly;
+_verifiedFilter = savedFilters.VerifiedFilter;
+_searchText = savedFilters.SearchText ?? string.Empty;
+}
 	}
 
 	private async Task LoadData(bool useCash)

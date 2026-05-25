@@ -567,6 +567,8 @@
 	align-items: center;
 	flex-wrap: wrap;
 	margin-bottom: 1rem;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .data-grid-toolbar .search-input {
@@ -635,6 +637,8 @@
 	background: var(--bg-surface, #FAF7F2);
 	border: 1px solid var(--border-color, #E5D5C0);
 	border-radius: 8px;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .filter-row {
@@ -752,3 +756,14 @@
 	white-space: nowrap;
 }
 
+
+@media (max-width: 1200px) {
+.role-pill {
+font-size: clamp(0.6rem, 1.2vw, 0.75rem);
+padding: 0.2rem 0.45rem;
+}
+.status-badge {
+font-size: clamp(0.6rem, 1.2vw, 0.75rem);
+padding: 0.25rem 0.5rem;
+}
+}

@@ -370,6 +370,8 @@
 	align-items: center;
 	flex-wrap: wrap;
 	margin-bottom: 1rem;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .data-grid-toolbar .search-input {
@@ -426,6 +428,8 @@
 	background: var(--bg-surface, #FAF7F2);
 	border: 1px solid var(--border-color, #E5D5C0);
 	border-radius: 8px;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .filter-row {
@@ -565,3 +569,41 @@
 	opacity: 0.8;
 }
 
+
+.date-range-group {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+flex-wrap: wrap;
+}
+
+.date-range-label {
+font-size: 0.8rem;
+color: var(--text-secondary, #7A7A7A);
+white-space: nowrap;
+}
+
+.date-input {
+    background: var(--bg-primary, #FFFBF5);
+    color: var(--text-primary, #3D2E1F);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color, #E5D5C0);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    height: 42px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.4);
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--accent-primary, #8B7355);
+    box-shadow: 0 0 0 2px rgba(201, 168, 108, 0.2);
+}

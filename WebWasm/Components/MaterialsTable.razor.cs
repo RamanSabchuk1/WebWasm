@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Models;
@@ -6,9 +7,11 @@ namespace WebWasm.Components;
 
 public partial class MaterialsTable : ComponentBase
 {
+	private const string SearchKey = "search_materials";
 	[Parameter] public List<MaterialType> Materials { get; set; } = [];
 	[Parameter] public EventCallback<MaterialType> OnEdit { get; set; }
 	[Parameter] public EventCallback<Guid> OnDelete { get; set; }
+	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
 	private string _searchText = string.Empty;
 	private bool _hasItems => Materials.Count > 0;
@@ -70,6 +73,17 @@ public partial class MaterialsTable : ComponentBase
 	{
 		_showConfirmDialog = false;
 		_pendingDeleteId = Guid.Empty;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
+		catch { _searchText = string.Empty; }
+	}
+
+	private async Task SaveSearch()
+	{
+		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
 	}
 
 	}

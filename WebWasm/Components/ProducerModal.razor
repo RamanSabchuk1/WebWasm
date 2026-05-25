@@ -1,9 +1,6 @@
 @using WebWasm.Models
 
-@if (IsOpen)
-{
-	<div class="modal-overlay" @onclick="CloseModal">
-		<div class="modal-container modal-large" @onclick:stopPropagation="true">
+<ModalShell IsOpen="IsOpen" ContainerClass="modal-large" OnClose="CloseModal">
 			<div class="modal-header">
 				<h2>@(IsEditMode ? "Edit Producer" : "Add New Producer")</h2>
 				<button class="btn-close" @onclick="CloseModal">×</button>
@@ -119,6 +116,4 @@
 					@(IsEditMode ? "Update" : "Create")
 				</button>
 			</div>
-		</div>
-	</div>
-}
+</ModalShell>

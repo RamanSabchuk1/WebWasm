@@ -39,12 +39,14 @@ public partial class Companies : ComponentBase
 
 	private void OpenAddCompanyModal()
 	{
+		_editingCompany = null;
 		_isCompanyModalOpen = true;
 	}
 
 	private void CloseCompanyModal()
 	{
 		_isCompanyModalOpen = false;
+		_editingCompany = null;
 	}
 
 	private async Task HandleCompanySubmit((CreateCompany?, UpdateCompany?, Guid) submit)
@@ -77,6 +79,31 @@ public partial class Companies : ComponentBase
 			catch (Exception ex)
 			{
 				ToastService.ShowError($"Failed to call API with company: {ex.Message}");
+			}
+		});
+	}
+
+	private void HandleDeleteCompany(Company company)
+	{
+		_confirmTitle = "Soft Delete Company";
+		_confirmMessage = $"Are you sure you want to soft-delete company '{company.Name}'? This will also cascade soft-delete all related Producers, Vehicles, Drivers and Users belonging to this company. This action cannot be easily undone.";
+		_confirmAction = async () => await DeleteCompanyConfirmed(company.Id);
+		_showConfirmDialog = true;
+	}
+
+	private async Task DeleteCompanyConfirmed(Guid companyId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Delete($"Admin/company/{companyId}");
+				ToastService.ShowSuccess("Company soft-deleted successfully!");
+				await LoadCompanies(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to delete company: {ex.Message}");
 			}
 		});
 	}

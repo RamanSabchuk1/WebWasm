@@ -119,6 +119,62 @@
 					}
 				</div>
 			</div>
+
+			<div class="filter-row">
+				<label class="filter-label">Active Status</label>
+				<div class="filter-control">
+					<div class="kind-switch">
+						<button type="button"
+								class="kind-switch-btn @(_activeUserFilter == ActiveUserFilter.All ? "active" : "")"
+								@onclick="() => OnActiveFilterChanged(ActiveUserFilter.All)">
+							All
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_activeUserFilter == ActiveUserFilter.ActiveOnly ? "active" : "")"
+								@onclick="() => OnActiveFilterChanged(ActiveUserFilter.ActiveOnly)">
+							✅ Active
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_activeUserFilter == ActiveUserFilter.InactiveOnly ? "active" : "")"
+								@onclick="() => OnActiveFilterChanged(ActiveUserFilter.InactiveOnly)">
+							❌ Inactive
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="filter-row">
+				<label class="filter-label">Verification</label>
+				<div class="filter-control">
+					<div class="kind-switch">
+						<button type="button"
+								class="kind-switch-btn @(_verifiedFilter == VerifiedUserFilter.All ? "active" : "")"
+								@onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.All)">
+							All
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_verifiedFilter == VerifiedUserFilter.VerifiedOnly ? "active" : "")"
+								@onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.VerifiedOnly)">
+							✔️ Verified
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_verifiedFilter == VerifiedUserFilter.UnverifiedOnly ? "active" : "")"
+								@onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.UnverifiedOnly)">
+							❓ Unverified
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="filter-row">
+				<label class="filter-label">Customers</label>
+				<div class="filter-control">
+					<label class="checkbox">
+						<input type="checkbox" checked="@_showCustomersOnly" @onchange="OnShowCustomersChanged" />
+						<span>Show users without roles only</span>
+					</label>
+				</div>
+			</div>
 		</div>
 	}
 
@@ -212,6 +268,23 @@
 									@if (driver is not null && hasCompany)
 									{
 										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">+ Slot</button>
+									}
+									@if (driver is null)
+									{
+										<button class="btn-action btn-edit" @onclick="() => RequestCreateDriver(user)" title="Create driver entity for this user">+ Driver</button>
+									}
+									else
+									{
+										<button class="btn-action btn-delete" @onclick="() => RequestDeleteDriver(user, driver)" title="Soft delete driver (cascades to vehicles)">🗑️ Driver</button>
+									}
+									<button class="btn-action btn-delete" @onclick="() => RequestDeleteUserInfo(user)" title="Soft delete user (cascades to driver and vehicles)">🗑️ User</button>
+									@if (user.UserInfo.Company is not null)
+									{
+										<button class="btn-action btn-warn" @onclick="() => RequestUnassignCompany(user)" title="Unassign user from their company">🚫 Company</button>
+									}
+									else
+									{
+										<button class="btn-action btn-edit" @onclick="() => OpenAssignCompanyModal(user)" title="Assign user to a company">🏢 Company</button>
 									}
 								</div>
 							</td>
@@ -318,10 +391,7 @@
 	}
 </div>
 
-@if (_showCreateUserModal)
-{
-	<div class="modal-overlay" @onclick="CloseCreateUserModal">
-		<div class="modal-container" @onclick:stopPropagation="true">
+<ModalShell IsOpen="_showCreateUserModal" OnClose="CloseCreateUserModal">
 			<div class="modal-header">
 				<h2>Add User</h2>
 				<button class="btn-close" @onclick="CloseCreateUserModal">×</button>
@@ -378,14 +448,9 @@
 				<button class="btn-secondary" @onclick="CloseCreateUserModal">Cancel</button>
 				<button class="btn-primary" @onclick="CreateUser">Create User</button>
 			</div>
-		</div>
-	</div>
-}
+</ModalShell>
 
-@if (_showCreateDriverModal)
-{
-	<div class="modal-overlay" @onclick="CloseCreateDriverModal">
-		<div class="modal-container" @onclick:stopPropagation="true">
+<ModalShell IsOpen="_showCreateDriverModal" OnClose="CloseCreateDriverModal">
 			<div class="modal-header">
 				<h2>Add Driver</h2>
 				<button class="btn-close" @onclick="CloseCreateDriverModal">×</button>
@@ -434,14 +499,9 @@
 				<button class="btn-secondary" @onclick="CloseCreateDriverModal">Cancel</button>
 				<button class="btn-primary" @onclick="CreateDriver">Create Driver</button>
 			</div>
-		</div>
-	</div>
-}
+</ModalShell>
 
-@if (_showDriverSlotModal)
-{
-	<div class="modal-overlay" @onclick="CloseDriverSlotModal">
-		<div class="modal-container" @onclick:stopPropagation="true">
+<ModalShell IsOpen="_showDriverSlotModal" OnClose="CloseDriverSlotModal">
 			<div class="modal-header">
 				<h2>Add Driver Slot</h2>
 				<button class="btn-close" @onclick="CloseDriverSlotModal">×</button>
@@ -491,14 +551,9 @@
 				<button class="btn-secondary" @onclick="CloseDriverSlotModal">Cancel</button>
 				<button class="btn-primary" @onclick="CreateDriverSlot">Create Slot</button>
 			</div>
-		</div>
-	</div>
-}
+</ModalShell>
 
-@if (_showRolesModal)
-{
-	<div class="modal-overlay" @onclick="CloseRolesModal">
-		<div class="modal-container" @onclick:stopPropagation="true">
+<ModalShell IsOpen="_showRolesModal" OnClose="CloseRolesModal">
 			<div class="modal-header">
 				<h2>Edit Roles</h2>
 				<button class="btn-close" @onclick="CloseRolesModal">×</button>
@@ -525,6 +580,40 @@
 				<button class="btn-secondary" @onclick="CloseRolesModal">Cancel</button>
 				<button class="btn-primary" @onclick="UpdateRoles">Save Roles</button>
 			</div>
-		</div>
-	</div>
-}
+</ModalShell>
+
+<ModalShell IsOpen="_showAssignCompanyModal" OnClose="CloseAssignCompanyModal">
+			<div class="modal-header">
+				<h2>Assign Company</h2>
+				<button class="btn-close" @onclick="CloseAssignCompanyModal">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Company *</label>
+					<select class="search-input" @bind="_assignCompanyId">
+						<option value="@Guid.Empty">-- Select company --</option>
+						@foreach (var company in _companies)
+						{
+							<option value="@company.Id">@company.Name</option>
+						}
+					</select>
+				</div>
+				@if (!string.IsNullOrWhiteSpace(_assignCompanyError))
+				{
+					<div class="error-message">⚠️ @_assignCompanyError</div>
+				}
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="CloseAssignCompanyModal">Cancel</button>
+				<button class="btn-primary" @onclick="ConfirmAssignCompany" disabled="@(_assignCompanyId == Guid.Empty)">Assign</button>
+			</div>
+</ModalShell>
+
+<ConfirmDialog IsOpen="@_showConfirmDialog"
+			   Title="@_confirmTitle"
+			   Message="@_confirmMessage"
+			   ConfirmText="Confirm"
+			   CancelText="Cancel"
+			   IsDangerous="true"
+			   OnConfirm="@HandleConfirm"
+			   OnCancel="@CloseConfirmDialog" />

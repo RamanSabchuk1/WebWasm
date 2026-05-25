@@ -44,6 +44,8 @@ public record CreateDriver(string Photo, string FirstName, string MiddleName, st
 public record CreateDriverSlot(TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);
 public record CreateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime, string Name);
 public record MutateLevel(LevelType Type, byte CalculationAlgorithm, ICollection<Location> Points, Dictionary<uint, PriceInfo> Info);
+public record UpdateLevelGeometry(ICollection<Location> Points);
+public record UpdateLevelPriceInfo(Dictionary<uint, PriceInfo> Info, byte CalculationAlgorithm, LevelType Type);
 public record CreateUser(Guid CompanyId, string FirstName, string MiddleName, string LastName, string MobilePhone, RoleType[] Roles);
 public record CreateVehicle(string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Guid DriverId);
 public record CreateRegion(string Name, string TimeZone);
@@ -108,3 +110,4 @@ public enum PaymentTransactionType
 	Pending = 24,
 	Cancelled = 25
 }
+public record PhotoDto(string Photo);

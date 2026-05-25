@@ -1,0 +1,8 @@
+@if (IsOpen)
+{
+	<div class="modal-overlay @(TopLayer ? "modal-overlay-top" : "")" tabindex="-1" @ref="_overlayRef" @onkeydown="HandleKeyDown">
+		<div class="modal-container @ContainerClass" @onclick:stopPropagation="true">
+			@ChildContent
+		</div>
+	</div>
+}

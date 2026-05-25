@@ -15,10 +15,10 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
 	public const string Authorization = nameof(Authorization);
 	private const string Bearer = nameof(Bearer);
-	private const string BaseAddress = "https://kliffort.com/api/dev/";
-	//private const string BaseAddress = "https://localhost:7231/";
+	//private const string BaseAddress = "https://kliffort.com/api/dev/";
+	private const string BaseAddress = "https://localhost:7231/";
 
-    private const string Auth = nameof(Auth);
+	private const string Auth = nameof(Auth);
 
 	public async ValueTask Login(Login.LoginModel login)
 	{
@@ -67,6 +67,22 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		var client = await GetHttpClient();
 
 		var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
+		{
+			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
+		};
+
+		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+		var response = await client.SendAsync(request);
+		await CheckResponseHeader(response, endpoint);
+		_ = await response.Content.ReadAsStringAsync();
+	}
+
+	public async ValueTask Patch<TRequest>(string endpoint, TRequest data)
+	{
+		var client = await GetHttpClient();
+
+		var request = new HttpRequestMessage(HttpMethod.Patch, endpoint)
 		{
 			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
 		};

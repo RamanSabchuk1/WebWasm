@@ -1,9 +1,6 @@
 ﻿@using WebWasm.Models
 
-@if (IsOpen)
-{
-	<div class="modal-overlay" @onclick="CloseEditor">
-		<div class="modal-container modal-fullscreen" @onclick:stopPropagation="true">
+<ModalShell IsOpen="IsOpen" ContainerClass="modal-fullscreen" OnClose="CloseEditor">
 			<div class="modal-header">
 				<h2>@(IsEditMode ? "Edit Level" : "Add New Level")</h2>
 				<button class="btn-close" @onclick="CloseEditor">×</button>
@@ -46,6 +43,15 @@
 
 						<h3>Price Information</h3>
 						<PriceInfoEditor @key="@GetPriceEditorKey()" @ref="_priceEditor" ExistingPrices="@_priceInfo" />
+
+						@if (IsEditMode)
+						{
+							<div class="panel-actions">
+								<button class="btn-primary" @onclick="HandleSubmitPrices" disabled="@(_priceEditor?.IsValid != true)">
+									💰 Update Prices
+								</button>
+							</div>
+						}
 					</div>
 
 					<!-- Right Panel: Map -->
@@ -65,6 +71,12 @@
 								<button class="btn-start-drawing" @onclick="OpenDrawer">
 									🎨 Start Drawing
 								</button>
+								@if (IsEditMode && _points.Count >= 3)
+								{
+									<button class="btn-primary panel-action-btn" @onclick="HandleSubmitGeometry">
+										🗺️ Update Geometry
+									</button>
+								}
 							</div>
 						}
 					</div>
@@ -79,11 +91,12 @@
 			</div>
 
 			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseEditor">Cancel</button>
-				<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!CanSubmit)">
-					@(IsEditMode ? "Update" : "Create") Level
-				</button>
+				<button class="btn-secondary" @onclick="CloseEditor">@(IsEditMode ? "Close" : "Cancel")</button>
+				@if (!IsEditMode)
+				{
+					<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!CanSubmit)">
+						Create Level
+					</button>
+				}
 			</div>
-		</div>
-	</div>
-}
+</ModalShell>

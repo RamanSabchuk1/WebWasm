@@ -10,6 +10,8 @@ public partial class LevelEditor : ComponentBase
 	[Parameter] public Level? EditingLevel { get; set; }
 	[Parameter] public EventCallback OnClose { get; set; }
 	[Parameter] public EventCallback<MutateLevel> OnSubmit { get; set; }
+	[Parameter] public EventCallback<UpdateLevelPriceInfo> OnSubmitPrices { get; set; }
+	[Parameter] public EventCallback<UpdateLevelGeometry> OnSubmitGeometry { get; set; }
 
 	private PriceInfoEditor? _priceEditor;
 	private LevelType _levelType = LevelType.Neighborhood;
@@ -147,6 +149,45 @@ public partial class LevelEditor : ComponentBase
 			await OnSubmit.InvokeAsync(createLevel);
 			// Close modal immediately after submission, regardless of result
 			await CloseEditor();
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"Error: {ex.Message}";
+		}
+	}
+
+	private async Task HandleSubmitPrices()
+	{
+		var priceInfo = _priceEditor?.GetPrices();
+		if (priceInfo is null || priceInfo.Count == 0)
+		{
+			_errorMessage = "Invalid price information.";
+			return;
+		}
+
+		try
+		{
+			var model = new UpdateLevelPriceInfo(priceInfo, _algorithm, _levelType);
+			await OnSubmitPrices.InvokeAsync(model);
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"Error: {ex.Message}";
+		}
+	}
+
+	private async Task HandleSubmitGeometry()
+	{
+		if (_points.Count < 3)
+		{
+			_errorMessage = "Polygon must have at least 3 points.";
+			return;
+		}
+
+		try
+		{
+			var model = new UpdateLevelGeometry(_points);
+			await OnSubmitGeometry.InvokeAsync(model);
 		}
 		catch (Exception ex)
 		{

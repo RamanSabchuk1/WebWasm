@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Models;
@@ -8,11 +9,14 @@ namespace WebWasm.Components;
 [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
 public partial class VehiclesTable
 {
+	private const string SearchKey = "search_vehicles";
 	[Parameter]
 	public required IEnumerable<Vehicle> Items { get; set; }
 
 	[Parameter]
 	public required EventCallback<Vehicle> OnDelete { get; set; }
+
+	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private string _searchText = string.Empty;
@@ -61,5 +65,16 @@ public partial class VehiclesTable
 		{
 			_expandedDrivers.Add(vehicleId);
 		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
+		catch { _searchText = string.Empty; }
+	}
+
+	private async Task SaveSearch()
+	{
+		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
 	}
 }

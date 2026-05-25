@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Models;
@@ -8,6 +9,7 @@ namespace WebWasm.Components;
 [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
 public partial class ProducersTable : ComponentBase
 {
+	private const string SearchKey = "search_providers";
 	[Parameter] public List<Producer> Producers { get; set; } = [];
 	[Parameter] public List<Company> Companies { get; set; } = [];
 	[Parameter] public EventCallback<Producer> OnEditProducer { get; set; }
@@ -15,6 +17,7 @@ public partial class ProducersTable : ComponentBase
 	[Parameter] public EventCallback<Producer> OnAddLoadingPlace { get; set; }
 	[Parameter] public EventCallback<(Guid ProducerId, LoadingPlace LoadingPlace)> OnEditLoadingPlace { get; set; }
 	[Parameter] public EventCallback<(Guid ProducerId, Guid LoadingPlaceId)> OnDeleteLoadingPlace { get; set; }
+	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
 	private string _searchText = string.Empty;
 	private bool _hasItems => FilteredProducers.Any();
@@ -78,4 +81,15 @@ public partial class ProducersTable : ComponentBase
 		DayOfWeek.Sunday => "Sun",
 		_ => day.ToString()
 	};
+
+	protected override async Task OnInitializedAsync()
+	{
+		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
+		catch { _searchText = string.Empty; }
+	}
+
+	private async Task SaveSearch()
+	{
+		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
+	}
 }

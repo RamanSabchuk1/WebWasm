@@ -6,6 +6,7 @@
 		<input type="text"
 			   placeholder="Search companies by name, UNP, email, or address..."
 			   @bind="_searchText"
+			   @bind:after="SaveSearch"
 			   @bind:event="oninput"
 			   class="search-input" />
 	</div>
@@ -131,6 +132,10 @@
 
 					<button class="btn-action btn-edit" @onclick="() => OnEditCompany.InvokeAsync(context)">
 						✏️ Edit
+					</button>
+
+					<button class="btn-action btn-delete" @onclick="() => OnDeleteCompany.InvokeAsync(context)" title="Soft delete company (cascades to producers, vehicles, drivers, users)">
+						🗑️ Delete
 					</button>
 				</TemplateColumn>
 			</QuickGrid>
