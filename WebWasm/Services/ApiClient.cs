@@ -15,8 +15,8 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
 	public const string Authorization = nameof(Authorization);
 	private const string Bearer = nameof(Bearer);
-	//private const string BaseAddress = "https://kliffort.com/api/dev/";
-	private const string BaseAddress = "https://localhost:7231/";
+	private const string BaseAddress = "https://kliffort.com/api/dev/";
+	// private const string BaseAddress = "https://localhost:7231/";
 
 	private const string Auth = nameof(Auth);
 
