@@ -194,10 +194,11 @@
 				<thead>
 					<tr>
 						<th>Login</th>
+						<th>Phone</th>
 						<th>Company</th>
-						<th>Phone / Security Level</th>
 						<th>Roles</th>
 						<th>Status</th>
+						<th>Security Level</th>
 						<th>Actions</th>
 						<th></th>
 					</tr>
@@ -214,6 +215,7 @@
 						var driver = GetDriver(user);
 						var company = GetCompany(user, driver);
 						var hasCompany = company is not null;
+						var clearance = user.SecurityClearanceLevel;
 						<tr>
 							<td>
 								<div class="user-cell">
@@ -229,6 +231,7 @@
 									}
 								</div>
 							</td>
+							<td class="phone-cell">@user.UserInfo.MobilePhone</td>
 							<td>
 								@if (company is not null)
 								{
@@ -256,6 +259,9 @@
 										@(user.UserVerified ? "✅" : "⚠️")
 									</span>
 								</div>
+							</td>
+							<td>
+								<span class="level-badge level-badge--@clearance.ToString().ToLowerInvariant()">@clearance</span>
 							</td>
 							<td>
 								<div class="action-buttons">
@@ -291,26 +297,17 @@
 								</div>
 							</td>
 							<td>
-								@if(driver is not null)
-								{
-									<button class="btn-expand" @onclick="() => ToggleExpanded(user.Id)">
-										@(IsExpanded(user.Id) ? "▼" : "▶")
-									</button>
-								}
-								else
-								{
-									<button class="btn-expand">
-										⛔
-									</button>
-								}
+								<button class="btn-expand" @onclick="() => ToggleExpanded(user.Id)">
+									@(IsExpanded(user.Id) ? "▼" : "▶")
+								</button>
 							</td>
 						</tr>
-						@if (IsExpanded(user.Id) && driver is not null)
+						@if (IsExpanded(user.Id))
 						{
 							var displayName = GetDisplayName(user.UserInfo);
-							var slots = GetDriverSlots(driver.Id).ToArray();
+							var passport = user.UserInfo.Passport;
 							<tr class="details-row">
-								<td colspan="6">
+								<td colspan="8">
 									<div class="details-grid">
 										<div class="details-section">
 											<h4>User Info</h4>
@@ -323,61 +320,87 @@
 												<span class="detail-value">@user.UserInfo.MobilePhone</span>
 											</div>
 										</div>
-										<div class="details-section">
-											<h4>Driver</h4>
-											<div class="driver-details">
-												<div class="driver-avatar-container">
-													@if (!string.IsNullOrWhiteSpace(driver.Photo))
-													{
-														<img src="@driver.Photo" alt="Driver" class="driver-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-														<div class="driver-avatar-fallback" style="display:none;">
-															<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-																<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-															</svg>
-														</div>
-													}
-													else
-													{
-														<div class="driver-avatar-fallback">
-															<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-																<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-															</svg>
-														</div>
-													}
+										@if (passport is { Count: > 0 })
+										{
+											<div class="details-section">
+												<h4>Passport</h4>
+												<div class="detail-item">
+													<span class="detail-label">Number</span>
+													<span class="detail-value">@GetPassportValue(passport, "passport.number")</span>
 												</div>
-												<div>
-													<div class="driver-name">@GetDisplayName(driver.UserInfo)</div>
-													@if (company is not null)
-													{
-														<div class="driver-company">@company.Name</div>
-													}
-													else
-													{
-														<div class="driver-company text-muted">No company</div>
-													}
+												<div class="detail-item">
+													<span class="detail-label">Identification Number</span>
+													<span class="detail-value">@GetPassportValue(passport, "passport.identificationNumber")</span>
+												</div>
+												<div class="detail-item">
+													<span class="detail-label">Issued By</span>
+													<span class="detail-value">@GetPassportValue(passport, "passport.issuedBy")</span>
+												</div>
+												<div class="detail-item">
+													<span class="detail-label">Issued Date</span>
+													<span class="detail-value">@GetPassportValue(passport, "passport.issuedDate")</span>
 												</div>
 											</div>
-										</div>
-										<div class="details-section">
-											<h4>Available Slots</h4>
-											@if (!hasCompany)
-											{
-												<span class="text-muted">No slots available</span>
-											}
-											else if (!slots.Any())
-											{
-												<span class="text-muted">No slots configured</span>
-											}
-											else
-											{
-												<div class="slot-list">
-													@foreach (var slot in slots)
-													{
-														<span class="slot-pill">@FormatSlot(slot)</span>
-													}
+										}
+										@if (driver is not null)
+										{
+											var slots = GetDriverSlots(driver.Id).ToArray();
+											<div class="details-section">
+												<h4>Driver</h4>
+												<div class="driver-details">
+													<div class="driver-avatar-container">
+														@if (!string.IsNullOrWhiteSpace(driver.Photo))
+														{
+															<img src="@driver.Photo" alt="Driver" class="driver-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+															<div class="driver-avatar-fallback" style="display:none;">
+																<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+																	<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+																</svg>
+															</div>
+														}
+														else
+														{
+															<div class="driver-avatar-fallback">
+																<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+																	<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+																</svg>
+															</div>
+														}
+													</div>
+													<div>
+														<div class="driver-name">@GetDisplayName(driver.UserInfo)</div>
+														@if (company is not null)
+														{
+															<div class="driver-company">@company.Name</div>
+														}
+														else
+														{
+															<div class="driver-company text-muted">No company</div>
+														}
+													</div>
 												</div>
-											}
-										</div>
+											</div>
+											<div class="details-section">
+												<h4>Available Slots</h4>
+												@if (!hasCompany)
+												{
+													<span class="text-muted">No slots available</span>
+												}
+												else if (!slots.Any())
+												{
+													<span class="text-muted">No slots configured</span>
+												}
+												else
+												{
+													<div class="slot-list">
+														@foreach (var slot in slots)
+														{
+															<span class="slot-pill">@FormatSlot(slot)</span>
+														}
+													</div>
+												}
+											</div>
+										}
 									</div>
 								</td>
 							</tr>

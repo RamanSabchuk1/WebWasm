@@ -488,6 +488,10 @@ _searchText = savedFilters.SearchText ?? string.Empty;
 		var name = string.Join(" ", parts);
 		return string.IsNullOrWhiteSpace(name) ? "Unknown" : name;
 	}
+// Значение паспортного поля из secure-словаря UserInfo.Passport (ключи backend: passport.*).
+	// Отсутствующий ключ → пустая строка. Значение (в т.ч. issuedDate) выводится КАК ЕСТЬ, без переформатирования.
+	private static string GetPassportValue(IReadOnlyDictionary<string, string> passport, string key)
+		=> passport.TryGetValue(key, out var value) ? value : string.Empty;
 
 	private bool IsExpanded(Guid userId) => _expandedUsers.Contains(userId);
 

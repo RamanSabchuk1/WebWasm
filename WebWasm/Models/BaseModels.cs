@@ -10,8 +10,12 @@ public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] Deli
 public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat);
 public record CreditCardInfo(Guid Id, Guid UserInfoId, string MaskedCard, DateTime ExpirationDate, DateTime UnbindAt);
 public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
+// Форма совпадает с backend UserDto (Kliffort.Application/Users/Models/UserDto.cs): без User-level IsActive
+// (активность пользователя живёт на UserInfo.IsActive). SecurityClearanceLevel — позиционный (как в backend DTO),
+// дефолт Public не мешает STJ-десериализации (отсутствует в JSON → Public).
 public record User(Guid Id, string Login, bool UserVerified, UserInfo UserInfo, ICollection<RoleType> Roles, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public);
 public record UpdateCompany(Location Location, string Photo, string Name, string Address, string CorporateEmail, double Rebate);
+// Форма совпадает с backend CompanyDto (Kliffort.Application/Shared/Models/CompanyDto.cs): IsActive + позиционный SecurityClearanceLevel.
 public record Company(Guid Id, string Name, double Rebate, bool IsActive, Guid RegionId, Location Location, CompanyInfo? CompanyInfo, ICollection<Vehicle> Vehicles, ICollection<Producer> Producers, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public);
 public record CompanyInfo(Guid Id, string Address, string CorporateEmail, string UNP, BankAccount BankAccount, string LegalType, string Photo);
 public record Delivery(Guid Id, uint NetoWeight, uint GrossWeight, uint AppliedWeight, string State, string? BatchNumber, decimal DeliveryCost, Driver? Driver);
@@ -25,7 +29,14 @@ public record Transaction(Guid Id, decimal Amount, DateTime Date, PaymentMethodT
 public record Producer(Guid Id, Company? Company, string Name, ICollection<ProducerWorkingTime> ProducerWorkingTime, ICollection<LoadingPlace> LoadingPlaces);
 public record Region(Guid Id, string Name, string TimeZone, ICollection<Level> Levels);
 public record Triangle(Location Point1, Location Point2, Location Point3);
-public record UserInfo(Guid Id, string FirstName, string MiddleName, string LastName, string MobilePhone, bool IsActive, Company? Company);
+public record UserInfo(Guid Id, string FirstName, string MiddleName, string LastName, string MobilePhone, bool IsActive, Company? Company)
+{
+	// Backend-контракт: UserInfoDto.Passport (Kliffort.Application/Shared/Models/UserInfoDto.cs) —
+	// IReadOnlyDictionary<string,string>? с ключами passport.number / passport.identificationNumber /
+	// passport.issuedBy / passport.issuedDate. Присутствует только при effectiveLevel >= Sensitive(4),
+	// иначе null (secure projection, D7). init-член — не ломает позиционный конструктор/STJ (нет в JSON → null).
+	public IReadOnlyDictionary<string, string>? Passport { get; init; }
+}
 public record Vehicle(Guid Id, Guid DriverId, Guid CompanyId, string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Driver? Driver) { public Driver? Driver { get; set; } = Driver; }
 public record ActivityRecord(string Description, DateTime Date);
 public record Log(string Level, string Message, string MessageTemplate, DateTime TimeStamp, string? Exception);
@@ -70,6 +81,8 @@ public enum RoleType
 	AccountAdmin,
 	SuperAdmin
 }
+// enum DataSecurityLevel вынесен в Models/SecurityModels.cs (канон, синхронизирован с backend по D43).
+
 
 public enum OrderStatus
 {

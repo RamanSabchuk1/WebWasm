@@ -208,6 +208,53 @@
 	background: rgba(255, 152, 0, 0.15);
 	color: #EF6C00;
 }
+.phone-cell {
+	font-family: monospace;
+	font-size: 0.85rem;
+	color: var(--text-secondary, #7A7A7A);
+	white-space: nowrap;
+}
+
+.level-badge {
+	display: inline-block;
+	padding: 0.3rem 0.65rem;
+	border-radius: 16px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+	background: rgba(139, 115, 85, 0.15);
+	color: #8B7355;
+}
+
+.level-badge--public {
+	background: rgba(158, 158, 158, 0.2);
+	color: #757575;
+}
+
+.level-badge--internal {
+	background: rgba(76, 175, 80, 0.2);
+	color: #388E3C;
+}
+
+.level-badge--companyoperational {
+	background: rgba(201, 168, 108, 0.25);
+	color: #8B7355;
+}
+
+.level-badge--restricted {
+	background: rgba(255, 152, 0, 0.18);
+	color: #EF6C00;
+}
+
+.level-badge--sensitive {
+	background: rgba(244, 67, 54, 0.18);
+	color: #D32F2F;
+}
+
+.level-badge--systemonly {
+	background: rgba(123, 31, 162, 0.18);
+	color: #6A1B9A;
+}
 
 .action-buttons {
 	display: flex;

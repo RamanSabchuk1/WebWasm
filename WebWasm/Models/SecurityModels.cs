@@ -1,13 +1,16 @@
 namespace WebWasm.Models;
 
-public enum DataSecurityLevel
+// Синхронизирован с backend-каноном Kliffort.Contracts/Security/DataSecurityLevel.cs (backend = source of truth, D43).
+// Backend сериализует enum как СТРОКУ (JsonStringEnumConverter, имена значений PascalCase),
+// frontend десериализует строкой (UseStringEnumConverter=true в AppJsonSerializerContext) — имена ДОЛЖНЫ совпадать.
+public enum DataSecurityLevel : byte
 {
-	Public,
-	Internal,
-	CompanyOperational,
-	Restricted,
-	Sensitive,
-	SystemOnly
+	Public = 0,
+	Internal = 1,
+	CompanyOperational = 2,
+	Restricted = 3,
+	Sensitive = 4,
+	SystemOnly = 5
 }
 
 public enum EncryptionPurpose

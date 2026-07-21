@@ -124,6 +124,13 @@
 					}
 				</TemplateColumn>
 
+				<TemplateColumn Title="Security Level" Sortable="false">
+					@{
+						var clearance = context.SecurityClearanceLevel;
+					}
+					<span class="level-badge level-badge--@clearance.ToString().ToLowerInvariant()">@clearance</span>
+				</TemplateColumn>
+
 				<TemplateColumn Title="Actions" Sortable="false">
 					<button class="btn-action @(context.IsActive ? "btn-deactivate" : "btn-activate")"
 							@onclick="() => OnToggleActive.InvokeAsync((context.Id, !context.IsActive))">
