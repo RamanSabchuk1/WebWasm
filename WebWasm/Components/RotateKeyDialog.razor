@@ -1,0 +1,32 @@
+@using WebWasm.Models
+
+<ModalShell IsOpen="IsOpen" OnClose="CloseModal">
+	<div class="modal-header">
+		<h2>Rotate Encryption Key</h2>
+		<button class="btn-close" @onclick="CloseModal">×</button>
+	</div>
+
+	<div class="modal-body">
+		<p class="entity-label">Purpose: @Purpose</p>
+		<p>
+			A new active key version will be created for <strong>@Purpose</strong>. New writes will use it
+			immediately; existing encrypted values are migrated to it gradually in the background.
+		</p>
+
+		<div class="form-section">
+			<label class="checkbox">
+				<input type="checkbox" checked="@_force" @onchange="OnForceChanged" />
+				<span>Force rotation even if the cooldown period hasn't elapsed yet</span>
+			</label>
+			@if (_force)
+			{
+				<p class="error-warn">⚠ Bypasses the minimum interval between rotations. Only use this if you understand the operational impact.</p>
+			}
+		</div>
+	</div>
+
+	<div class="modal-footer">
+		<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
+		<button class="btn-danger" @onclick="HandleConfirm">Rotate</button>
+	</div>
+</ModalShell>

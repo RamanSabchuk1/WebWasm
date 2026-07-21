@@ -195,6 +195,7 @@
 					<tr>
 						<th>Login</th>
 						<th>Company</th>
+						<th>Phone / Security Level</th>
 						<th>Roles</th>
 						<th>Status</th>
 						<th>Actions</th>
@@ -265,6 +266,7 @@
 										@(user.UserVerified ? "Unverify" : "Verify")
 									</button>
 									<button class="btn-action" @onclick="() => OpenRolesModal(user)">Edit Roles</button>
+									<button class="btn-action" @onclick="() => OpenSecurityLevelModal(user)" title="View or change data security level for this user">🔐 Security</button>
 									@if (driver is not null && hasCompany)
 									{
 										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">+ Slot</button>
@@ -608,6 +610,12 @@
 				<button class="btn-primary" @onclick="ConfirmAssignCompany" disabled="@(_assignCompanyId == Guid.Empty)">Assign</button>
 			</div>
 </ModalShell>
+
+<SecurityLevelDialog IsOpen="_showSecurityLevelModal"
+					 EntityLabel="@($"User: {(_securityLevelTargetUser is null ? string.Empty : GetDisplayName(_securityLevelTargetUser.UserInfo))}")"
+					 CurrentLevel="_securityLevelCurrent"
+					 OnClose="CloseSecurityLevelModal"
+					 OnSubmit="ConfirmSecurityLevel" />
 
 <ConfirmDialog IsOpen="@_showConfirmDialog"
 			   Title="@_confirmTitle"

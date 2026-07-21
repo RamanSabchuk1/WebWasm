@@ -15,8 +15,8 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
 	public const string Authorization = nameof(Authorization);
 	private const string Bearer = nameof(Bearer);
-	private const string BaseAddress = "https://kliffort.com/api/dev/";
-	// private const string BaseAddress = "https://localhost:7231/";
+	//private const string BaseAddress = "https://kliffort.com/api/dev/";
+	private const string BaseAddress = "https://localhost:7231/";
 
 	private const string Auth = nameof(Auth);
 
@@ -60,6 +60,24 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		var response = await client.SendAsync(request);
 
 		await CheckResponseHeader(response, endpoint);
+	}
+
+	/// <summary>
+	/// POST без тела запроса, но с типизированным чтением ответа (например, Admin/secure-data/backfill,
+	/// который принимает пустой POST и возвращает BackfillResult). Не путать с
+	/// Post&lt;TRequest,TResponse&gt;, который требует тело запроса.
+	/// </summary>
+	public async ValueTask<TResponse> Post<TResponse>(string endpoint)
+	{
+		var client = await GetHttpClient();
+
+		var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+		var response = await client.SendAsync(request);
+
+		await CheckResponseHeader(response, endpoint);
+		return await response.Content.ReadFromJsonAsync<TResponse>(_jsonOptions) ?? throw new Exception($"Failed to get {endpoint}.");
 	}
 
 	public async ValueTask Put<TRequest>(string endpoint, TRequest data)

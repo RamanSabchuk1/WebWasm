@@ -32,6 +32,58 @@ public partial class Companies : ComponentBase
         _isCompanyModalOpen = true;
     }
 
+	private bool _showSecurityLevelModal;
+	private Company? _securityLevelTargetCompany;
+	private DataSecurityLevel _securityLevelCurrent;
+
+	private async Task HandleEditSecurityLevel(Company company)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				var response = await ApiClient.Get<SecurityLevelRequest>($"admin/security-levels/companies/{company.Id}");
+				_securityLevelTargetCompany = company;
+				_securityLevelCurrent = response.Level;
+				_showSecurityLevelModal = true;
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to load security level: {ex.Message}");
+			}
+		});
+	}
+
+	private void CloseSecurityLevelModal()
+	{
+		_showSecurityLevelModal = false;
+		_securityLevelTargetCompany = null;
+	}
+
+	private async Task ConfirmSecurityLevel(DataSecurityLevel newLevel)
+	{
+		if (_securityLevelTargetCompany is null)
+		{
+			return;
+		}
+
+		var companyId = _securityLevelTargetCompany.Id;
+		CloseSecurityLevelModal();
+
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Put($"admin/security-levels/companies/{companyId}", new SecurityLevelRequest(newLevel));
+				ToastService.ShowSuccess("Security level updated successfully");
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to update security level: {ex.Message}");
+			}
+		});
+	}
+
     private async Task LoadCompanies(bool useCash)
 	{
 		_companies = [.. await CashService.GetData<Company>(useCash)];

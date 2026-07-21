@@ -10,9 +10,9 @@ public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] Deli
 public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat);
 public record CreditCardInfo(Guid Id, Guid UserInfoId, string MaskedCard, DateTime ExpirationDate, DateTime UnbindAt);
 public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
-public record User(Guid Id, string Login, bool UserVerified, UserInfo UserInfo, ICollection<RoleType> Roles);
+public record User(Guid Id, string Login, bool UserVerified, UserInfo UserInfo, ICollection<RoleType> Roles, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public);
 public record UpdateCompany(Location Location, string Photo, string Name, string Address, string CorporateEmail, double Rebate);
-public record Company(Guid Id, string Name, double Rebate, bool IsActive, Guid RegionId, Location Location, CompanyInfo? CompanyInfo, ICollection<Vehicle> Vehicles, ICollection<Producer> Producers);
+public record Company(Guid Id, string Name, double Rebate, bool IsActive, Guid RegionId, Location Location, CompanyInfo? CompanyInfo, ICollection<Vehicle> Vehicles, ICollection<Producer> Producers, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public);
 public record CompanyInfo(Guid Id, string Address, string CorporateEmail, string UNP, BankAccount BankAccount, string LegalType, string Photo);
 public record Delivery(Guid Id, uint NetoWeight, uint GrossWeight, uint AppliedWeight, string State, string? BatchNumber, decimal DeliveryCost, Driver? Driver);
 public record Driver(Guid Id, string Photo, ICollection<Vehicle>? Vehicles, UserInfo? UserInfo);

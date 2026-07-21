@@ -188,6 +188,7 @@ else
 						<thead>
 							<tr>
 								<th>State</th>
+								<th>Batch Number</th>
 								<th>Cost</th>
 								<th>Weight (Net/Gross/Applied)</th>
 								<th>Driver</th>
@@ -199,6 +200,7 @@ else
 							{
 								<tr>
 									<td data-label="State">@d.State</td>
+									<td data-label="Batch Number">@(string.IsNullOrEmpty(d.BatchNumber) ? "-" : d.BatchNumber)</td>
 									<td data-label="Cost">@d.DeliveryCost.ToString("F2") BYN</td>
 									<td data-label="Weight">@d.NetoWeight / @d.GrossWeight / @d.AppliedWeight </td>
 									<td data-label="Driver">

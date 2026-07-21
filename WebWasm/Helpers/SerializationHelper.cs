@@ -107,4 +107,10 @@ public static class SerializationHelper
 [JsonSerializable(typeof(Login.TokenResponse))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(Dictionary<uint, PriceInfo>))]
+[JsonSerializable(typeof(DataSecurityLevel))]
+[JsonSerializable(typeof(SecurityLevelRequest))]
+[JsonSerializable(typeof(EncryptionPurpose))]
+[JsonSerializable(typeof(EncryptionKeyInfo))]
+[JsonSerializable(typeof(EncryptionKeyInfo[]))]
+[JsonSerializable(typeof(BackfillResult))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;

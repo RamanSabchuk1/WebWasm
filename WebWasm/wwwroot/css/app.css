@@ -110,21 +110,40 @@ a:hover, .btn-link:hover {
     box-shadow: var(--shadow-soft);
 }
 
-.table thead th {
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    padding: 1rem;
-    font-weight: 500;
-}
+    .table thead {
+        background: linear-gradient(135deg, rgba(201, 168, 108, 0.1) 0%, rgba(139, 115, 85, 0.1) 100%);
+    }
 
-.table tbody td {
-    padding: 1rem;
-    border-bottom: 1px solid rgba(139, 115, 85, 0.1);
-}
+        .table thead th {
+            background: transparent;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-primary, #3D3D3D);
+            border-bottom: 2px solid rgba(139, 115, 85, 0.2);
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+    .table tbody td {
+        padding: 1rem;
+        background: transparent;
+        padding: 0.7rem 1rem !important;
+        border-bottom: 1px solid var(--border-color, #E5D5C0);
+        color: var(--text-primary, #3D2E1F);
+        vertical-align: top;
+    }
 
 .table tbody tr:hover {
     background: rgba(201, 168, 108, 0.1);
+}
+
+.data-grid-scroll {
+    border-radius: var(--radius-sm);
+}
+
+tbody tr:hover {
+    background-color: rgba(201, 168, 108, 0.05);
 }
 
 .valid.modified:not([type=checkbox]) {

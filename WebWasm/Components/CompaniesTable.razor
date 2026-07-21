@@ -134,6 +134,10 @@
 						✏️ Edit
 					</button>
 
+					<button class="btn-action" @onclick="() => OnEditSecurityLevel.InvokeAsync(context)" title="View or change data security level for this company">
+						🔐 Security
+					</button>
+
 					<button class="btn-action btn-delete" @onclick="() => OnDeleteCompany.InvokeAsync(context)" title="Soft delete company (cascades to producers, vehicles, drivers, users)">
 						🗑️ Delete
 					</button>

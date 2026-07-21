@@ -128,6 +128,7 @@
 
 .table-container {
 	overflow-x: auto;
+	border-radius: var(--radius-sm);
 }
 
 .styled-table {
@@ -135,21 +136,20 @@
 	border-collapse: collapse;
 }
 
-.styled-table thead th {
-	text-align: left;
-	padding: 1rem;
-	background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
-	color: white;
-	font-weight: 500;
-}
+	.styled-table thead {
+		background: linear-gradient(135deg, rgba(201, 168, 108, 0.1) 0%, rgba(139, 115, 85, 0.1) 100%);
+	}
 
-.styled-table thead th:first-child {
-	border-radius: 12px 0 0 0;
-}
-
-.styled-table thead th:last-child {
-	border-radius: 0 12px 0 0;
-}
+		.styled-table thead th {
+			background: transparent;
+			padding: 1rem;
+			text-align: left;
+			font-weight: 700;
+			color: var(--text-primary, #3D3D3D);
+			border-bottom: 2px solid rgba(139, 115, 85, 0.2);
+			font-size: 0.875rem;
+			white-space: nowrap;
+		}
 
 .styled-table tbody td {
 	padding: 1rem;

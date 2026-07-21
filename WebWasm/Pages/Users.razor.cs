@@ -75,6 +75,58 @@ public partial class Users : ComponentBase
 	private Guid _assignCompanyId = Guid.Empty;
 	private string _assignCompanyError = string.Empty;
 
+	private bool _showSecurityLevelModal;
+	private User? _securityLevelTargetUser;
+	private DataSecurityLevel _securityLevelCurrent;
+
+	private async Task OpenSecurityLevelModal(User user)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				var response = await ApiClient.Get<SecurityLevelRequest>($"admin/security-levels/users/{user.Id}");
+				_securityLevelTargetUser = user;
+				_securityLevelCurrent = response.Level;
+				_showSecurityLevelModal = true;
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to load security level: {ex.Message}");
+			}
+		});
+	}
+
+	private void CloseSecurityLevelModal()
+	{
+		_showSecurityLevelModal = false;
+		_securityLevelTargetUser = null;
+	}
+
+	private async Task ConfirmSecurityLevel(DataSecurityLevel newLevel)
+	{
+		if (_securityLevelTargetUser is null)
+		{
+			return;
+		}
+
+		var userId = _securityLevelTargetUser.Id;
+		CloseSecurityLevelModal();
+
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Put($"admin/security-levels/users/{userId}", new SecurityLevelRequest(newLevel));
+				ToastService.ShowSuccess("Security level updated successfully");
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to update security level: {ex.Message}");
+			}
+		});
+	}
+
 	private void OpenAssignCompanyModal(User user)
 	{
 		_assignCompanyTargetUser = user;

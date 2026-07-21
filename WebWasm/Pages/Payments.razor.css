@@ -37,7 +37,7 @@
 
 .data-grid-container {
 	background: var(--bg-primary, #FFFBF5);
-	border-radius: 12px;
+	border-radius: var(--radius-sm);
 	padding: 1rem;
 	border: 1px solid var(--border-color, #E5D5C0);
 }
@@ -65,7 +65,7 @@
 
 .data-grid-scroll {
 	overflow-x: auto;
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	box-shadow: 0 2px 8px rgba(139, 115, 85, 0.05);
 	-webkit-overflow-scrolling: touch;
 }

@@ -14,6 +14,7 @@ public partial class CompaniesTable : ComponentBase
 	[Parameter] public EventCallback<(Guid CompanyId, bool IsActive)> OnToggleActive { get; set; }
     [Parameter] public EventCallback<Company> OnEditCompany { get; set; }
     [Parameter] public EventCallback<Company> OnDeleteCompany { get; set; }
+    [Parameter] public EventCallback<Company> OnEditSecurityLevel { get; set; }
     [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
     private string _searchText = string.Empty;

@@ -28,7 +28,7 @@
 
 ::deep .data-grid-scroll {
 	overflow-x: auto;
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	box-shadow: 0 2px 8px rgba(139, 115, 85, 0.05);
 }
 

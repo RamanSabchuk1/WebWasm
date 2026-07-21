@@ -17,13 +17,20 @@
 					Companies="@_companies"
 					OnToggleActive="@HandleToggleActive"
 					OnEditCompany="@HandleEditCompany"
-					OnDeleteCompany="@HandleDeleteCompany" />
+					OnDeleteCompany="@HandleDeleteCompany"
+					OnEditSecurityLevel="@HandleEditSecurityLevel" />
 </div>
 
 <CompanyModal IsOpen="@_isCompanyModalOpen"
 			  EditingCompany="@_editingCompany"
 			  OnClose="@CloseCompanyModal"
 			  OnSubmit="@HandleCompanySubmit" />
+
+<SecurityLevelDialog IsOpen="_showSecurityLevelModal"
+					 EntityLabel="@($"Company: {_securityLevelTargetCompany?.Name}")"
+					 CurrentLevel="_securityLevelCurrent"
+					 OnClose="CloseSecurityLevelModal"
+					 OnSubmit="ConfirmSecurityLevel" />
 
 <ConfirmDialog IsOpen="@_showConfirmDialog"
 			   Title="@_confirmTitle"
