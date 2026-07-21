@@ -111,14 +111,21 @@ public partial class Users : ComponentBase
 		}
 
 		var userId = _securityLevelTargetUser.Id;
-		CloseSecurityLevelModal();
+		var oldLevel = _securityLevelCurrent;
+        CloseSecurityLevelModal();
+
+		if (oldLevel == newLevel)
+		{
+			return;
+		}
 
 		await LoadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
 				await ApiClient.Put($"admin/security-levels/users/{userId}", new SecurityLevelRequest(newLevel));
-				ToastService.ShowSuccess("Security level updated successfully");
+                await LoadData(false);
+                ToastService.ShowSuccess("Security level updated successfully");
 			}
 			catch (Exception ex)
 			{

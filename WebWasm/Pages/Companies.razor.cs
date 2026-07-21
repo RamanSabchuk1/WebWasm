@@ -68,14 +68,21 @@ public partial class Companies : ComponentBase
 		}
 
 		var companyId = _securityLevelTargetCompany.Id;
-		CloseSecurityLevelModal();
+		var oldLevel = _securityLevelCurrent;
+        CloseSecurityLevelModal();
+
+		if (oldLevel == newLevel)
+		{
+			return;
+		}
 
 		await LoadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
 				await ApiClient.Put($"admin/security-levels/companies/{companyId}", new SecurityLevelRequest(newLevel));
-				ToastService.ShowSuccess("Security level updated successfully");
+				await LoadCompanies(false);
+                ToastService.ShowSuccess("Security level updated successfully");
 			}
 			catch (Exception ex)
 			{
