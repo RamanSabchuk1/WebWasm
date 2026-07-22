@@ -84,7 +84,7 @@ public partial class Users : ComponentBase
 	private string _passportNumber = string.Empty;
 	private string _passportIdentificationNumber = string.Empty;
 	private string _passportIssuedBy = string.Empty;
-	private string _passportIssuedDate = string.Empty;
+	private DateOnly _passportIssuedDate = default;
 	private string _passportErrorMessage = string.Empty;
 
 	private void OpenPassportModal(User user)
@@ -93,7 +93,7 @@ public partial class Users : ComponentBase
 		_passportNumber = string.Empty;
 		_passportIdentificationNumber = string.Empty;
 		_passportIssuedBy = string.Empty;
-		_passportIssuedDate = string.Empty;
+		_passportIssuedDate = default;
 		_passportErrorMessage = string.Empty;
 		_showPassportModal = true;
 	}
@@ -105,7 +105,7 @@ public partial class Users : ComponentBase
 		_passportNumber = string.Empty;
 		_passportIdentificationNumber = string.Empty;
 		_passportIssuedBy = string.Empty;
-		_passportIssuedDate = string.Empty;
+		_passportIssuedDate = default;
 		_passportErrorMessage = string.Empty;
 	}
 
@@ -119,7 +119,7 @@ public partial class Users : ComponentBase
 		var number = string.IsNullOrWhiteSpace(_passportNumber) ? null : _passportNumber.Trim();
 		var identificationNumber = string.IsNullOrWhiteSpace(_passportIdentificationNumber) ? null : _passportIdentificationNumber.Trim();
 		var issuedBy = string.IsNullOrWhiteSpace(_passportIssuedBy) ? null : _passportIssuedBy.Trim();
-		DateOnly? issuedDate = DateOnly.TryParse(_passportIssuedDate, out var parsedDate) ? parsedDate : null;
+		DateOnly? issuedDate = _passportIssuedDate == default ? null : _passportIssuedDate;
 
 		if (number is null && identificationNumber is null && issuedBy is null && issuedDate is null)
 		{
@@ -547,7 +547,7 @@ _searchText = savedFilters.SearchText ?? string.Empty;
 	private static Company? GetCompany(User user, Driver? driver)
 		=> user.UserInfo.Company ?? driver?.UserInfo?.Company;
 
-	private IEnumerable<DriverSlot> GetDriverSlots(Guid driverId)
+	private List<DriverSlot> GetDriverSlots(Guid driverId)
 		=> _slotsByDriverId.TryGetValue(driverId, out var slots) ? slots : [];
 
 	private static string GetDisplayName(UserInfo? userInfo)
