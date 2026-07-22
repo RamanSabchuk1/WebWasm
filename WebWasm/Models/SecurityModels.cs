@@ -22,6 +22,13 @@ public enum EncryptionPurpose
 public record SecurityLevelRequest(DataSecurityLevel Level);
 public record EncryptionKeyInfo(Guid Id, EncryptionPurpose Purpose, int Version, bool IsActive, DateTime CreatedAt, DateTime? FullyMigratedAt);
 
+// Тело запроса POST users/{userInfoId}/passport (SuperAdmin-only, backend = source of truth, D43).
+// Точное соответствие backend Kliffort.WebApi.Controllers.SetPassportRequest
+// (Kliffort.WebApi/Controllers/UsersController.cs): те же имена и порядок полей.
+// Все поля опциональны (backend требует хотя бы одно непустое); переданные значения
+// шифруются на backend (AES-256-GCM) и кладутся в AdditionalSecureInfo (Sensitive-уровень).
+public record SetPassportRequest(string? Number, string? IdentificationNumber, string? IssuedBy, DateOnly? IssuedDate);
+
 /// <summary>
 /// Результат POST Admin/secure-data/backfill (см. Kliffort.Contracts.Services.BackfillResult).
 /// CompanyRootProcessed — MR review: отдельный счётчик для корневого Company (rebate/location),

@@ -79,6 +79,73 @@ public partial class Users : ComponentBase
 	private User? _securityLevelTargetUser;
 	private DataSecurityLevel _securityLevelCurrent;
 
+	private bool _showPassportModal;
+	private User? _passportTargetUser;
+	private string _passportNumber = string.Empty;
+	private string _passportIdentificationNumber = string.Empty;
+	private string _passportIssuedBy = string.Empty;
+	private string _passportIssuedDate = string.Empty;
+	private string _passportErrorMessage = string.Empty;
+
+	private void OpenPassportModal(User user)
+	{
+		_passportTargetUser = user;
+		_passportNumber = string.Empty;
+		_passportIdentificationNumber = string.Empty;
+		_passportIssuedBy = string.Empty;
+		_passportIssuedDate = string.Empty;
+		_passportErrorMessage = string.Empty;
+		_showPassportModal = true;
+	}
+
+	private void ClosePassportModal()
+	{
+		_showPassportModal = false;
+		_passportTargetUser = null;
+		_passportNumber = string.Empty;
+		_passportIdentificationNumber = string.Empty;
+		_passportIssuedBy = string.Empty;
+		_passportIssuedDate = string.Empty;
+		_passportErrorMessage = string.Empty;
+	}
+
+	private async Task SubmitPassport()
+	{
+		if (_passportTargetUser is null)
+		{
+			return;
+		}
+
+		var number = string.IsNullOrWhiteSpace(_passportNumber) ? null : _passportNumber.Trim();
+		var identificationNumber = string.IsNullOrWhiteSpace(_passportIdentificationNumber) ? null : _passportIdentificationNumber.Trim();
+		var issuedBy = string.IsNullOrWhiteSpace(_passportIssuedBy) ? null : _passportIssuedBy.Trim();
+		DateOnly? issuedDate = DateOnly.TryParse(_passportIssuedDate, out var parsedDate) ? parsedDate : null;
+
+		if (number is null && identificationNumber is null && issuedBy is null && issuedDate is null)
+		{
+			_passportErrorMessage = "Please fill in at least one field.";
+			return;
+		}
+
+		var userInfoId = _passportTargetUser.UserInfo.Id;
+		var request = new SetPassportRequest(number, identificationNumber, issuedBy, issuedDate);
+
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Post($"users/{userInfoId}/passport", request);
+				ToastService.ShowSuccess("Passport data set successfully");
+				ClosePassportModal();
+				await LoadData(false);
+			}
+			catch (Exception ex)
+			{
+				_passportErrorMessage = $"Failed to set passport data: {ex.Message}";
+			}
+		});
+	}
+
 	private async Task OpenSecurityLevelModal(User user)
 	{
 		await LoadingService.ExecuteWithLoading(async () =>

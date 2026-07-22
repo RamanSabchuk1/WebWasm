@@ -273,6 +273,7 @@
 									</button>
 									<button class="btn-action" @onclick="() => OpenRolesModal(user)">Edit Roles</button>
 									<button class="btn-action" @onclick="() => OpenSecurityLevelModal(user)" title="View or change data security level for this user">🔐 Security</button>
+									<button class="btn-action" @onclick="() => OpenPassportModal(user)" title="Set passport data (SuperAdmin only)">🪪 Passport</button>
 									@if (driver is not null && hasCompany)
 									{
 										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">+ Slot</button>
@@ -639,6 +640,39 @@
 					 CurrentLevel="_securityLevelCurrent"
 					 OnClose="CloseSecurityLevelModal"
 					 OnSubmit="ConfirmSecurityLevel" />
+
+<ModalShell IsOpen="_showPassportModal" OnClose="ClosePassportModal">
+			<div class="modal-header">
+				<h2>Set Passport Data@(_passportTargetUser is null ? string.Empty : $": {GetDisplayName(_passportTargetUser.UserInfo)}")</h2>
+				<button class="btn-close" @onclick="ClosePassportModal">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Number</label>
+					<input class="form-control" @bind="_passportNumber" />
+				</div>
+				<div class="form-group">
+					<label>Identification Number</label>
+					<input class="form-control" @bind="_passportIdentificationNumber" />
+				</div>
+				<div class="form-group">
+					<label>Issued By</label>
+					<input class="form-control" @bind="_passportIssuedBy" />
+				</div>
+				<div class="form-group">
+					<label>Issued Date</label>
+					<input type="date" class="form-control" @bind="_passportIssuedDate" />
+				</div>
+				@if (!string.IsNullOrWhiteSpace(_passportErrorMessage))
+				{
+					<div class="error-message">⚠️ @_passportErrorMessage</div>
+				}
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" @onclick="ClosePassportModal">Cancel</button>
+				<button class="btn-primary" @onclick="SubmitPassport">Save</button>
+			</div>
+</ModalShell>
 
 <ConfirmDialog IsOpen="@_showConfirmDialog"
 			   Title="@_confirmTitle"

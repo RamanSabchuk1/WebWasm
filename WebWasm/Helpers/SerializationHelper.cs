@@ -113,4 +113,5 @@ public static class SerializationHelper
 [JsonSerializable(typeof(EncryptionKeyInfo))]
 [JsonSerializable(typeof(EncryptionKeyInfo[]))]
 [JsonSerializable(typeof(BackfillResult))]
+[JsonSerializable(typeof(SetPassportRequest))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;
