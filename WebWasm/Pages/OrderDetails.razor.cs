@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Components;
+using System.Buffers;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -15,6 +17,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private Level[] _levels = [];
 	private (Company, Driver)[] _driversWithCompany = [];
 	private readonly Dictionary<double, Guid> _selectedDriverIds = [];
+	private bool _userDetailsOpen;
+	private string _userDetailsButtonName = "Show Details";
+
+	private Driver? _driverInfo;
 
 	// For Status Change
 	private OrderStatus _newStatus;
@@ -22,7 +28,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 	// Confirmation Dialog
 	private bool _isConfirmOpen;
-	private string _confirmTitle = "Confirm Action";
+    private string _confirmTitle = "Confirm Action";
 	private string _confirmMessage = "Are you sure you want to proceed?";
 	private Func<Task>? _pendingAction;
 
@@ -205,4 +211,30 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			_ => "There is no state 🗽"
         };
 	}
+
+	private void ShowUserDetails()
+	{
+		_userDetailsOpen = !_userDetailsOpen;
+        _userDetailsButtonName = _userDetailsOpen ? "Hide Details" : "Show Details";
+    }
+
+	private static string PrintKey(string key)
+	{
+		return key.FormatJsonKey();
+	}
+
+	private void SetDriverToView(Guid? driverId)
+	{
+		if (driverId == null)
+		{
+			_driverInfo = null;
+		}
+
+		var driverWithCompany = _driversWithCompany.FirstOrDefault(dc => dc.Item2.Id == driverId);
+        if (driverWithCompany != default)
+		{
+            _driverInfo = driverWithCompany.Item2;
+			_driverInfo.UserInfo?.Company = driverWithCompany.Item1;
+        }
+    }
 }

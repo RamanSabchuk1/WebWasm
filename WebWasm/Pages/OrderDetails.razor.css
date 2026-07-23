@@ -133,6 +133,151 @@
 		grid-column: 1 / -1;
 	}
 
+/* Выравнивание содержимого ячейки таблицы */
+.driver-td {
+	vertical-align: middle;
+}
+
+/* Главный контейнер: делит ячейку на Текст (слева) и Кнопку (справа) */
+.driver-cell-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: space-between; /* Толкает кнопку строго к правому краю */
+	gap: 1rem;
+	width: 100%;
+}
+
+/* Блок с текстом */
+.driver-info-block {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem; /* Небольшой отступ между именем и машиной */
+	text-align: left;
+}
+
+/* Стили имени */
+.driver-name {
+	font-weight: 600;
+	color: #333333;
+	font-size: 0.95rem;
+}
+
+/* Блок автомобиля */
+.driver-vehicle {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	font-size: 0.8rem;
+	color: #666666;
+}
+
+/* Госномера шрифтом monospace для лучшей читаемости */
+.vehicle-plate {
+	font-family: monospace;
+	background-color: rgba(0, 0, 0, 0.04); /* Легкая подложка, как у настоящих номеров */
+	padding: 1px 4px;
+	border-radius: 4px;
+	font-size: 0.85em;
+}
+
+/* Новая аккуратная кнопка View */
+.btn-view-driver {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.4rem 0.8rem;
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: #4b5563; /* Спокойный темно-серый цвет текста */
+	background-color: #f3f4f6; /* Светлый нейтральный фон */
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: all 0.2s ease;
+}
+
+	/* Эффекты для кнопки */
+	.btn-view-driver:hover {
+		background-color: #e5e7eb; /* Чуть темнее при наведении */
+		color: #1f2937;
+		border-color: #d1d5db;
+	}
+
+	.btn-view-driver:active {
+		transform: scale(0.97);
+	}
+
+/* Иконка внутри кнопки */
+.btn-icon {
+	font-size: 0.9rem;
+}
+
+/* Стиль для пустой ячейки */
+.empty-cell {
+	color: #9ca3af;
+}
+
+
+.additional-info {
+	background-color: var(--bg-main);
+	border-radius: 8px;
+	padding: 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem; /* Немного уменьшили отступ перед сеткой */
+	position: relative; /* Важно для абсолютного позиционирования кнопки */
+}
+
+/* Метка заголовка "Driver Details:" */
+.info-label {
+	font-weight: bold;
+	font-size: 0.9rem;
+	color: #555; /* Или переменная вашего цвета текста, например var(--text-color) */
+}
+
+.circle-btn {
+	position: absolute; /* Прижимаем к углу карточки */
+	top: 1rem;
+	right: 1rem;
+	width: 32px; /* Делаем аккуратной и миниатюрной */
+	height: 32px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.05); /* Легкий нейтральный фон */
+	color: #666666; /* Серый крестик */
+	font-size: 14px;
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+	/* Эффект при наведении на крестик */
+	.circle-btn:hover {
+		background-color: #fee2e2; /* Мягкий пастельно-красный фон */
+		color: #ef4444; /* Спокойный красный крестик */
+		transform: scale(1.05);
+	}
+
+	.circle-btn:active {
+		transform: scale(0.95);
+	}
+
+.formatted-text {
+	font-size: 0.73rem;
+	line-height: 1.1; 
+	text-transform: capitalize;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+	.formatted-text p {
+		margin: 0;
+		padding: 0;
+	}
+
 @media (max-width: 768px) {
 	.status-control {
 		flex-direction: column;
@@ -154,53 +299,52 @@
 		width: 100%;
 	}
 
-	.table tr {
-		margin-bottom: 1rem;
-		border: 1px solid #ddd;
-		border-radius: 8px;
-		background: #fff;
-		padding: 0.5rem;
-	}
+		.table tr {
+			margin-bottom: 1rem;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			background: #fff;
+			padding: 0.5rem;
+		}
 
-	.table td {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		text-align: right;
-		padding: 0.5rem 0;
-		border-bottom: 1px solid #f0f0f0;
-	}
+		.table td {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			text-align: right;
+			padding: 0.5rem 0;
+			border-bottom: 1px solid #f0f0f0;
+		}
 
-	.table td:last-child {
-		border-bottom: none;
-	}
+			.table td:last-child {
+				border-bottom: none;
+			}
 
-	.table td::before {
-		content: attr(data-label);
-		font-weight: bold;
-		color: #555;
-		margin-right: 1rem;
-		text-align: left;
-	}
+			.table td::before {
+				content: attr(data-label);
+				font-weight: bold;
+				color: #555;
+				margin-right: 1rem;
+				text-align: left;
+			}
+			/* Adjust for cells that contain block elements or forms */
+			.table td[data-label="Action"], .table td[data-label="Driver"] {
+				flex-direction: column;
+				align-items: flex-start;
+				text-align: left;
+			}
 
-	/* Adjust for cells that contain block elements or forms */
-	.table td[data-label="Action"], .table td[data-label="Driver"] {
-		flex-direction: column;
-		align-items: flex-start;
-		text-align: left;
-	}
-	
-	.table td[data-label="Action"]::before, .table td[data-label="Driver"]::before {
-		margin-bottom: 0.5rem;
-	}
+				.table td[data-label="Action"]::before, .table td[data-label="Driver"]::before {
+					margin-bottom: 0.5rem;
+				}
 
 	.accept-form {
 		flex-direction: column;
 		width: 100%;
 	}
-	
-	.accept-form select, .accept-form button {
-		width: 100%;
-		margin-bottom: 0.25rem;
-	}
+
+		.accept-form select, .accept-form button {
+			width: 100%;
+			margin-bottom: 0.25rem;
+		}
 }

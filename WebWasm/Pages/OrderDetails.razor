@@ -62,7 +62,36 @@ else
 			<div class="info-item"><label>Total Km</label><span>@_order.TotalKm</span></div>
 			<div class="info-item"><label>Region Level</label><span>@_order.RegionLevelId</span></div>
 			<div class="info-item"><label>Loading Place</label><span>@(_order.LoadingPlace?.Name ?? "-")</span></div>
-			<div class="info-item"><label>User</label><span>@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.LastName ?? "")</span></div>
+			<div class="info-item"><label>User</label>
+				<span>@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.LastName ?? "")
+					<button class="btn-view-driver" @onclick="ShowUserDetails">@_userDetailsButtonName <span class="btn-icon">👤</span></button>
+				</span>
+			</div>
+			@if (_userDetailsOpen && _order.UserInfo != null)
+			{
+				<div class="info-item full-width additional-info">
+					<span class="info-label">User Details:</span>
+					<div class="user-details formatted-text">
+						@{
+							if (_order.UserInfo.Passport != null)
+							{
+								foreach (var (key, value) in _order.UserInfo.Passport)
+								{
+									<p><strong>@PrintKey(key):</strong> @value</p>
+								}
+							}
+							if (_order.UserInfo.Company != null && _order.UserInfo.Company.CompanyInfo != null)
+							{
+								<p><strong>Company Name:</strong> @_order.UserInfo.Company.Name</p>
+								<p><strong>Company Address:</strong> @_order.UserInfo.Company.CompanyInfo.Address</p>
+								<p><strong>Company Unp:</strong> @_order.UserInfo.Company.CompanyInfo.UNP</p>
+								<p><strong>Company Legal Type:</strong> @_order.UserInfo.Company.CompanyInfo.LegalType</p>
+								<p><strong>Company Bank Account (Number | Bic):</strong> @_order.UserInfo.Company.CompanyInfo.BankAccount.BankNumber | @_order.UserInfo.Company.CompanyInfo.BankAccount.BIC</p>
+							}
+						}
+					</div>
+				</div>
+			}
 		</div>
 	</div>
 
@@ -203,23 +232,40 @@ else
 									<td data-label="Batch Number">@(string.IsNullOrEmpty(d.BatchNumber) ? "-" : d.BatchNumber)</td>
 									<td data-label="Cost">@d.DeliveryCost.ToString("F2") BYN</td>
 									<td data-label="Weight">@d.NetoWeight / @d.GrossWeight / @d.AppliedWeight </td>
-									<td data-label="Driver">
+									<td data-label="Driver" class="driver-td">
 										@if (d.Driver != null)
 										{
-											 <div>
-												<div>@d.Driver.UserInfo?.FirstName @d.Driver.UserInfo?.LastName</div>
-												@{ var driverVehicle = d.Driver.Vehicles?.FirstOrDefault(); }
-												@if (driverVehicle != null)
-												{
-													<div style="font-size: 0.85em; color: #666;">
-														🚗 @driverVehicle.Model <span style="font-family: monospace;">(@driverVehicle.RegistrationNumber)</span>
+											<div class="driver-cell-wrapper">
+												<!-- Левая часть: информация о водителе -->
+												<div class="driver-info-block">
+													<div class="driver-name">
+														@d.Driver.UserInfo?.FirstName @d.Driver.UserInfo?.LastName
 													</div>
-												}
-											 </div>
+
+													@{
+														var driverVehicle = d.Driver.Vehicles?.FirstOrDefault();
+													}
+													@if (driverVehicle != null)
+													{
+														<div class="driver-vehicle">
+															<span class="vehicle-icon">🚗</span>
+															<span class="vehicle-model">@driverVehicle.Model</span>
+															<span class="vehicle-plate">(@driverVehicle.RegistrationNumber)</span>
+														</div>
+													}
+												</div>
+
+												<!-- Правая часть: кнопка действия -->
+												<div class="driver-action-block">
+													<button class="btn-view-driver" @onclick="_ => SetDriverToView(d.Driver.Id)">
+														View <span class="btn-icon">🧑‍✈️</span>
+													</button>
+												</div>
+											</div>
 										}
 										else
 										{
-											 <span>-</span>
+											<span class="empty-cell">-</span>
 										}
 									</td>
 									<td data-label="Action"></td>
@@ -243,12 +289,38 @@ else
 							}
 						</select>
 
-						<button class="btn btn-success btn-sm" 
-								@onclick="() => RequestAcceptDelivery(deliveryGroup.Key)">
-							Accept
+						<button class="btn-view-driver" @onclick="() => RequestAcceptDelivery(deliveryGroup.Key)">
+							Accept <span class="btn-icon">📑</span>
 						</button>
 					</div>
 				}
+
+                @if (_driverInfo?.UserInfo != null)
+                {
+					<div class="info-item full-width additional-info">
+						<span class="info-label">Driver Details:</span>
+						<button class="circle-btn" @onclick="_ => SetDriverToView(null)">❌</button>
+						<div class="user-details formatted-text">
+							@{
+								if (_driverInfo.UserInfo.Passport != null)
+								{
+									foreach (var (key, value) in _driverInfo.UserInfo.Passport)
+									{
+										<p><strong>@PrintKey(key):</strong> @value</p>
+									}
+								}
+								if (_driverInfo.UserInfo.Company?.CompanyInfo != null)
+								{
+									<p><strong>Company Name:</strong> @_driverInfo.UserInfo.Company.Name</p>
+									<p><strong>Company Address:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.Address</p>
+									<p><strong>Company Unp:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.UNP</p>
+									<p><strong>Company Legal Type:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.LegalType</p>
+									<p><strong>Company Bank Account (Number | Bic):</strong> @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BankNumber | @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BIC</p>
+								}
+							}
+						</div>
+					</div>
+                }
 			}
 		}
 		else

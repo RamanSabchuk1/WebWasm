@@ -35,7 +35,8 @@ public record UserInfo(Guid Id, string FirstName, string MiddleName, string Last
 	// IReadOnlyDictionary<string,string>? с ключами passport.number / passport.identificationNumber /
 	// passport.issuedBy / passport.issuedDate. Присутствует только при effectiveLevel >= Sensitive(4),
 	// иначе null (secure projection, D7). init-член — не ломает позиционный конструктор/STJ (нет в JSON → null).
-	public IReadOnlyDictionary<string, string>? Passport { get; init; }
+	public Dictionary<string, string>? Passport { get; init; }
+	public Company? Company { get; set; } = Company;
 }
 public record Vehicle(Guid Id, Guid DriverId, Guid CompanyId, string Model, string RegistrationNumber, uint VehicleWeight, uint LoadCapacity, string Photo, Driver? Driver) { public Driver? Driver { get; set; } = Driver; }
 public record ActivityRecord(string Description, DateTime Date);
