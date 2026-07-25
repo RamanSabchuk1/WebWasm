@@ -4,8 +4,7 @@
 		<TargetFramework>net11.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<!-- Enable C# preview language features -->
-		<!--<LangVersion>preview</LangVersion>-->
+		<!-- Enable C# - preview language features -->
 		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 
@@ -48,7 +47,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.10" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.20.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.21.0" />
 	</ItemGroup>
 
 	<ItemGroup>
