@@ -1,42 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
-		<TargetFramework>net11.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<!-- Enable C# - preview language features -->
-		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+
+		<!-- C# & Code Analysis -->
+		<LangVersion>preview</LangVersion>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<NoWarn>$(NoWarn);IL2111;IL2007</NoWarn>
+
+		<!-- PWA & Static assets .NET 10 -->
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
 
-		<HotReloadAutoRestart>true</HotReloadAutoRestart>
-
-		<!-- Optimization settings for size reduction -->
+		<!-- Size optimization (Trimming and Globalization) -->
 		<PublishTrimmed>true</PublishTrimmed>
-		<!-- Possible values full, link, copyused, partial.
-			 Use 'partial' for Blazor WebAssembly: 'full' aggressively removes
-			 framework members the WASM SDK substitutions still expect, which
-			 triggers a runtime AggregateException/InvalidCastException at startup. -->
 		<TrimMode>partial</TrimMode>
-		<!-- AOT and native build only during publish to keep dev iteration fast. '_IsPublishing' is set by Sdk targets during dotnet publish. -->
-		<RunAOTCompilation Condition="'$(_IsPublishing)' == 'true'">true</RunAOTCompilation>
-		<WasmStripILAfterAOT Condition="'$(_IsPublishing)' == 'true'">true</WasmStripILAfterAOT>
-		<WasmBuildNative Condition="'$(_IsPublishing)' == 'true'">true</WasmBuildNative>
-		<!-- Keep globalization support for proper date/time and number formatting. Set to true to save ~200KB if not needed -->
+		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
 
-		<!-- Enhanced debugging and analysis -->
+		<!-- AOT compilation (only during publish) -->
+		<RunAOTCompilation Condition="'$(_IsPublishing)' == 'true'">true</RunAOTCompilation>
+		<WasmBuildNative Condition="'$(_IsPublishing)' == 'true'">true</WasmBuildNative>
+
+		<!-- Turn off not used features -->
+		<EventSourceSupport>false</EventSourceSupport>
 		<BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
-			<EventSourceSupport>false</EventSourceSupport>
-		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-		<SelfContained>false</SelfContained>
-		<EnablePreviewFeatures>true</EnablePreviewFeatures>
-		<LangVersion>preview</LangVersion>
-		<AnalysisLevel>latest</AnalysisLevel>
-		<!-- Suppress:
-			 IL2111: Router.NotFoundPage is a known Blazor framework AOT issue that doesn't cause runtime problems.
-			 IL2007: WasmIntrinsics.xml references System.Private.CoreLib by a name the linker can't resolve; this substitution is benign and emitted by the WebAssembly SDK itself. -->
-		<NoWarn>$(NoWarn);IL2111;IL2007</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -44,9 +36,8 @@
 		<PackageReference Include="BlazorWasmBrotliLoader.Build" Version="1.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.10" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0-preview.6.26359.118" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Gateway" Version="11.0.0-preview.6.26359.118" PrivateAssets="all" />
-		<!--<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0-preview.6.26359.118" PrivateAssets="all" />-->
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.10" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.21.0" />
 	</ItemGroup>
