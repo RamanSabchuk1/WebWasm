@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;

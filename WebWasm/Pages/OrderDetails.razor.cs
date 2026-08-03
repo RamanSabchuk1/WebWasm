@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using System.Buffers;
 using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -28,11 +27,11 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 	// Confirmation Dialog
 	private bool _isConfirmOpen;
-    private string _confirmTitle = "Confirm Action";
+	private string _confirmTitle = "Confirm Action";
 	private string _confirmMessage = "Are you sure you want to proceed?";
 	private Func<Task>? _pendingAction;
 
-    protected override async Task OnInitializedAsync()
+	protected override async Task OnInitializedAsync()
 	{
 		await FetchData();
 		await LoadOrder();
@@ -66,8 +65,8 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	{
 		_allCalculationInfo = await cashService.GetData<CalculationInfo>();
 		_levels = [.. (await cashService.GetData<Region>()).SelectMany(r => r.Levels)];
-        _driversWithCompany = await cashService.GetDriverWithCompany();
-    }
+		_driversWithCompany = await cashService.GetDriverWithCompany();
+	}
 
 	private void RequestResetPayments()
 	{
@@ -176,20 +175,20 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_pendingAction = null;
 	}
 
-    private Guid GetCompanyId(Guid driverId)
-    {
-        foreach (var (company, driver) in _driversWithCompany)
-        {
-            if (driver.Id == driverId)
-            {
-                return company.Id;
-            }
-        }
+	private Guid GetCompanyId(Guid driverId)
+	{
+		foreach (var (company, driver) in _driversWithCompany)
+		{
+			if (driver.Id == driverId)
+			{
+				return company.Id;
+			}
+		}
 
-        return Guid.Empty;
-    }
+		return Guid.Empty;
+	}
 
-    private string GetAdminState()
+	private string GetAdminState()
 	{
 		if (_order is null)
 		{
@@ -197,26 +196,26 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		}
 
 		return _order.Status switch
-        {
-            OrderStatus.Draft => "Заказ почемуто в мусорном статусе 🗑️",
-            OrderStatus.WaitingApprove => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ПРИНЯТ похоже это мусор" : _order.Created < DateTime.Now.AddHours(2) ? "Заказ всё еще не принимают 🧲" : "Новый заказ создан ✒️",
-            OrderStatus.PaymentPending => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ОПЛАЧЕН похоже это мусор" : "Заказ всё еще не оплачен 💸",
-            OrderStatus.Active => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? " Сегодня выполнение заказа 📦" : " Active order 📝",
-            OrderStatus.Completed => "Считаем наши денюзки 🤑, не забываем оплатить Перевозчикам/Поставщикам",
-            OrderStatus.CorruptedPayment => "💀 надо чтото сделать с этим ⏰",
-            OrderStatus.Cancelled => "Увы но отмена 😢",
-            OrderStatus.Archived => "Уже и не вспомнить что с ним было 😅",
-            OrderStatus.Deleted => "👷 уже нет",
-            OrderStatus.PaymentInProgress => "📣 обрабатываем платёж надеюсь всё ок 🤞 статус поменяется быстро",
+		{
+			OrderStatus.Draft => "Заказ почемуто в мусорном статусе 🗑️",
+			OrderStatus.WaitingApprove => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ПРИНЯТ похоже это мусор" : _order.Created < DateTime.Now.AddHours(2) ? "Заказ всё еще не принимают 🧲" : "Новый заказ создан ✒️",
+			OrderStatus.PaymentPending => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ОПЛАЧЕН похоже это мусор" : "Заказ всё еще не оплачен 💸",
+			OrderStatus.Active => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? " Сегодня выполнение заказа 📦" : " Active order 📝",
+			OrderStatus.Completed => "Считаем наши денюзки 🤑, не забываем оплатить Перевозчикам/Поставщикам",
+			OrderStatus.CorruptedPayment => "💀 надо чтото сделать с этим ⏰",
+			OrderStatus.Cancelled => "Увы но отмена 😢",
+			OrderStatus.Archived => "Уже и не вспомнить что с ним было 😅",
+			OrderStatus.Deleted => "👷 уже нет",
+			OrderStatus.PaymentInProgress => "📣 обрабатываем платёж надеюсь всё ок 🤞 статус поменяется быстро",
 			_ => "There is no state 🗽"
-        };
+		};
 	}
 
 	private void ShowUserDetails()
 	{
 		_userDetailsOpen = !_userDetailsOpen;
-        _userDetailsButtonName = _userDetailsOpen ? "Hide Details" : "Show Details";
-    }
+		_userDetailsButtonName = _userDetailsOpen ? "Hide Details" : "Show Details";
+	}
 
 	private static string PrintKey(string key)
 	{
@@ -231,10 +230,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		}
 
 		var driverWithCompany = _driversWithCompany.FirstOrDefault(dc => dc.Item2.Id == driverId);
-        if (driverWithCompany != default)
+		if (driverWithCompany != default)
 		{
-            _driverInfo = driverWithCompany.Item2;
+			_driverInfo = driverWithCompany.Item2;
 			_driverInfo.UserInfo?.Company = driverWithCompany.Item1;
-        }
-    }
+		}
+	}
 }

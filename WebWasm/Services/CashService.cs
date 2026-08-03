@@ -1,10 +1,9 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using WebWasm.Helpers;
 using WebWasm.Models;
-using WebWasm.Pages;
 
 namespace WebWasm.Services;
 
@@ -98,7 +97,8 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		}
 
 		UserInfo? result = null;
-		await loadingService.ExecuteWithLoading(async () => {
+		await loadingService.ExecuteWithLoading(async () =>
+		{
 			try
 			{
 				var response = await fetchFunc(default);
@@ -126,39 +126,40 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 
 	public async ValueTask<DriverSlot[]> GetSlots(Dictionary<Guid, List<Guid>> driverIds, bool useCash = true)
 	{
-        var key = nameof(DriverSlot);
-        if (!_cachedData.TryGetValue(key, out var cachedInfo))
-        {
-            cachedInfo = new CashedInfo(DateTime.MinValue, default);
-        }
+		var key = nameof(DriverSlot);
+		if (!_cachedData.TryGetValue(key, out var cachedInfo))
+		{
+			cachedInfo = new CashedInfo(DateTime.MinValue, default);
+		}
 
-        var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
-        if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
-        {
-            return cachedInfo.Data.Deserialize<DriverSlot[]>(_serOptions) ?? [];
-        }
+		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
+		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
+		{
+			return cachedInfo.Data.Deserialize<DriverSlot[]>(_serOptions) ?? [];
+		}
 
-        List<DriverSlot> result = [];
-        await loadingService.ExecuteWithLoading(async () => {
-            try
-            {
+		List<DriverSlot> result = [];
+		await loadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
 				foreach (var (regionId, drivers) in driverIds)
 				{
-                    var response = await apiClient.Get<DriverSlot[]>($"Drivers/slots/filter{GetArgs(drivers, regionId)}");
+					var response = await apiClient.Get<DriverSlot[]>($"Drivers/slots/filter{GetArgs(drivers, regionId)}");
 					result.AddRange(response);
 				}
-            }
-            catch (Exception ex)
-            {
-                toastService.ShowError($"Failed to load {key}: {ex.Message}");
-            }
-        });
+			}
+			catch (Exception ex)
+			{
+				toastService.ShowError($"Failed to load {key}: {ex.Message}");
+			}
+		});
 
-        if (result is not null)
-        {
-            _cachedData[key] = cachedInfo;
+		if (result is not null)
+		{
+			_cachedData[key] = cachedInfo;
 			return [.. result];
-        }
+		}
 
 		return [];
 
@@ -169,13 +170,13 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			for (var i = 0; i < drivers.Count; i++)
 			{
 				var driver = drivers[i];
-                sb.Append($"&driverIds={driver}");
+				sb.Append($"&driverIds={driver}");
 			}
 
 			return sb.ToString();
 
-        }
-    }
+		}
+	}
 
 	public static string Stringify(object? args)
 	{
@@ -192,9 +193,9 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 
 	public async ValueTask<(Company, Driver)[]> GetDriverWithCompany()
 	{
-        var companies = await GetData<Company>(true);
-        var users = await GetData<User>(true);
-        var drivers = await GetData<Driver>(true);
+		var companies = await GetData<Company>(true);
+		var users = await GetData<User>(true);
+		var drivers = await GetData<Driver>(true);
 
 		var driverWithComapny = drivers
 			.Where(d => d.UserInfo is not null)
@@ -213,13 +214,14 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 
 		return [.. driverWithComapny];
 
-    }
+	}
 
-    private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
+	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
 	{
 		T[] result = [];
 		CashedInfo? cashValue = null;
-		await loadingService.ExecuteWithLoading(async () => {
+		await loadingService.ExecuteWithLoading(async () =>
+		{
 			try
 			{
 				var args = await BuildCalculationInfoRequest(key, useCash);

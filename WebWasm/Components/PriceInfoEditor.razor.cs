@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -8,7 +8,7 @@ public partial class PriceInfoEditor : ComponentBase
 	[Parameter] public Dictionary<uint, PriceInfo>? ExistingPrices { get; set; }
 	[Parameter] public EventCallback<Dictionary<uint, PriceInfo>> OnPricesChanged { get; set; }
 
-	private List<PriceEntryModel> _entries = [];
+	private readonly List<PriceEntryModel> _entries = [];
 	private string _globalError = string.Empty;
 	private int? _expandedIndex = null;
 	private Dictionary<uint, PriceInfo>? _lastExistingPrices = null;
@@ -77,12 +77,12 @@ public partial class PriceInfoEditor : ComponentBase
 			foreach (var kvp in ExistingPrices)
 			{
 				_entries.Add(new PriceEntryModel
-					{
-						Key = kvp.Key,
-						MinPrice = kvp.Value.MinPrice,
-						MaxPrice = kvp.Value.MaxPrice,
-						Error = string.Empty
-					});
+				{
+					Key = kvp.Key,
+					MinPrice = kvp.Value.MinPrice,
+					MaxPrice = kvp.Value.MaxPrice,
+					Error = string.Empty
+				});
 			}
 			// Expand first entry for convenience
 			_expandedIndex = 0;
@@ -140,7 +140,9 @@ public partial class PriceInfoEditor : ComponentBase
 			foreach (var entry in _entries)
 			{
 				if (!entry.IsValid())
+				{
 					return false;
+				}
 
 				if (keys.Contains(entry.Key))
 				{
@@ -157,7 +159,9 @@ public partial class PriceInfoEditor : ComponentBase
 	public Dictionary<uint, PriceInfo>? GetPrices()
 	{
 		if (!IsValid)
+		{
 			return null;
+		}
 
 		var result = new Dictionary<uint, PriceInfo>();
 		foreach (var entry in _entries)

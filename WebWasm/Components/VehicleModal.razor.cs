@@ -38,7 +38,7 @@ public partial class VehicleModal
 			_loadCapacity = InitialVehicle.LoadCapacity;
 			_photo = InitialVehicle.Photo ?? string.Empty;
 			_selectedDriverId = InitialVehicle.DriverId;
-            _selectedCompanyId = GetCompanyId(InitialVehicle.DriverId);
+			_selectedCompanyId = GetCompanyId(InitialVehicle.DriverId);
 		}
 		else
 		{
@@ -58,11 +58,11 @@ public partial class VehicleModal
 	private async Task SubmitForm()
 	{
 		if (!IsFormValid())
-        {
-            return;
-        }
+		{
+			return;
+		}
 
-        var createVehicle = new CreateVehicle(_model, _registrationNumber, _vehicleWeight, _loadCapacity, _photo, _selectedDriverId);
+		var createVehicle = new CreateVehicle(_model, _registrationNumber, _vehicleWeight, _loadCapacity, _photo, _selectedDriverId);
 		await OnSubmit.InvokeAsync((GetCompanyId(_selectedDriverId), createVehicle));
 		Reset();
 	}

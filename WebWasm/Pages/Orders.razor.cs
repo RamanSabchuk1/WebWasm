@@ -1,7 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using System.Diagnostics.CodeAnalysis;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -15,7 +15,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	private int _completedOrders = 0;
 	private string _searchText = string.Empty;
 	private bool _hasItems => FilteredOrders.Any();
-	private PaginationState _pagination = new() { ItemsPerPage = 10 };
+	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private Order[] _orders = [];
 
 	private double? _minWeight;
@@ -24,7 +24,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	private double _weightRangeMax;
 	private double _weightStep = 1;
 	private bool _weightFilterDisabled;
-	private List<OrderStatus> _selectedStatuses = new();
+	private List<OrderStatus> _selectedStatuses = [];
 	private bool _showFilters = false;
 
 	private DateOnly? _fromDate;
@@ -157,7 +157,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	{
 		_orders = [.. await cashService.GetData<Order>(useCash)];
 		_totalOrders = _orders.Length;
-		_pendingOrders = _orders.Count(o => o.Status == OrderStatus.PaymentPending || o.Status == OrderStatus.WaitingApprove);
+		_pendingOrders = _orders.Count(o => o.Status is OrderStatus.PaymentPending or OrderStatus.WaitingApprove);
 		_completedOrders = _orders.Count(o => o.Status == OrderStatus.Completed);
 		RecalculateWeightRange();
 	}
@@ -175,8 +175,8 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 			OrderStatus.CorruptedPayment => "badge-corrupted",
 			OrderStatus.Archived => "badge-archived",
 			OrderStatus.Deleted => "badge-deleted",
-			OrderStatus.PaymentInProgress=> "badge-progress",
-            _ => string.Empty
+			OrderStatus.PaymentInProgress => "badge-progress",
+			_ => string.Empty
 		};
 	}
 
@@ -185,50 +185,50 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 		navigationManager.NavigateTo($"orders/{id}");
 	}
 
-protected override async Task OnInitializedAsync()
-{
-await LoadData(true);
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadData(true);
 
-var savedFilters = await localStorage.GetItemAsync<OrdersFilterState>("orders_filters");
-if (savedFilters is not null)
-{
-_selectedStatuses = savedFilters.SelectedStatuses ?? [];
-_minWeight = savedFilters.MinWeight;
-_maxWeight = savedFilters.MaxWeight;
-_fromDate = savedFilters.FromDate;
-_toDate = savedFilters.ToDate;
-_searchText = savedFilters.SearchText ?? string.Empty;
-}
-}
+		var savedFilters = await localStorage.GetItemAsync<OrdersFilterState>("orders_filters");
+		if (savedFilters is not null)
+		{
+			_selectedStatuses = savedFilters.SelectedStatuses ?? [];
+			_minWeight = savedFilters.MinWeight;
+			_maxWeight = savedFilters.MaxWeight;
+			_fromDate = savedFilters.FromDate;
+			_toDate = savedFilters.ToDate;
+			_searchText = savedFilters.SearchText ?? string.Empty;
+		}
+	}
 
-private async Task SaveFilters()
-{
-var state = new OrdersFilterState([.. _selectedStatuses], _minWeight, _maxWeight, _fromDate, _toDate, _searchText ?? string.Empty);
-await localStorage.SetItemAsync("orders_filters", state);
-}
+	private async Task SaveFilters()
+	{
+		var state = new OrdersFilterState([.. _selectedStatuses], _minWeight, _maxWeight, _fromDate, _toDate, _searchText ?? string.Empty);
+		await localStorage.SetItemAsync("orders_filters", state);
+	}
 
-private async Task OnSearchTextChanged(ChangeEventArgs e)
-{
-_searchText = e.Value?.ToString() ?? string.Empty;
-await SaveFilters();
-}
+	private async Task OnSearchTextChanged(ChangeEventArgs e)
+	{
+		_searchText = e.Value?.ToString() ?? string.Empty;
+		await SaveFilters();
+	}
 
-private async Task OnFromDateChanged(ChangeEventArgs e)
-{
-_fromDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null;
-await SaveFilters();
-}
+	private async Task OnFromDateChanged(ChangeEventArgs e)
+	{
+		_fromDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null;
+		await SaveFilters();
+	}
 
-private async Task OnToDateChanged(ChangeEventArgs e)
-{
-_toDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null;
-await SaveFilters();
-}
+	private async Task OnToDateChanged(ChangeEventArgs e)
+	{
+		_toDate = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null;
+		await SaveFilters();
+	}
 
-private void ClearDateFilter()
-{
-_fromDate = null;
-_toDate = null;
-_ = SaveFilters();
-}
+	private void ClearDateFilter()
+	{
+		_fromDate = null;
+		_toDate = null;
+		_ = SaveFilters();
+	}
 }

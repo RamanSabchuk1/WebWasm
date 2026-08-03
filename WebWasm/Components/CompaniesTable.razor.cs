@@ -1,7 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using System.Diagnostics.CodeAnalysis;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -12,15 +12,15 @@ public partial class CompaniesTable : ComponentBase
 	private const string SearchKey = "search_companies";
 	[Parameter] public List<Company> Companies { get; set; } = [];
 	[Parameter] public EventCallback<(Guid CompanyId, bool IsActive)> OnToggleActive { get; set; }
-    [Parameter] public EventCallback<Company> OnEditCompany { get; set; }
-    [Parameter] public EventCallback<Company> OnDeleteCompany { get; set; }
-    [Parameter] public EventCallback<Company> OnEditSecurityLevel { get; set; }
-    [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+	[Parameter] public EventCallback<Company> OnEditCompany { get; set; }
+	[Parameter] public EventCallback<Company> OnDeleteCompany { get; set; }
+	[Parameter] public EventCallback<Company> OnEditSecurityLevel { get; set; }
+	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
-    private string _searchText = string.Empty;
+	private string _searchText = string.Empty;
 	private bool _hasItems => FilteredCompanies.Any();
-	private HashSet<Guid> _expandedCompanies = [];
-	private PaginationState _pagination = new() { ItemsPerPage = 10 };
+	private readonly HashSet<Guid> _expandedCompanies = [];
+	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
 	private IQueryable<Company> FilteredCompanies
 	{
@@ -44,7 +44,9 @@ public partial class CompaniesTable : ComponentBase
 	private void ToggleExpand(Guid id)
 	{
 		if (!_expandedCompanies.Remove(id))
+		{
 			_expandedCompanies.Add(id);
+		}
 	}
 
 	protected override async Task OnInitializedAsync()

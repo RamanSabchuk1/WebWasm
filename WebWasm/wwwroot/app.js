@@ -1,4 +1,4 @@
 export function isInputFocused() {
-    const tag = document.activeElement?.tagName ?? '';
-    return ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+	const tag = document.activeElement?.tagName ?? '';
+	return ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
 }

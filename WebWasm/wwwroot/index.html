@@ -58,17 +58,17 @@
 
 		async function initializeFirebaseMessaging() {
 			try {
-				swRegistration = await navigator.serviceWorker.register('service-worker.js', { 
+				swRegistration = await navigator.serviceWorker.register('service-worker.js', {
 					updateViaCache: 'none',
 					scope: '/WebWasm/'
 				});
-				
+
 				console.log('Service Worker registered successfully:', swRegistration);
 
 				await navigator.serviceWorker.ready;
-				
+
 				messaging = firebase.messaging();
-				
+
 				messaging.onMessage((payload) => {
 					console.log('Foreground message received:', payload);
 

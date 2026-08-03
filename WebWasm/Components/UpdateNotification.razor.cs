@@ -24,7 +24,7 @@ public partial class UpdateNotification : ComponentBase, IAsyncDisposable
 	[JSInvokable]
 	public void OnUpdateAvailable(string version)
 	{
-        Console.WriteLine($"current version {version}");
+		Console.WriteLine($"current version {version}");
 		_updateAvailable = true;
 		StateHasChanged();
 	}
@@ -39,28 +39,28 @@ public partial class UpdateNotification : ComponentBase, IAsyncDisposable
 		if (payload.TryGetProperty("notification", out var notification))
 		{
 			if (notification.TryGetProperty("title", out var t))
-            {
-                title = t.GetString() ?? title;
-            }
+			{
+				title = t.GetString() ?? title;
+			}
 
-            if (notification.TryGetProperty("body", out var b))
-            {
-                body = b.GetString() ?? body;
-            }
-        }
+			if (notification.TryGetProperty("body", out var b))
+			{
+				body = b.GetString() ?? body;
+			}
+		}
 		// Fallback to 'data' property
 		else if (payload.TryGetProperty("data", out var data))
 		{
 			if (data.TryGetProperty("title", out var t))
-            {
-                title = t.GetString() ?? title;
-            }
+			{
+				title = t.GetString() ?? title;
+			}
 
-            if (data.TryGetProperty("body", out var b))
-            {
-                body = b.GetString() ?? body;
-            }
-        }
+			if (data.TryGetProperty("body", out var b))
+			{
+				body = b.GetString() ?? body;
+			}
+		}
 
 		ToastService.ShowInfo($"{title}: {body}");
 	}

@@ -7,280 +7,280 @@ namespace WebWasm.Pages;
 
 public partial class Regions : ComponentBase
 {
-    [Inject] private CashService CashService { get; set; } = default!;
-    [Inject] private ApiClient ApiClient { get; set; } = default!;
-    [Inject] private ToastService ToastService { get; set; } = default!;
-    [Inject] private LoadingService LoadingService { get; set; } = default!;
+	[Inject] private CashService CashService { get; set; } = default!;
+	[Inject] private ApiClient ApiClient { get; set; } = default!;
+	[Inject] private ToastService ToastService { get; set; } = default!;
+	[Inject] private LoadingService LoadingService { get; set; } = default!;
 
-    private List<Region> _regions = [];
-    private RegionsTable? _regionsTableRef;
-    private bool _isRegionModalOpen = false;
-    private Region? _editingRegion = null;
-    private bool _isDetailsModalOpen = false;
-    private Region? _viewingRegion = null;
-    private bool _isLevelEditorOpen = false;
-    private Region? _editingLevelRegion = null;
-    private Level? _editingLevel = null;
-    private bool _isConfirmOpen = false;
-    private string _confirmTitle = string.Empty;
-    private string _confirmMessage = string.Empty;
-    private string _confirmText = string.Empty;
-    private Func<Task>? _confirmAction = null;
+	private List<Region> _regions = [];
+	private RegionsTable? _regionsTableRef;
+	private bool _isRegionModalOpen = false;
+	private Region? _editingRegion = null;
+	private bool _isDetailsModalOpen = false;
+	private Region? _viewingRegion = null;
+	private bool _isLevelEditorOpen = false;
+	private Region? _editingLevelRegion = null;
+	private Level? _editingLevel = null;
+	private bool _isConfirmOpen = false;
+	private string _confirmTitle = string.Empty;
+	private string _confirmMessage = string.Empty;
+	private string _confirmText = string.Empty;
+	private Func<Task>? _confirmAction = null;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadRegions(true);
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadRegions(true);
+	}
 
-    private async Task LoadRegions(bool useCash)
-    {
-        _regions = [.. await CashService.GetData<Region>(useCash)];
-    }
+	private async Task LoadRegions(bool useCash)
+	{
+		_regions = [.. await CashService.GetData<Region>(useCash)];
+	}
 
-    private void OpenAddRegionModal()
-    {
-        _editingRegion = null;
-        _isRegionModalOpen = true;
-    }
+	private void OpenAddRegionModal()
+	{
+		_editingRegion = null;
+		_isRegionModalOpen = true;
+	}
 
-    private void HandleEditRegion(Region region)
-    {
-        _editingRegion = region;
-        _isRegionModalOpen = true;
-    }
+	private void HandleEditRegion(Region region)
+	{
+		_editingRegion = region;
+		_isRegionModalOpen = true;
+	}
 
-    private void HandleViewDetails(Region region)
-    {
-        _viewingRegion = region;
-        _isDetailsModalOpen = true;
-    }
+	private void HandleViewDetails(Region region)
+	{
+		_viewingRegion = region;
+		_isDetailsModalOpen = true;
+	}
 
-    private void CloseRegionModal()
-    {
-        _isRegionModalOpen = false;
-        _editingRegion = null;
-    }
+	private void CloseRegionModal()
+	{
+		_isRegionModalOpen = false;
+		_editingRegion = null;
+	}
 
-    private void CloseDetailsModal()
-    {
-        _isDetailsModalOpen = false;
-        _viewingRegion = null;
-    }
+	private void CloseDetailsModal()
+	{
+		_isDetailsModalOpen = false;
+		_viewingRegion = null;
+	}
 
-    private void CloseLevelEditor()
-    {
-        _isLevelEditorOpen = false;
-        _editingLevelRegion = null;
-        _editingLevel = null;
-    }
+	private void CloseLevelEditor()
+	{
+		_isLevelEditorOpen = false;
+		_editingLevelRegion = null;
+		_editingLevel = null;
+	}
 
-    private async Task HandleRegionSubmit(UpdateRegion regionData)
-    {
-        await LoadingService.ExecuteWithLoading(async () =>
-        {
-            try
-            {
-                if (_editingRegion is not null)
-                {
-                    await ApiClient.Put($"Regions/{_editingRegion.Id}", regionData);
-                    ToastService.ShowSuccess("Region updated successfully!");
-                }
-                else
-                {
-                    var createRegion = new CreateRegion(regionData.Name, regionData.TimeZone);
-                    await ApiClient.Post("Regions", createRegion);
-                    ToastService.ShowSuccess("Region created successfully!");
-                }
+	private async Task HandleRegionSubmit(UpdateRegion regionData)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				if (_editingRegion is not null)
+				{
+					await ApiClient.Put($"Regions/{_editingRegion.Id}", regionData);
+					ToastService.ShowSuccess("Region updated successfully!");
+				}
+				else
+				{
+					var createRegion = new CreateRegion(regionData.Name, regionData.TimeZone);
+					await ApiClient.Post("Regions", createRegion);
+					ToastService.ShowSuccess("Region created successfully!");
+				}
 
-                await LoadRegions(false);
-                CloseRegionModal();
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Failed to save region: {ex.Message}");
-            }
-        });
-    }
+				await LoadRegions(false);
+				CloseRegionModal();
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to save region: {ex.Message}");
+			}
+		});
+	}
 
-    private void HandleAddLevel(Region region)
-    {
-        _editingLevelRegion = region;
-        _editingLevel = null;
-        _isDetailsModalOpen = false;
-        _isLevelEditorOpen = true;
-    }
+	private void HandleAddLevel(Region region)
+	{
+		_editingLevelRegion = region;
+		_editingLevel = null;
+		_isDetailsModalOpen = false;
+		_isLevelEditorOpen = true;
+	}
 
-    private void HandleEditLevel((Region region, Level level) data)
-    {
-        _editingLevelRegion = data.region;
-        _editingLevel = data.level;
-        _isDetailsModalOpen = false;
-        _isLevelEditorOpen = true;
-    }
+	private void HandleEditLevel((Region region, Level level) data)
+	{
+		_editingLevelRegion = data.region;
+		_editingLevel = data.level;
+		_isDetailsModalOpen = false;
+		_isLevelEditorOpen = true;
+	}
 
-    private async Task HandleLevelSubmit(MutateLevel levelData)
-    {
-        if (_editingLevelRegion is null)
-        {
-            return;
-        }
+	private async Task HandleLevelSubmit(MutateLevel levelData)
+	{
+		if (_editingLevelRegion is null)
+		{
+			return;
+		}
 
-        await LoadingService.ExecuteWithLoading(async () =>
-        {
-            try
-            {
-                // Create-only path: edit goes through the split handlers below
-                await ApiClient.Post($"Regions/{_editingLevelRegion.Id}/level", levelData);
-                ToastService.ShowSuccess("Level created successfully!");
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				// Create-only path: edit goes through the split handlers below
+				await ApiClient.Post($"Regions/{_editingLevelRegion.Id}/level", levelData);
+				ToastService.ShowSuccess("Level created successfully!");
 
-                await LoadRegions(false);
-                CloseLevelEditor();
+				await LoadRegions(false);
+				CloseLevelEditor();
 
-                if (_isDetailsModalOpen)
-                {
-                    _viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Failed to save level: {ex.Message}");
-            }
-        });
-    }
+				if (_isDetailsModalOpen)
+				{
+					_viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
+				}
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to save level: {ex.Message}");
+			}
+		});
+	}
 
-    private async Task HandleLevelSubmitPrices(UpdateLevelPriceInfo priceInfo)
-    {
-        if (_editingLevelRegion is null || _editingLevel is null)
-        {
-            return;
-        }
+	private async Task HandleLevelSubmitPrices(UpdateLevelPriceInfo priceInfo)
+	{
+		if (_editingLevelRegion is null || _editingLevel is null)
+		{
+			return;
+		}
 
-        await LoadingService.ExecuteWithLoading(async () =>
-        {
-            try
-            {
-                await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/price-info", priceInfo);
-                ToastService.ShowSuccess("Prices updated successfully!");
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/price-info", priceInfo);
+				ToastService.ShowSuccess("Prices updated successfully!");
 
-                await LoadRegions(false);
+				await LoadRegions(false);
 
-                if (_isDetailsModalOpen)
-                {
-                    _viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Failed to update prices: {ex.Message}");
-            }
-        });
-    }
+				if (_isDetailsModalOpen)
+				{
+					_viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
+				}
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to update prices: {ex.Message}");
+			}
+		});
+	}
 
-    private async Task HandleLevelSubmitGeometry(UpdateLevelGeometry geometry)
-    {
-        if (_editingLevelRegion is null || _editingLevel is null)
-        {
-            return;
-        }
+	private async Task HandleLevelSubmitGeometry(UpdateLevelGeometry geometry)
+	{
+		if (_editingLevelRegion is null || _editingLevel is null)
+		{
+			return;
+		}
 
-        await LoadingService.ExecuteWithLoading(async () =>
-        {
-            try
-            {
-                await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/geometry", geometry);
-                ToastService.ShowSuccess("Geometry updated successfully!");
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/geometry", geometry);
+				ToastService.ShowSuccess("Geometry updated successfully!");
 
-                await LoadRegions(false);
+				await LoadRegions(false);
 
-                if (_isDetailsModalOpen)
-                {
-                    _viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Failed to update geometry: {ex.Message}");
-            }
-        });
-    }
+				if (_isDetailsModalOpen)
+				{
+					_viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
+				}
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to update geometry: {ex.Message}");
+			}
+		});
+	}
 
-    private void HandleDeleteRegion(Region region)
-    {
-        _confirmTitle = "Delete Region";
-        _confirmMessage = $"Are you sure you want to delete the region \"{region.Name}\"? This will also delete all its levels and associated data.";
-        _confirmText = "Delete";
-        _confirmAction = async () => await DeleteRegion(region.Id);
-        _isConfirmOpen = true;
-    }
+	private void HandleDeleteRegion(Region region)
+	{
+		_confirmTitle = "Delete Region";
+		_confirmMessage = $"Are you sure you want to delete the region \"{region.Name}\"? This will also delete all its levels and associated data.";
+		_confirmText = "Delete";
+		_confirmAction = async () => await DeleteRegion(region.Id);
+		_isConfirmOpen = true;
+	}
 
-    private async Task DeleteRegion(Guid regionId)
-    {
-        await LoadingService.ExecuteWithLoading(async () =>
-        {
-            try
-            {
-                await ApiClient.Delete($"Regions/{regionId}");
-                ToastService.ShowSuccess("Region deleted successfully!");
-                await LoadRegions(false);
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Failed to delete region: {ex.Message}");
-            }
-        });
-    }
+	private async Task DeleteRegion(Guid regionId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Delete($"Regions/{regionId}");
+				ToastService.ShowSuccess("Region deleted successfully!");
+				await LoadRegions(false);
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to delete region: {ex.Message}");
+			}
+		});
+	}
 
-    private void HandleDeleteLevel((Region region, Guid levelId) data)
-    {
-        var level = data.region.Levels?.FirstOrDefault(l => l.Id == data.levelId);
-        if (level is null)
-        {
-            return;
-        }
+	private void HandleDeleteLevel((Region region, Guid levelId) data)
+	{
+		var level = data.region.Levels?.FirstOrDefault(l => l.Id == data.levelId);
+		if (level is null)
+		{
+			return;
+		}
 
-        _confirmTitle = "Delete Level";
-        _confirmMessage = $"Are you sure you want to delete the {level.Type} level? This will remove all {level.Triangles?.Count ?? 0} triangles in this level.";
-        _confirmText = "Delete";
-        _confirmAction = async () => await DeleteLevel(data.region.Id, data.levelId);
-        _isConfirmOpen = true;
-    }
+		_confirmTitle = "Delete Level";
+		_confirmMessage = $"Are you sure you want to delete the {level.Type} level? This will remove all {level.Triangles?.Count ?? 0} triangles in this level.";
+		_confirmText = "Delete";
+		_confirmAction = async () => await DeleteLevel(data.region.Id, data.levelId);
+		_isConfirmOpen = true;
+	}
 
-    private async Task DeleteLevel(Guid regionId, Guid levelId)
-    {
-        await LoadingService.ExecuteWithLoading(async () =>
-        {
-            try
-            {
-                await ApiClient.Delete($"Regions/{regionId}/level/{levelId}");
-                ToastService.ShowSuccess("Level deleted successfully!");
-                await LoadRegions(false);
+	private async Task DeleteLevel(Guid regionId, Guid levelId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Delete($"Regions/{regionId}/level/{levelId}");
+				ToastService.ShowSuccess("Level deleted successfully!");
+				await LoadRegions(false);
 
-                // Refresh the details modal if open
-                if (_isDetailsModalOpen && _viewingRegion?.Id == regionId)
-                {
-                    _viewingRegion = _regions.FirstOrDefault(r => r.Id == regionId);
-                }
-            }
-            catch (Exception ex)
-            {
-                ToastService.ShowError($"Failed to delete level: {ex.Message}");
-            }
-        });
-    }
+				// Refresh the details modal if open
+				if (_isDetailsModalOpen && _viewingRegion?.Id == regionId)
+				{
+					_viewingRegion = _regions.FirstOrDefault(r => r.Id == regionId);
+				}
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to delete level: {ex.Message}");
+			}
+		});
+	}
 
-    private async Task HandleConfirm()
-    {
-        if (_confirmAction is not null)
-        {
-            await _confirmAction();
-        }
+	private async Task HandleConfirm()
+	{
+		if (_confirmAction is not null)
+		{
+			await _confirmAction();
+		}
 
-        CloseConfirm();
-    }
+		CloseConfirm();
+	}
 
-    private void CloseConfirm()
-    {
-        _isConfirmOpen = false;
-        _confirmAction = null;
-    }
+	private void CloseConfirm()
+	{
+		_isConfirmOpen = false;
+		_confirmAction = null;
+	}
 }

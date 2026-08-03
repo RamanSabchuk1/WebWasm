@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -25,7 +25,8 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 
 	private async Task HandleApply(Guid suggestionId)
 	{
-		await loadingService.ExecuteWithLoading(async () => {
+		await loadingService.ExecuteWithLoading(async () =>
+		{
 			try
 			{
 				await apiClient.Post($"Supports/suggestion/apply?suggestionId={suggestionId}");

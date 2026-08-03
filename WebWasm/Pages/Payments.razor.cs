@@ -1,7 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using System.Diagnostics.CodeAnalysis;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -20,7 +20,7 @@ public partial class Payments : ComponentBase
 	private List<CreditCardInfo> _creditCards = [];
 	private string _searchText = string.Empty;
 	private bool _hasItems => FilteredCards.Count != 0;
-	private PaginationState _pagination = new() { ItemsPerPage = 10 };
+	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
 	private List<CreditCardInfo> FilteredCards
 	{

@@ -3,32 +3,32 @@
 @implements IAsyncDisposable
 
 <div class="location-picker-container">
-	@if(!string.IsNullOrEmpty(Title))
+	@if (!string.IsNullOrEmpty(Title))
 	{
 		<p class="map-hint">📍 @Title</p>
-    }
+	}
 	<div class="map-wrapper" @attributes="@(string.IsNullOrEmpty(MapHeight) ? null : new Dictionary<string, object> { { "style", $"height:{MapHeight}" } })">
 		<div @ref="_mapElement" class="leaflet-map"></div>
 	</div>
 
-	@if(ShowInputs)
+	@if (ShowInputs)
 	{
 		<div class="location-info">
 			<div class="coordinates">
 				<div class="coord-group">
 					<label>Latitude:</label>
-					<input type="number" 
-						   step="0.000001" 
-						   @bind="_latitude" 
+					<input type="number"
+						   step="0.000001"
+						   @bind="_latitude"
 						   @bind:event="oninput"
 						   @onchange="UpdateMarkerFromInput"
 						   class="coord-input" />
 				</div>
 				<div class="coord-group">
 					<label>Longitude:</label>
-					<input type="number" 
-						   step="0.000001" 
-						   @bind="_longitude" 
+					<input type="number"
+						   step="0.000001"
+						   @bind="_longitude"
 						   @bind:event="oninput"
 						   @onchange="UpdateMarkerFromInput"
 						   class="coord-input" />
@@ -47,7 +47,7 @@
 	[Parameter] public string? Title { get; set; }
 	[Parameter] public bool ShowInputs { get; set; } = true;
 
-    private ElementReference _mapElement;
+	private ElementReference _mapElement;
 	private IJSObjectReference? _jsModule;
 	private IJSObjectReference? _mapInstance;
 	private double _latitude;

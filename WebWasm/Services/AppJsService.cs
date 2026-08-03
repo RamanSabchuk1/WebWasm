@@ -1,4 +1,4 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
 
 namespace WebWasm.Services;
 
@@ -6,7 +6,7 @@ public class AppJsService(IJSRuntime jSRuntime)
 {
 	private bool isInitialized = false;
 	private IJSObjectReference? appJsModule;
-	
+
 	public async ValueTask<IJSObjectReference> GetAppJsModule()
 	{
 		if (isInitialized)

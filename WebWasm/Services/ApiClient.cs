@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
@@ -143,7 +143,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		{
 			_ = await response.Content.ReadAsStringAsync();
 		}
-		
+
 		return response;
 	}
 

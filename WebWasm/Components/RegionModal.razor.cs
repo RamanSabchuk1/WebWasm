@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -13,7 +13,7 @@ public partial class RegionModal : ComponentBase
 
 	private string _name = string.Empty;
 	private string _timeZone = Default;
-    private string _errorMessage = string.Empty;
+	private string _errorMessage = string.Empty;
 	private List<Level> _existingLevels = [];
 
 	private bool IsEditMode => EditingRegion is not null;

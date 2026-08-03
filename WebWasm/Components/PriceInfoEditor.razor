@@ -1,4 +1,4 @@
-﻿@using WebWasm.Models
+@using WebWasm.Models
 
 <div class="price-editor-container">
 	<div class="price-entries">
@@ -15,9 +15,9 @@
 					var entry = _entries[i];
 					var index = i;
 					var isExpanded = _expandedIndex == index;
-					
+
 					<div class="entry-panel" @key="index">
-						<button class="entry-toggle" 
+						<button class="entry-toggle"
 								@onclick="() => ToggleExpand(index)"
 								type="button">
 							<span class="toggle-icon">@(isExpanded ? "▼" : "▶")</span>
@@ -39,7 +39,7 @@
 							<div class="entry-content">
 								<div class="entry-header">
 									<div class="entry-key-input">
-								<label>Neto KG</label>
+										<label>Neto KG</label>
 										<input type="number"
 											   class="form-control"
 											   @bind="entry.Key"

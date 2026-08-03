@@ -1,4 +1,4 @@
-﻿namespace WebWasm.Models;
+namespace WebWasm.Models;
 
 public record Suggestion(Guid Id, Guid UserInfoId, string Name, Dictionary<string, string> Data, DateTime Created, DateTime? Applied);
 public record DeviceToken(Guid Id, Guid UserInfoId, string Token, string Device, Dictionary<string, string>? AdditionalData);
@@ -87,16 +87,16 @@ public enum RoleType
 
 public enum OrderStatus
 {
-    Draft,
-    WaitingApprove,
-    PaymentPending,
-    Active,
-    Completed,
-    CorruptedPayment,
-    Cancelled,
-    Archived,
-    Deleted,
-    PaymentInProgress
+	Draft,
+	WaitingApprove,
+	PaymentPending,
+	Active,
+	Completed,
+	CorruptedPayment,
+	Cancelled,
+	Archived,
+	Deleted,
+	PaymentInProgress
 }
 
 public enum PaymentMethodType

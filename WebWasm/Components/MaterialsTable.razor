@@ -1,12 +1,12 @@
-﻿@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Components.QuickGrid
 @using WebWasm.Models
 @using WebWasm.Services
 
 <div class="data-grid-container">
 	<div class="data-grid-search">
-		<input type="text" 
-			   placeholder="Search materials..." 
-			   @bind="_searchText" 
+		<input type="text"
+			   placeholder="Search materials..."
+			   @bind="_searchText"
 			   @bind:after="SaveSearch"
 			   @bind:event="oninput"
 			   class="search-input" />
@@ -30,7 +30,7 @@
 		</div>
 
 		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" TotalItems="@FilteredMaterials.Count" AfterNavigate="() => StateHasChanged()"/>
+			<CustomPaginator State="@_pagination" TotalItems="@FilteredMaterials.Count" AfterNavigate="() => StateHasChanged()" />
 		</div>
 	}
 	else

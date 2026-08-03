@@ -1,4 +1,4 @@
-﻿using Blazored.LocalStorage;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Models;
@@ -179,7 +179,7 @@ public partial class Users : ComponentBase
 
 		var userId = _securityLevelTargetUser.Id;
 		var oldLevel = _securityLevelCurrent;
-        CloseSecurityLevelModal();
+		CloseSecurityLevelModal();
 
 		if (oldLevel == newLevel)
 		{
@@ -191,8 +191,8 @@ public partial class Users : ComponentBase
 			try
 			{
 				await ApiClient.Put($"admin/security-levels/users/{userId}", new SecurityLevelRequest(newLevel));
-                await LoadData(false);
-                ToastService.ShowSuccess("Security level updated successfully");
+				await LoadData(false);
+				ToastService.ShowSuccess("Security level updated successfully");
 			}
 			catch (Exception ex)
 			{
@@ -455,23 +455,33 @@ public partial class Users : ComponentBase
 				filtered = filtered.Where(u => GetDriver(u) is null);
 			}
 
-if (_filterRoles.Count > 0)
-{
-filtered = filtered.Where(u => u.Roles.Any(r => _filterRoles.Contains(r)));
-}
+			if (_filterRoles.Count > 0)
+			{
+				filtered = filtered.Where(u => u.Roles.Any(r => _filterRoles.Contains(r)));
+			}
 
-if (_activeUserFilter == ActiveUserFilter.ActiveOnly)
-filtered = filtered.Where(u => u.UserInfo.IsActive);
-else if (_activeUserFilter == ActiveUserFilter.InactiveOnly)
-filtered = filtered.Where(u => !u.UserInfo.IsActive);
+			if (_activeUserFilter == ActiveUserFilter.ActiveOnly)
+			{
+				filtered = filtered.Where(u => u.UserInfo.IsActive);
+			}
+			else if (_activeUserFilter == ActiveUserFilter.InactiveOnly)
+			{
+				filtered = filtered.Where(u => !u.UserInfo.IsActive);
+			}
 
-if (_showCustomersOnly)
-filtered = filtered.Where(u => u.Roles.Count == 0);
+			if (_showCustomersOnly)
+			{
+				filtered = filtered.Where(u => u.Roles.Count == 0);
+			}
 
-if (_verifiedFilter == VerifiedUserFilter.VerifiedOnly)
-filtered = filtered.Where(u => u.UserVerified);
-else if (_verifiedFilter == VerifiedUserFilter.UnverifiedOnly)
-filtered = filtered.Where(u => !u.UserVerified);
+			if (_verifiedFilter == VerifiedUserFilter.VerifiedOnly)
+			{
+				filtered = filtered.Where(u => u.UserVerified);
+			}
+			else if (_verifiedFilter == VerifiedUserFilter.UnverifiedOnly)
+			{
+				filtered = filtered.Where(u => !u.UserVerified);
+			}
 
 			if (!string.IsNullOrWhiteSpace(_searchText))
 			{
@@ -497,19 +507,19 @@ filtered = filtered.Where(u => !u.UserVerified);
 			return;
 		}
 
-_isInitialized = true;
-await LoadData(true);
+		_isInitialized = true;
+		await LoadData(true);
 
-var savedFilters = await LocalStorage.GetItemAsync<UsersFilterState>("users_filters");
-if (savedFilters is not null)
-{
-_userKindFilter = savedFilters.UserKindFilter;
-_filterRoles.AddRange(savedFilters.FilterRoles ?? []);
-_activeUserFilter = savedFilters.ActiveFilter;
-_showCustomersOnly = savedFilters.ShowCustomersOnly;
-_verifiedFilter = savedFilters.VerifiedFilter;
-_searchText = savedFilters.SearchText ?? string.Empty;
-}
+		var savedFilters = await LocalStorage.GetItemAsync<UsersFilterState>("users_filters");
+		if (savedFilters is not null)
+		{
+			_userKindFilter = savedFilters.UserKindFilter;
+			_filterRoles.AddRange(savedFilters.FilterRoles ?? []);
+			_activeUserFilter = savedFilters.ActiveFilter;
+			_showCustomersOnly = savedFilters.ShowCustomersOnly;
+			_verifiedFilter = savedFilters.VerifiedFilter;
+			_searchText = savedFilters.SearchText ?? string.Empty;
+		}
 	}
 
 	private async Task LoadData(bool useCash)
@@ -541,7 +551,7 @@ _searchText = savedFilters.SearchText ?? string.Empty;
 	private int SuperAdminUsers => _users?.Count(user => user.Roles.Contains(RoleType.SuperAdmin)) ?? 0;
 	private int DriverCount => _drivers.Length;
 
-	private Driver? GetDriver(User user)	
+	private Driver? GetDriver(User user)
 		=> _driverByUserInfoId.TryGetValue(user.UserInfo.Id, out var driver) ? driver : null;
 
 	private static Company? GetCompany(User user, Driver? driver)
@@ -562,7 +572,7 @@ _searchText = savedFilters.SearchText ?? string.Empty;
 		var name = string.Join(" ", parts);
 		return string.IsNullOrWhiteSpace(name) ? "Unknown" : name;
 	}
-// Значение паспортного поля из secure-словаря UserInfo.Passport (ключи backend: passport.*).
+	// Значение паспортного поля из secure-словаря UserInfo.Passport (ключи backend: passport.*).
 	// Отсутствующий ключ → пустая строка. Значение (в т.ч. issuedDate) выводится КАК ЕСТЬ, без переформатирования.
 	private static string GetPassportValue(IReadOnlyDictionary<string, string> passport, string key)
 		=> passport.TryGetValue(key, out var value) ? value : string.Empty;
@@ -920,7 +930,7 @@ _searchText = savedFilters.SearchText ?? string.Empty;
 			_slotEndTime = lastSlot.EndTime;
 
 		}
-		else if(_newSlots.Count > 0)
+		else if (_newSlots.Count > 0)
 		{
 			var lastNewSlot = _newSlots.MaxBy(s => s.WorkingDay)!;
 			_slotDate = lastNewSlot.WorkingDay.AddDays(1);
@@ -939,16 +949,17 @@ _searchText = savedFilters.SearchText ?? string.Empty;
 	{
 		var regionDrivers = drivers
 			.Where(d => d.UserInfo is not null)
-			.Select(d => {
+			.Select(d =>
+			{
 				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
 				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
 				return (DriverId: d.Id, CompanyId: companyId);
 			})
 			.Where(x => x.CompanyId.HasValue)
 			.Select(x => (x.DriverId, CompanyId: x.CompanyId!.Value))
-			.Join(companies, 
-				d => d.CompanyId, 
-				c => c.Id, 
+			.Join(companies,
+				d => d.CompanyId,
+				c => c.Id,
 				(d, c) => new { d.DriverId, c.RegionId })
 			.GroupBy(x => x.RegionId)
 			.ToDictionary(g => g.Key, g => g.Select(x => x.DriverId).ToList());

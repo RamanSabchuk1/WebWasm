@@ -1,7 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using System.Diagnostics.CodeAnalysis;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -21,10 +21,10 @@ public partial class ProducersTable : ComponentBase
 
 	private string _searchText = string.Empty;
 	private bool _hasItems => FilteredProducers.Any();
-	private HashSet<Guid> _expandedProducers = [];
-	private HashSet<Guid> _expandedWorkingTimes = [];
-	private HashSet<Guid> _expandedLoadingPlaces = [];
-	private PaginationState _pagination = new() { ItemsPerPage = 10 };
+	private readonly HashSet<Guid> _expandedProducers = [];
+	private readonly HashSet<Guid> _expandedWorkingTimes = [];
+	private readonly HashSet<Guid> _expandedLoadingPlaces = [];
+	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
 	private IQueryable<Producer> FilteredProducers
 	{
@@ -50,27 +50,33 @@ public partial class ProducersTable : ComponentBase
 	private void ToggleProducerExpand(Guid id)
 	{
 		if (!_expandedProducers.Remove(id))
+		{
 			_expandedProducers.Add(id);
+		}
 	}
 
 	private void ToggleWorkingTimeExpand(Guid id)
 	{
 		if (!_expandedWorkingTimes.Remove(id))
+		{
 			_expandedWorkingTimes.Add(id);
+		}
 	}
 
 	private void ToggleLoadingPlacesExpand(Guid id)
 	{
 		if (!_expandedLoadingPlaces.Remove(id))
+		{
 			_expandedLoadingPlaces.Add(id);
+		}
 	}
 
-	private string GetCompanyName(Producer producer)
+	private static string GetCompanyName(Producer producer)
 	{
 		return producer.Company?.Name ?? "(No Company)";
 	}
 
-	private string GetDayAbbreviation(DayOfWeek day) => day switch
+	private static string GetDayAbbreviation(DayOfWeek day) => day switch
 	{
 		DayOfWeek.Monday => "Mon",
 		DayOfWeek.Tuesday => "Tue",

@@ -1,4 +1,4 @@
-﻿@inject ApiClient ApiClient
+@inject ApiClient ApiClient
 
 <div class="login-container">
 	<div class="login-card">
@@ -10,7 +10,7 @@
 
 		<EditForm Model="@_loginModel" OnValidSubmit="HandleLogin" class="login-form">
 			<DataAnnotationsValidator />
-			
+
 			<div class="form-group">
 				<label for="username">Username</label>
 				<div class="input-wrapper">
@@ -19,7 +19,7 @@
 				</div>
 				<ValidationMessage For="@(() => _loginModel.Username)" />
 			</div>
-			
+
 			<div class="form-group">
 				<label for="password">Password</label>
 				<div class="input-wrapper">
@@ -47,7 +47,7 @@
 				}
 			</button>
 		</EditForm>
-		
+
 		<div class="login-footer">
 			<p>SuperAdmin Panel v1.0</p>
 		</div>

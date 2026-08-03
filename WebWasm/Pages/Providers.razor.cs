@@ -100,7 +100,9 @@ public partial class Providers : ComponentBase
 	{
 		var producer = _producers.FirstOrDefault(p => p.Id == producerId);
 		if (producer is null)
+		{
 			return;
+		}
 
 		var loadingPlacesCount = producer.LoadingPlaces.Count;
 		_confirmTitle = "Confirm Delete Producer";
@@ -196,7 +198,9 @@ public partial class Providers : ComponentBase
 		var loadingPlace = producer?.LoadingPlaces.FirstOrDefault(lp => lp.Id == data.LoadingPlaceId);
 
 		if (loadingPlace is null)
+		{
 			return;
+		}
 
 		_confirmTitle = "Confirm Delete Loading Place";
 		_confirmMessage = $"Are you sure you want to delete loading place '{loadingPlace.Name}'? This action cannot be undone.";

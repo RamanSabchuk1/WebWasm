@@ -14,7 +14,7 @@ public partial class Companies : ComponentBase
 
 	private List<Company> _companies = [];
 	private Company? _editingCompany = null;
-    private CompaniesTable? _companiesTableRef;
+	private CompaniesTable? _companiesTableRef;
 	private bool _isCompanyModalOpen = false;
 	private bool _showConfirmDialog = false;
 	private string _confirmTitle = string.Empty;
@@ -26,11 +26,11 @@ public partial class Companies : ComponentBase
 		await LoadCompanies(true);
 	}
 
-    private void HandleEditCompany(Company company)
-    {
-        _editingCompany = company;
-        _isCompanyModalOpen = true;
-    }
+	private void HandleEditCompany(Company company)
+	{
+		_editingCompany = company;
+		_isCompanyModalOpen = true;
+	}
 
 	private bool _showSecurityLevelModal;
 	private Company? _securityLevelTargetCompany;
@@ -69,7 +69,7 @@ public partial class Companies : ComponentBase
 
 		var companyId = _securityLevelTargetCompany.Id;
 		var oldLevel = _securityLevelCurrent;
-        CloseSecurityLevelModal();
+		CloseSecurityLevelModal();
 
 		if (oldLevel == newLevel)
 		{
@@ -82,7 +82,7 @@ public partial class Companies : ComponentBase
 			{
 				await ApiClient.Put($"admin/security-levels/companies/{companyId}", new SecurityLevelRequest(newLevel));
 				await LoadCompanies(false);
-                ToastService.ShowSuccess("Security level updated successfully");
+				ToastService.ShowSuccess("Security level updated successfully");
 			}
 			catch (Exception ex)
 			{
@@ -91,7 +91,7 @@ public partial class Companies : ComponentBase
 		});
 	}
 
-    private async Task LoadCompanies(bool useCash)
+	private async Task LoadCompanies(bool useCash)
 	{
 		_companies = [.. await CashService.GetData<Company>(useCash)];
 	}
@@ -113,8 +113,8 @@ public partial class Companies : ComponentBase
 		var (createCompany, updateCompany, companyId) = submit;
 		if (createCompany is null && updateCompany is null)
 		{
-            ToastService.ShowWarning("There is no Company");
-            return;
+			ToastService.ShowWarning("There is no Company");
+			return;
 		}
 
 		await LoadingService.ExecuteWithLoading(async () =>
@@ -123,9 +123,9 @@ public partial class Companies : ComponentBase
 			{
 				if (createCompany is null)
 				{
-                    await ApiClient.Put($"Companies/{companyId}", updateCompany);
-                    ToastService.ShowSuccess("Company updated successfully!");
-                }
+					await ApiClient.Put($"Companies/{companyId}", updateCompany);
+					ToastService.ShowSuccess("Company updated successfully!");
+				}
 				else
 				{
 					await ApiClient.Post("Companies", createCompany);
@@ -171,7 +171,9 @@ public partial class Companies : ComponentBase
 	{
 		var company = _companies.FirstOrDefault(c => c.Id == data.CompanyId);
 		if (company is null)
+		{
 			return;
+		}
 
 		var action = data.IsActive ? "activate" : "deactivate";
 		_confirmTitle = $"Confirm {action.ToUpper()} Company";

@@ -1,5 +1,3 @@
-using WebWasm.Models;
-
 namespace WebWasm.Models;
 
 public enum UserKindFilter { All, DriversOnly, UsersOnly }

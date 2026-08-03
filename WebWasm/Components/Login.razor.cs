@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 
 namespace WebWasm.Components;
 
@@ -12,7 +12,7 @@ public partial class Login(NavigationManager navManager)
 
 	public record TokenResponse(string Token);
 
-	private LoginModel _loginModel = new();
+	private readonly LoginModel _loginModel = new();
 	private bool _isLoading = false;
 	private string? _errorMessage;
 

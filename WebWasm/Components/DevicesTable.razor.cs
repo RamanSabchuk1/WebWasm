@@ -1,8 +1,8 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.JSInterop;
+using System.Diagnostics.CodeAnalysis;
 using WebWasm.Pages;
 using WebWasm.Services;
 
@@ -36,13 +36,17 @@ public partial class DevicesTable : ComponentBase
 	private void ToggleExpand(Guid id)
 	{
 		if (!_expandedTokens.Remove(id))
+		{
 			_expandedTokens.Add(id);
+		}
 	}
 
 	private void ToggleDataExpand(Guid id)
 	{
 		if (!_expandedData.Remove(id))
+		{
 			_expandedData.Add(id);
+		}
 	}
 
 	private void ShowUnbindConfirmation(string token, Guid userId, string deviceName)

@@ -1,4 +1,4 @@
-﻿@page "/materials"
+@page "/materials"
 @using WebWasm.Components
 
 <PageTitle>Materials</PageTitle>
@@ -14,8 +14,8 @@
 		<button class="btn-primary" @onclick="OpenAddModal">+ Add Material</button>
 	</div>
 	<MaterialsTable @ref="_materialsTableRef"
-					Materials="@_materials" 
-					OnEdit="@HandleEdit" 
+					Materials="@_materials"
+					OnEdit="@HandleEdit"
 					OnDelete="@HandleDelete" />
 </div>
 

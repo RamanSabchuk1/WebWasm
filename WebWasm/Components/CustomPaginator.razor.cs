@@ -26,17 +26,11 @@ public partial class CustomPaginator : ComponentBase, IDisposable
 	{
 		if (State != _previousState)
 		{
-			if (_previousState is not null)
-			{
-				_previousState.TotalItemCountChanged -= OnTotalItemCountChanged;
-			}
+			_previousState?.TotalItemCountChanged -= OnTotalItemCountChanged;
 
 			_previousState = State;
 
-			if (State is not null)
-			{
-				State.TotalItemCountChanged += OnTotalItemCountChanged;
-			}
+			State?.TotalItemCountChanged += OnTotalItemCountChanged;
 		}
 	}
 
@@ -84,9 +78,6 @@ public partial class CustomPaginator : ComponentBase, IDisposable
 
 	public void Dispose()
 	{
-		if (_previousState is not null)
-		{
-			_previousState.TotalItemCountChanged -= OnTotalItemCountChanged;
-		}
+		_previousState?.TotalItemCountChanged -= OnTotalItemCountChanged;
 	}
 }

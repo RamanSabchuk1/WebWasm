@@ -1,7 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using System.Diagnostics.CodeAnalysis;
 using WebWasm.Pages;
 
 namespace WebWasm.Components;
@@ -24,7 +24,9 @@ public partial class SuggestionsTable : ComponentBase
 	private void ToggleExpand(Guid id)
 	{
 		if (!_expandedRows.Remove(id))
+		{
 			_expandedRows.Add(id);
+		}
 	}
 
 	private IQueryable<Supports.SuggestionsWithUser> FilteredSuggestions

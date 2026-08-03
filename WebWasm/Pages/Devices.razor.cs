@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -62,5 +62,5 @@ public record DeviceTokenWithUser(DeviceToken DeviceToken, User? User)
 			: string.IsNullOrEmpty(User.UserInfo.FirstName)
 				? User.Login
 				: $"{User.UserInfo.FirstName} {User.UserInfo.LastName}";
-    }
+	}
 }

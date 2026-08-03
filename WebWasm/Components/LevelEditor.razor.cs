@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -54,24 +54,24 @@ public partial class LevelEditor : ComponentBase
 		{
 			_levelType = EditingLevel.Type;
 			_algorithm = EditingLevel.CalculationAlgorithm;
-			
+
 			// Get price info from dictionary - IMPORTANT: Create new dictionary instance
 			_priceInfo = null; // Reset first
 			if (EditingLevel.Info?.Info?.Count > 0)
 			{
-				_priceInfo = new Dictionary<uint, PriceInfo>(EditingLevel.Info.Info);
+				_priceInfo = [with(EditingLevel.Info.Info)];
 			}
 			else
 			{
 				_priceInfo = [];
 			}
-			
+
 			// Extract points from triangles
 			if (EditingLevel.Triangles?.Count > 0)
 			{
 				var pointSet = new HashSet<string>();
 				_points.Clear();
-				
+
 				foreach (var triangle in EditingLevel.Triangles)
 				{
 					AddPointIfUnique(triangle.Point1, pointSet);
@@ -89,7 +89,7 @@ public partial class LevelEditor : ComponentBase
 			_points.Clear();
 			_showDrawer = false;
 		}
-		
+
 		// Force re-render to ensure child components get updated parameters
 		StateHasChanged();
 	}

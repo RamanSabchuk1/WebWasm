@@ -19,7 +19,7 @@ public partial class MaterialModal : ComponentBase
 	private string _errorMessage = string.Empty;
 
 	private bool IsEditMode => EditingMaterial is not null;
-	private bool IsValid => !string.IsNullOrWhiteSpace(_name) 
+	private bool IsValid => !string.IsNullOrWhiteSpace(_name)
 		&& !string.IsNullOrWhiteSpace(_description);
 
 	// Simplified logic for v0/v1:
@@ -27,7 +27,7 @@ public partial class MaterialModal : ComponentBase
 	// - Editing with parent: can only select root materials as parent
 	// - Editing root material: cannot set parent
 	private bool CanSetParent => !IsEditMode || EditingMaterial?.ParentId != null;
-	
+
 	private List<MaterialType> AvailableMaterials => AllMaterials
 		.Where(m => m.ParentId == null) // Only root materials can be parents
 		.ToList();

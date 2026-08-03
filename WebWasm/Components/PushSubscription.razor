@@ -1,4 +1,4 @@
-﻿@inject ApiClient ApiClient
+@inject ApiClient ApiClient
 @inject IJSRuntime JSRuntime
 @using WebWasm.Models
 
@@ -75,11 +75,11 @@ else
 				return;
 			}
 
-			var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");            
+			var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
 			if (!string.IsNullOrEmpty(token))
 			{
 				fcmToken = token;
-				
+
 				// Send token to backend
 				var info = new DeviceTokenInfo(fcmToken, "WebWasm PWA", new Dictionary<string, string>
 				{
@@ -101,7 +101,7 @@ else
 		finally
 		{
 			isSubscribing = false;
-				StateHasChanged();
-			}
+			StateHasChanged();
 		}
 	}
+}

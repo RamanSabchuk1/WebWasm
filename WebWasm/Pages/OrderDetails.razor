@@ -31,7 +31,7 @@ else
 		</div>
 		<div class="controls-row">
 			<button class="btn btn-warning" @onclick="RequestResetPayments">Reset Payments</button>
-			
+
 			<div class="status-control">
 				<select @bind="_newStatus" class="form-control">
 					@foreach (var status in Enum.GetValues<OrderStatus>())
@@ -62,8 +62,10 @@ else
 			<div class="info-item"><label>Total Km</label><span>@_order.TotalKm</span></div>
 			<div class="info-item"><label>Region Level</label><span>@_order.RegionLevelId</span></div>
 			<div class="info-item"><label>Loading Place</label><span>@(_order.LoadingPlace?.Name ?? "-")</span></div>
-			<div class="info-item"><label>User</label>
-				<span>@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.LastName ?? "")
+			<div class="info-item">
+				<label>User</label>
+				<span>
+					@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.LastName ?? "")
 					<button class="btn-view-driver" @onclick="ShowUserDetails">@_userDetailsButtonName <span class="btn-icon">👤</span></button>
 				</span>
 			</div>
@@ -103,14 +105,14 @@ else
 			@RenderLocation(_order.Location, "Order location")
 			<div class="info-item">
 				@{
-                    var level = _levels.FirstOrDefault(l => l.Id == _order.RegionLevelId);
-					if(level is not null)
+					var level = _levels.FirstOrDefault(l => l.Id == _order.RegionLevelId);
+					if (level is not null)
 					{
 						<TriangleMap Triangles="@level.Triangles"
 									 LevelType="@level.Type"
 									 ShowTitle="true"
 									 MapHeight="240px" />
-                    }
+					}
 				}
 			</div>
 		</div>
@@ -120,10 +122,10 @@ else
 		<div class="card-header">
 			<h3>Material Information</h3>
 		</div>
-		@if(_order.LoadingPlace?.MaterialType is not null)
+		@if (_order.LoadingPlace?.MaterialType is not null)
 		{
-            var type = _order.LoadingPlace.MaterialType;
-			@if(!string.IsNullOrEmpty(type.Photo))
+			var type = _order.LoadingPlace.MaterialType;
+			@if (!string.IsNullOrEmpty(type.Photo))
 			{
 				<div class="info-item full-width">
 					<span class="info-label">Photo:</span>
@@ -144,9 +146,9 @@ else
 		<div class="card-header">
 			<h3>Provider Information</h3>
 		</div>
-		@if(_order.LoadingPlace?.Producer?.Company?.CompanyInfo is not null)
+		@if (_order.LoadingPlace?.Producer?.Company?.CompanyInfo is not null)
 		{
-			@if(!string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo))
+			@if (!string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo))
 			{
 				<div class="info-item full-width">
 					<span class="info-label">Photo:</span>
@@ -294,33 +296,33 @@ else
 						</button>
 					</div>
 				}
+			}
 
-                @if (_driverInfo?.UserInfo != null)
-                {
-					<div class="info-item full-width additional-info">
-						<span class="info-label">Driver Details:</span>
-						<button class="circle-btn" @onclick="_ => SetDriverToView(null)">❌</button>
-						<div class="user-details formatted-text">
-							@{
-								if (_driverInfo.UserInfo.Passport != null)
+			@if (_driverInfo?.UserInfo != null)
+			{
+				<div class="info-item full-width additional-info">
+					<span class="info-label">Driver Details:</span>
+					<button class="circle-btn" @onclick="_ => SetDriverToView(null)">❌</button>
+					<div class="user-details formatted-text">
+						@{
+							if (_driverInfo.UserInfo.Passport != null)
+							{
+								foreach (var (key, value) in _driverInfo.UserInfo.Passport)
 								{
-									foreach (var (key, value) in _driverInfo.UserInfo.Passport)
-									{
-										<p><strong>@PrintKey(key):</strong> @value</p>
-									}
-								}
-								if (_driverInfo.UserInfo.Company?.CompanyInfo != null)
-								{
-									<p><strong>Company Name:</strong> @_driverInfo.UserInfo.Company.Name</p>
-									<p><strong>Company Address:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.Address</p>
-									<p><strong>Company Unp:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.UNP</p>
-									<p><strong>Company Legal Type:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.LegalType</p>
-									<p><strong>Company Bank Account (Number | Bic):</strong> @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BankNumber | @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BIC</p>
+									<p><strong>@PrintKey(key):</strong> @value</p>
 								}
 							}
-						</div>
+							if (_driverInfo.UserInfo.Company?.CompanyInfo != null)
+							{
+								<p><strong>Company Name:</strong> @_driverInfo.UserInfo.Company.Name</p>
+								<p><strong>Company Address:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.Address</p>
+								<p><strong>Company Unp:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.UNP</p>
+								<p><strong>Company Legal Type:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.LegalType</p>
+								<p><strong>Company Bank Account (Number | Bic):</strong> @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BankNumber | @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BIC</p>
+							}
+						}
 					</div>
-                }
+				</div>
 			}
 		}
 		else
@@ -372,10 +374,10 @@ else
 	{
 		<div class="info-item">
 			<LocationMapPicker InitialLocation="@location"
-				MapHeight="240px"
-				ShowInputs="false"
-				Title="@title"
-				OnLocationChanged="_ => {}" />
-		</div>		
+							   MapHeight="240px"
+							   ShowInputs="false"
+							   Title="@title"
+							   OnLocationChanged="_ => {}" />
+		</div>
 	};
 }

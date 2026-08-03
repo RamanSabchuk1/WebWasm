@@ -1,7 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js');
 
-self.importScripts('./rxjs.umd.min.js'); 
+self.importScripts('./rxjs.umd.min.js');
 self.importScripts('./service-worker-assets.js');
 
 const firebaseConfig = {
@@ -26,8 +26,8 @@ const notificationClick$ = fromEvent(self, 'notificationclick');
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
-const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/ ];
+const offlineAssetsInclude = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/];
+const offlineAssetsExclude = [/^service-worker\.js$/];
 const baseUrl = new URL('/', self.origin);
 const manifestUrlList = self.assetsManifest.assets.map(asset => new URL(asset.url, baseUrl).href);
 
@@ -60,7 +60,7 @@ fetch$.subscribe(event => {
 
 message$.subscribe(event => {
 	console.log('Service Worker: Message received', event.data);
-	
+
 	// Handle update check message from client
 	if (event.data === 'CHECK_FOR_UPDATES') {
 		event.waitUntil(checkForUpdates(event));
@@ -116,7 +116,7 @@ async function onInstall() {
 	const assetsToCache = self.assetsManifest.assets
 		.filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
 		.filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)));
-	
+
 	const cache = await caches.open(cacheName);
 
 	await Promise.all(assetsToCache.map(async asset => {
@@ -177,13 +177,13 @@ async function onFetch(event) {
 		} catch (error) {
 			console.log('Service Worker: Network failed for navigation, falling back to cache');
 		}
-		
+
 		const cache = await caches.open(cacheName);
 		const cachedResponse = await cache.match(event.request);
 		if (cachedResponse) {
 			return cachedResponse;
 		}
-		
+
 		// Fallback to index.html
 		const cachedIndex = await cache.match('index.html');
 		if (cachedIndex) {

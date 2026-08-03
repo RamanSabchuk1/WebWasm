@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System.Text.Json;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -53,10 +53,10 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 
 	private static string? GetProperty(JsonElement element, string name)
 	{
-        return element.TryGetProperty(name, out var prop) ? prop.GetString() : null;
-    }
+		return element.TryGetProperty(name, out var prop) ? prop.GetString() : null;
+	}
 
-    private async Task LoadData(bool useCash)
+	private async Task LoadData(bool useCash)
 	{
 		_userInfo = await cashService.GetUserInfo(useCash);
 		_updateUser = new SetUserNames(_userInfo?.FirstName ?? string.Empty, _userInfo?.MiddleName, _userInfo?.LastName ?? string.Empty);
@@ -64,7 +64,8 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 
 	private async Task HandleSave()
 	{
-		await loadingService.ExecuteWithLoading(async () => {
+		await loadingService.ExecuteWithLoading(async () =>
+		{
 			try
 			{
 				await apiClient.Put("Users/user-info", _updateUser);

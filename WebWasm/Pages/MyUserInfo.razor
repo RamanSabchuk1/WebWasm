@@ -1,4 +1,4 @@
-﻿@page "/myuserinfo"
+@page "/myuserinfo"
 
 <PageTitle>My Profile</PageTitle>
 
@@ -14,13 +14,13 @@
 		{
 			<EditForm Model="@_updateUser" OnValidSubmit="HandleSave" class="profile-form">
 				<DataAnnotationsValidator />
-			
+
 				<div class="form-group">
 					<label for="firstName">First Name</label>
 					<InputText id="firstName" @bind-Value="_updateUser.FirstName" placeholder="Enter first name" class="form-input" />
 					<ValidationMessage For="@(() => _updateUser.FirstName)" />
 				</div>
-			
+
 				<div class="form-group">
 					<label for="middleName">Middle Name</label>
 					<InputText id="middleName" @bind-Value="_updateUser.MiddleName" placeholder="Enter middle name" class="form-input" />

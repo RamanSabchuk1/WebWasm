@@ -15,8 +15,8 @@ public partial class MaterialsTable : ComponentBase
 
 	private string _searchText = string.Empty;
 	private bool _hasItems => Materials.Count > 0;
-	private HashSet<Guid> _expandedIds = [];
-	private PaginationState _pagination = new() { ItemsPerPage = 10 };
+	private readonly HashSet<Guid> _expandedIds = [];
+	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
 	// Confirmation dialog state
 	private bool _showConfirmDialog = false;
@@ -56,7 +56,7 @@ public partial class MaterialsTable : ComponentBase
 	{
 		_pendingDeleteId = material.Id;
 		var hasChildren = Materials.Any(m => m.ParentId == material.Id);
-		_confirmMessage = hasChildren 
+		_confirmMessage = hasChildren
 			? $"Are you sure you want to delete '{material.Name}'? This will also delete all its child materials. This action cannot be undone."
 			: $"Are you sure you want to delete '{material.Name}'? This action cannot be undone.";
 		_showConfirmDialog = true;
@@ -86,4 +86,4 @@ public partial class MaterialsTable : ComponentBase
 		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
 	}
 
-	}
+}

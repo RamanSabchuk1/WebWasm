@@ -44,11 +44,11 @@ public partial class Vehicles
 				var (companyId, createVehicle) = data;
 				if (companyId == Guid.Empty)
 				{
-                    ToastService.ShowError("Cannot retreve a company ID");
+					ToastService.ShowError("Cannot retreve a company ID");
 					return;
-                }
+				}
 
-                await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
+				await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
 				ToastService.ShowSuccess("Vehicle created successfully");
 				CloseCreateModal();
 				await LoadData(false);
@@ -109,7 +109,7 @@ public partial class Vehicles
 				// Enrich driver with phone from User/UserInfo
 				var (company, driver) = driverWithCompany;
 				var enrichedDriver = driver;
-				if (driver.UserInfo?.Id != Guid.Empty && 
+				if (driver.UserInfo?.Id != Guid.Empty &&
 					driver.UserInfo != null &&
 					userDict.TryGetValue(driver.UserInfo.Id, out var user))
 				{

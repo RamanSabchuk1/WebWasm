@@ -1,4 +1,4 @@
-﻿using WebWasm.Models;
+using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Pages;

@@ -1,5 +1,5 @@
 const loadLeaflet = () => {
-return new Promise((resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		if (window.L) {
 			resolve();
 			return;

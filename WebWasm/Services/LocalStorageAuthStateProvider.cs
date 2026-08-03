@@ -1,7 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace WebWasm.Services;
 
@@ -45,7 +45,7 @@ public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, En
 	{
 		var encryptedToken = encryptionService.Encrypt(rawJwt);
 		await localStorage.SetItemAsync(TokenStorageKey, encryptedToken);
-		
+
 		var authState = GetAuthenticationStateAsync();
 		NotifyAuthenticationStateChanged(authState);
 	}
