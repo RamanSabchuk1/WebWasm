@@ -1,6 +1,7 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using Microsoft.JSInterop;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -13,6 +14,7 @@ public partial class Users : ComponentBase
 	[Inject] private ToastService ToastService { get; set; } = default!;
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
 	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+	[Inject] private IJSRuntime JS { get; set; } = default!;
 
 	private User[]? _users;
 	private Driver[] _drivers = [];
@@ -47,6 +49,12 @@ public partial class Users : ComponentBase
 
 	private Guid? _slotDriverId;
 	private Guid? _slotCompanyId;
+	private Guid? _activeDropdownUserId;
+	private double _menuTop;
+	private double _menuLeft;
+	private string _menuDirectionClass = "drop-down";
+	private string _show = "";
+	private readonly Dictionary<Guid, ElementReference> _buttonRefs = [];
 	private DateOnly _slotDate = DateOnly.FromDateTime(DateTime.Today);
 	private TimeOnly _slotStartTime = new(8, 0);
 	private TimeOnly _slotEndTime = new(17, 0);
@@ -966,4 +974,46 @@ public partial class Users : ComponentBase
 
 		return await cashService.GetSlots(regionDrivers);
 	}
+
+	private async Task ToggleDropdown(Guid userId)
+	{
+		if (_activeDropdownUserId == userId)
+		{
+			_activeDropdownUserId = null;
+			_show = "";
+			return;
+		}
+
+		_activeDropdownUserId = userId;
+		await Task.Yield();
+		if (_buttonRefs.TryGetValue(userId, out var btnRef))
+		{
+			var rect = await JS.InvokeAsync<BoundingBox>("getElementCoordinates", btnRef);
+			var windowHeight = await JS.InvokeAsync<double>("eval", "window.innerHeight");
+			double menuHeight = 310;
+			double spaceBelow = windowHeight - rect.Bottom;
+			_menuLeft = rect.Left - (210 - rect.Width);
+			if (spaceBelow < menuHeight && rect.Top > menuHeight)
+			{
+				_menuTop = rect.Top - menuHeight - 5;
+				_menuDirectionClass = "drop-up";
+			}
+			else
+			{
+				_menuTop = rect.Bottom + 5;
+				_menuDirectionClass = "drop-down";
+			}
+		}
+		_show = "display: flex;";
+	}
+}
+
+public record BoundingBox
+{
+	public double Top { get; set; }
+	public double Left { get; set; }
+	public double Bottom { get; set; }
+	public double Right { get; set; }
+	public double Width { get; set; }
+	public double Height { get; set; }
 }

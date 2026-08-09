@@ -1,0 +1,42 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div @ref="containerRef" style="display: contents;">
+	@ChildContent
+</div>
+
+@code {
+	private ElementReference containerRef;
+	private DotNetObjectReference<ClickOutside>? dotNetHelper;
+
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+	[Parameter] public EventCallback OnClickOutside { get; set; }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			dotNetHelper = DotNetObjectReference.Create(this);
+			await JS.InvokeVoidAsync("clickOutside.register", containerRef, dotNetHelper);
+		}
+	}
+
+	[JSInvokable]
+	public async Task InvokeClickOutside()
+	{
+		await OnClickOutside.InvokeAsync();
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (containerRef.Context != null)
+		{
+			try
+			{
+				await JS.InvokeVoidAsync("clickOutside.unregister", containerRef);
+			}
+			catch (JSDisconnectedException) { }
+		}
+
+		dotNetHelper?.Dispose();
+	}
+}

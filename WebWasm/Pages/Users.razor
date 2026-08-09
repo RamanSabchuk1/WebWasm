@@ -1,7 +1,6 @@
 @page "/users"
+@using WebWasm.Helpers
 @using WebWasm.Models
-@using WebWasm.Services
-@using Microsoft.AspNetCore.Components.QuickGrid
 
 <PageTitle>Users</PageTitle>
 
@@ -263,37 +262,93 @@
 							<td>
 								<span class="level-badge level-badge--@clearance.ToString().ToLowerInvariant()">@clearance</span>
 							</td>
-							<td>
-								<div class="action-buttons">
-									<button class="btn-action @(user.UserInfo.IsActive ? "btn-delete" : "btn-edit")" @onclick="() => ToggleUserActive(user)">
-										@(user.UserInfo.IsActive ? "Deactivate" : "Activate")
+							<td class="actions-cell">
+								<div class="dropdown-actions">
+									<button @ref="_buttonRefs[user.UserInfo.Id]"
+											class="btn-trigger"
+											type="button"
+											@onclick="() => ToggleDropdown(user.UserInfo.Id)"
+											title="Действия">
+										⋮
 									</button>
-									<button class="btn-action @(user.UserVerified ? "btn-warn" : "btn-edit")" @onclick="() => ToggleUserVerified(user)">
-										@(user.UserVerified ? "Unverify" : "Verify")
-									</button>
-									<button class="btn-action" @onclick="() => OpenRolesModal(user)">Edit Roles</button>
-									<button class="btn-action" @onclick="() => OpenSecurityLevelModal(user)" title="View or change data security level for this user">🔐 Security</button>
-									<button class="btn-action" @onclick="() => OpenPassportModal(user)" title="Set passport data (SuperAdmin only)">🪪 Passport</button>
-									@if (driver is not null && hasCompany)
+									@if (_activeDropdownUserId == user.UserInfo.Id)
 									{
-										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">+ Slot</button>
-									}
-									@if (driver is null)
-									{
-										<button class="btn-action btn-edit" @onclick="() => RequestCreateDriver(user)" title="Create driver entity for this user">+ Driver</button>
-									}
-									else
-									{
-										<button class="btn-action btn-delete" @onclick="() => RequestDeleteDriver(user, driver)" title="Soft delete driver (cascades to vehicles)">🗑️ Driver</button>
-									}
-									<button class="btn-action btn-delete" @onclick="() => RequestDeleteUserInfo(user)" title="Soft delete user (cascades to driver and vehicles)">🗑️ User</button>
-									@if (user.UserInfo.Company is not null)
-									{
-										<button class="btn-action btn-warn" @onclick="() => RequestUnassignCompany(user)" title="Unassign user from their company">🚫 Company</button>
-									}
-									else
-									{
-										<button class="btn-action btn-edit" @onclick="() => OpenAssignCompanyModal(user)" title="Assign user to a company">🏢 Company</button>
+										<ClickOutside OnClickOutside="@(() => { _activeDropdownUserId = null; _show = "";})">
+											<div class="dropdown-backdrop" @onclick="() => _activeDropdownUserId = null">
+												<div class="dropdown-menu-content @_menuDirectionClass"
+													 style="position: fixed; top: @($"{_menuTop}px"); left: @($"{_menuLeft}px"); @_show"
+													 @onclick:stopPropagation="true">
+
+													<button class="btn-action @(user.UserInfo.IsActive ? "btn-delete" : "btn-edit")"
+														@onclick="async () => { await ToggleUserActive(user); _activeDropdownUserId = null; }">
+														@(user.UserInfo.IsActive ? "🚫 Deactivate" : "🛑 Activate")
+													</button>
+
+													<button class="btn-action @(user.UserVerified ? "btn-warn" : "btn-edit")"
+														@onclick="async () => { await ToggleUserVerified(user); _activeDropdownUserId = null; }">
+														@(user.UserVerified ? "🔍 Unverify" : "✅ Verify")
+													</button>
+
+													<button class="btn-action"
+														@onclick="() => { OpenRolesModal(user); _activeDropdownUserId = null; }">
+														⚙️ Edit Roles
+													</button>
+
+													<button class="btn-action"
+														@onclick="async () => { await OpenSecurityLevelModal(user); _activeDropdownUserId = null; }" title="View or change data security level for this user">
+														🔐 Security
+													</button>
+
+													<button class="btn-action"
+														@onclick="() => { OpenPassportModal(user); _activeDropdownUserId = null; }" title="Set passport data (SuperAdmin only)">
+														🪪 Passport
+													</button>
+
+													@if (driver is not null && hasCompany)
+													{
+														<button class="btn-action"
+															@onclick="() => { OpenDriverSlotModal(user); _activeDropdownUserId = null; }">
+															➕ Slot
+														</button>
+													}
+
+													@if (driver is null)
+													{
+														<button class="btn-action btn-edit"
+															@onclick="() => { RequestCreateDriver(user); _activeDropdownUserId = null; }" title="Create driver entity for this user">
+															👤 + Driver
+														</button>
+													}
+													else
+													{
+														<button class="btn-action btn-delete"
+															@onclick="() => { RequestDeleteDriver(user, driver); _activeDropdownUserId = null; }" title="Soft delete driver (cascades to vehicles)">
+															🗑️ Driver
+														</button>
+													}
+
+													<button class="btn-action btn-delete"
+														@onclick="() => { RequestDeleteUserInfo(user); _activeDropdownUserId = null; }" title="Soft delete user (cascades to driver and vehicles)">
+														🗑️ User
+													</button>
+
+													@if (user.UserInfo.Company is not null)
+													{
+														<button class="btn-action btn-warn"
+															@onclick="() => { RequestUnassignCompany(user); _activeDropdownUserId = null; }" title="Unassign user from their company">
+															🚫 Company
+														</button>
+													}
+													else
+													{
+														<button class="btn-action btn-edit"
+															@onclick="() => { OpenAssignCompanyModal(user); _activeDropdownUserId = null; }" title="Assign user to a company">
+															🏢 Company
+														</button>
+													}
+												</div>
+											</div>
+										</ClickOutside>
 									}
 								</div>
 							</td>
