@@ -144,6 +144,8 @@
 	.main-content {
 		flex: 1;
 		padding-bottom: 0;
+		flex-grow: 1;
+		width: 0;
 	}
 
 	/* Hide mobile header on desktop */
