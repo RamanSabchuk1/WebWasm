@@ -132,22 +132,20 @@
 				</TemplateColumn>
 
 				<TemplateColumn Title="Actions" Sortable="false">
-					<button class="btn-action @(context.IsActive ? "btn-deactivate" : "btn-activate")"
-							@onclick="() => OnToggleActive.InvokeAsync((context.Id, !context.IsActive))">
-						@(context.IsActive ? "🔒 Deactivate" : "✅ Activate")
-					</button>
-
-					<button class="btn-action btn-edit" @onclick="() => OnEditCompany.InvokeAsync(context)">
-						✏️ Edit
-					</button>
-
-					<button class="btn-action" @onclick="() => OnEditSecurityLevel.InvokeAsync(context)" title="View or change data security level for this company">
-						🔐 Security
-					</button>
-
-					<button class="btn-action btn-delete" @onclick="() => OnDeleteCompany.InvokeAsync(context)" title="Soft delete company (cascades to producers, vehicles, drivers, users)">
-						🗑️ Delete
-					</button>
+					<ActionsDropdown Title="Действия" MenuHeight="180">
+						<button class="btn-action" @onclick="() => OnToggleActive.InvokeAsync((context.Id, !context.IsActive))">
+							@(context.IsActive ? "🚫 Deactivate" : "✅ Activate")
+						</button>
+						<button class="btn-action" @onclick="() => OnEditCompany.InvokeAsync(context)">
+							✏️ Edit
+						</button>
+						<button class="btn-action" @onclick="() => OnEditSecurityLevel.InvokeAsync(context)" title="View or change data security level for this company">
+							🔐 Security
+						</button>
+						<button class="btn-action" @onclick="() => OnDeleteCompany.InvokeAsync(context)" title="Soft delete company (cascades to producers, vehicles, drivers, users)">
+							🗑️ Delete
+						</button>
+					</ActionsDropdown>
 				</TemplateColumn>
 			</QuickGrid>
 		</div>

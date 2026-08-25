@@ -202,6 +202,11 @@
 	color: #b9eaf5;
 }
 
+.badge-weighted {
+	background: #1f6feb;
+	color: #cae8ff;
+}
+
 .badge-corrupted {
 	background: #c93850;
 	color: #de81d8;

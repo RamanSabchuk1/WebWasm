@@ -106,18 +106,6 @@
 	transform: scale(1.1);
 }
 
-.btn-edit {
-	background: var(--accent-light, #E5D5C0);
-	color: var(--accent-primary, #8B7355);
-}
-
-	.btn-edit:hover {
-		background: var(--accent-primary, #8B7355);
-		color: white;
-		transform: translateY(-1px);
-		box-shadow: 0 2px 8px rgba(139, 115, 85, 0.2);
-	}
-
 .company-info {
 	display: flex;
 	flex-direction: column;
@@ -328,30 +316,6 @@
 	font-weight: 500;
 	transition: all 0.2s;
 	white-space: nowrap;
-}
-
-.btn-activate {
-	background: #E8F5E9;
-	color: #2E7D32;
-}
-
-.btn-activate:hover {
-	background: #2E7D32;
-	color: white;
-	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
-}
-
-.btn-deactivate {
-	background: #FFF3E0;
-	color: #F57C00;
-}
-
-.btn-deactivate:hover {
-	background: #F57C00;
-	color: white;
-	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(245, 124, 0, 0.2);
 }
 
 .empty-state {

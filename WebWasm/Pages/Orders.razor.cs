@@ -172,6 +172,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 			OrderStatus.WaitingApprove => "badge-waiting-approve",
 			OrderStatus.PaymentPending => "badge-waiting-payment",
 			OrderStatus.Active => "badge-active",
+			OrderStatus.Weighted => "badge-weighted",
 			OrderStatus.CorruptedPayment => "badge-corrupted",
 			OrderStatus.Archived => "badge-archived",
 			OrderStatus.Deleted => "badge-deleted",

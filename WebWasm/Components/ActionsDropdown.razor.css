@@ -1,0 +1,83 @@
+.dropdown-actions {
+	position: relative;
+	display: inline-block;
+}
+
+.btn-trigger {
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	border: 1px solid #e0e0e0;
+	background-color: #ffffff;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 20px;
+	color: #555;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+	.btn-trigger:hover {
+		background-color: #f5f5f5;
+	}
+
+/* position: absolute here is only a fallback for when JS measurement is unavailable;
+   normally the component sets position: fixed with measured coordinates inline */
+.dropdown-menu-content {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: calc(100% + 5px);
+	z-index: 999999 !important;
+	background-color: #ffffff;
+	width: 210px;
+	box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+	border-radius: 8px;
+	padding: 6px 0;
+	border: 1px solid #e2e8f0;
+	flex-direction: column;
+	height: max-content;
+}
+
+	/* Menu items arrive via ChildContent, so they carry the caller's CSS scope — ::deep is required */
+	.dropdown-menu-content ::deep button.btn-action {
+		background: none;
+		border: none;
+		border-radius: 0;
+		padding: 10px 16px;
+		text-align: left;
+		width: 100%;
+		box-sizing: border-box;
+		cursor: pointer;
+		font-size: 14px;
+		font-weight: 500;
+		color: #333;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		white-space: nowrap;
+	}
+
+		.dropdown-menu-content ::deep button.btn-action:hover {
+			background-color: #f8fafc;
+			color: #333;
+			transform: none;
+			box-shadow: none;
+		}
+
+@media (max-width: 414px) {
+	.dropdown-menu-content {
+		position: fixed !important;
+		top: auto !important;
+		bottom: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		border-radius: 16px 16px 0 0;
+		max-height: 50vh;
+		overflow-y: auto;
+		box-shadow: 0px -10px 30px rgba(0,0,0,0.2);
+	}
+}

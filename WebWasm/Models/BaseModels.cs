@@ -96,7 +96,8 @@ public enum OrderStatus
 	Cancelled,
 	Archived,
 	Deleted,
-	PaymentInProgress
+	PaymentInProgress,
+	Weighted
 }
 
 public enum PaymentMethodType
