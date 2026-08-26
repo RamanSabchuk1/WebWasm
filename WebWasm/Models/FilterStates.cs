@@ -10,7 +10,8 @@ public record UsersFilterState(
 	ActiveUserFilter ActiveFilter,
 	bool ShowCustomersOnly,
 	VerifiedUserFilter VerifiedFilter,
-	string SearchText = "");
+	string SearchText = "",
+	List<Guid>? FilterCompanyIds = null);
 
 public record OrdersFilterState(
 	List<OrderStatus> SelectedStatuses,

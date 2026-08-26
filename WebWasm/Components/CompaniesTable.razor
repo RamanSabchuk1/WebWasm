@@ -9,6 +9,15 @@
 			   @bind:after="SaveSearch"
 			   @bind:event="oninput"
 			   class="search-input" />
+		<select class="search-input filter-select"
+				value="@(_companyTypeFilter?.ToString() ?? string.Empty)"
+				@onchange="OnTypeFilterChanged">
+			<option value="">All types</option>
+			<option value="Buyer">Buyer</option>
+			<option value="Cargo">Cargo</option>
+			<option value="Provider">Provider</option>
+			<option value="None">No type</option>
+		</select>
 	</div>
 
 	@if (_hasItems)
@@ -113,12 +122,30 @@
 
 				<TemplateColumn Title="Email" Sortable="false">
 					<HeaderTemplate>
-						<button class="@SortHelper.GetHeaderClass(_sortState, "email")" @onclick="() => CycleSortEmail()">
+						<button class="@SortHelper.GetHeaderClass(_sortState, "email")" @onclick='() => CycleSort("email")'>
 							Email <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "email")</span>
 						</button>
 					</HeaderTemplate>
 					<ChildContent>
 						@(context.CompanyInfo?.CorporateEmail ?? "")
+					</ChildContent>
+				</TemplateColumn>
+
+				<TemplateColumn Title="Type" Sortable="false">
+					@foreach (var flag in GetTypeFlags(context.CompanyType))
+					{
+						<span class="type-badge type-badge--@flag.ToString().ToLowerInvariant()">@flag</span>
+					}
+				</TemplateColumn>
+
+				<TemplateColumn Title="Created" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "created")" @onclick='() => CycleSort("created")'>
+							Created <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "created")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@FormatCreated(context.Created)
 					</ChildContent>
 				</TemplateColumn>
 

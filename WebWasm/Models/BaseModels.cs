@@ -16,7 +16,14 @@ public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
 public record User(Guid Id, string Login, bool UserVerified, UserInfo UserInfo, ICollection<RoleType> Roles, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public);
 public record UpdateCompany(Location Location, string Photo, string Name, string Address, string CorporateEmail, double Rebate);
 // Форма совпадает с backend CompanyDto (Kliffort.Application/Shared/Models/CompanyDto.cs): IsActive + позиционный SecurityClearanceLevel.
-public record Company(Guid Id, string Name, double Rebate, bool IsActive, Guid RegionId, Location Location, CompanyInfo? CompanyInfo, ICollection<Vehicle> Vehicles, ICollection<Producer> Producers, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public);
+// CompanyType/Created — init-члены (как UserInfo.Passport): не ломают позиционный конструктор/STJ (нет в JSON → дефолт).
+public record Company(Guid Id, string Name, double Rebate, bool IsActive, Guid RegionId, Location Location, CompanyInfo? CompanyInfo, ICollection<Vehicle> Vehicles, ICollection<Producer> Producers, DataSecurityLevel SecurityClearanceLevel = DataSecurityLevel.Public)
+{
+	// Backend: CompanyMapper.GetCompanyType() — Cargo если есть Vehicles, Provider если есть Producers; флаги комбинируются.
+	public CompanyType CompanyType { get; init; }
+	// У компаний до миграции 20260825200959_AddCreatedToCompany = DateTime.MinValue (0001-01-01) — НЕ отображать.
+	public DateTime Created { get; init; }
+}
 public record CompanyInfo(Guid Id, string Address, string CorporateEmail, string UNP, BankAccount BankAccount, string LegalType, string Photo);
 public record Delivery(Guid Id, uint NetoWeight, uint GrossWeight, uint AppliedWeight, string State, string? BatchNumber, decimal DeliveryCost, Driver? Driver);
 public record Driver(Guid Id, string Photo, ICollection<Vehicle>? Vehicles, UserInfo? UserInfo);
@@ -83,6 +90,16 @@ public enum RoleType
 	SuperAdmin
 }
 // enum DataSecurityLevel вынесен в Models/SecurityModels.cs (канон, синхронизирован с backend по D43).
+
+// Синхронизирован с backend Kliffort.Contracts/Models/Companies/CompanyType.cs (D43).
+[Flags]
+public enum CompanyType
+{
+	None = 0,
+	Buyer = 1,
+	Cargo = 2,
+	Provider = 4,
+}
 
 
 public enum OrderStatus

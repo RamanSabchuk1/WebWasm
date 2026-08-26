@@ -51,6 +51,37 @@ public partial class Devices : ComponentBase
 			}
 		});
 	}
+
+	// Batch-endpoint'а нет (owner, 2026-08-27): N последовательных single DELETE — приемлемо для admin-объёмов.
+	private async Task HandleMultiUnbind(List<(string Token, Guid UserInfoId)> tokens)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			var failed = 0;
+			foreach (var (token, userInfoId) in tokens)
+			{
+				try
+				{
+					await ApiClient.Delete($"DeviceTokens/{token}?userInfoId={userInfoId}");
+				}
+				catch
+				{
+					failed++;
+				}
+			}
+
+			if (failed == 0)
+			{
+				ToastService.ShowSuccess($"Unbound {tokens.Count} device(s) successfully!");
+			}
+			else
+			{
+				ToastService.ShowError($"Unbound {tokens.Count - failed} of {tokens.Count} device(s); {failed} failed.");
+			}
+
+			await LoadDevices(false);
+		});
+	}
 }
 
 public record DeviceTokenWithUser(DeviceToken DeviceToken, User? User)

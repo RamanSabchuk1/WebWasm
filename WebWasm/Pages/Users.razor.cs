@@ -59,6 +59,7 @@ public partial class Users : ComponentBase
 
 	private string _searchText = string.Empty;
 	private readonly List<RoleType> _filterRoles = [];
+	private readonly List<Guid> _filterCompanyIds = [];
 	private UserKindFilter _userKindFilter = UserKindFilter.All;
 	private ActiveUserFilter _activeUserFilter = ActiveUserFilter.All;
 	private bool _showCustomersOnly = false;
@@ -386,6 +387,26 @@ public partial class Users : ComponentBase
 		await SaveFilters();
 	}
 
+	private async Task AddFilterCompany(ChangeEventArgs e)
+	{
+		if (Guid.TryParse(e.Value?.ToString(), out var companyId) && !_filterCompanyIds.Contains(companyId))
+		{
+			_filterCompanyIds.Add(companyId);
+			_ = _pagination.SetCurrentPageIndexAsync(0);
+			await SaveFilters();
+		}
+	}
+
+	private async Task RemoveFilterCompany(Guid companyId)
+	{
+		_filterCompanyIds.Remove(companyId);
+		_ = _pagination.SetCurrentPageIndexAsync(0);
+		await SaveFilters();
+	}
+
+	private string GetCompanyName(Guid companyId) =>
+		_companies.FirstOrDefault(c => c.Id == companyId)?.Name ?? companyId.ToString();
+
 	private async Task OnSearchTextChanged(ChangeEventArgs e)
 	{
 		_searchText = e.Value?.ToString() ?? string.Empty;
@@ -423,12 +444,13 @@ public partial class Users : ComponentBase
 
 	private async Task SaveFilters()
 	{
-		var state = new UsersFilterState(_userKindFilter, [.. _filterRoles], _activeUserFilter, _showCustomersOnly, _verifiedFilter, _searchText ?? string.Empty);
+		var state = new UsersFilterState(_userKindFilter, [.. _filterRoles], _activeUserFilter, _showCustomersOnly, _verifiedFilter, _searchText ?? string.Empty, [.. _filterCompanyIds]);
 		await LocalStorage.SetItemAsync("users_filters", state);
 	}
 
 	private int ActiveFilterCount =>
 		_filterRoles.Count
+		+ _filterCompanyIds.Count
 		+ (_userKindFilter != UserKindFilter.All ? 1 : 0)
 		+ (_activeUserFilter != ActiveUserFilter.All ? 1 : 0)
 		+ (_showCustomersOnly ? 1 : 0)
@@ -458,6 +480,12 @@ public partial class Users : ComponentBase
 			if (_filterRoles.Count > 0)
 			{
 				filtered = filtered.Where(u => u.Roles.Any(r => _filterRoles.Contains(r)));
+			}
+
+			if (_filterCompanyIds.Count > 0)
+			{
+				// Компания пользователя — через UserInfo.Company или Driver.UserInfo.Company (GetCompany).
+				filtered = filtered.Where(u => GetCompany(u, GetDriver(u)) is { } company && _filterCompanyIds.Contains(company.Id));
 			}
 
 			if (_activeUserFilter == ActiveUserFilter.ActiveOnly)
@@ -515,6 +543,7 @@ public partial class Users : ComponentBase
 		{
 			_userKindFilter = savedFilters.UserKindFilter;
 			_filterRoles.AddRange(savedFilters.FilterRoles ?? []);
+			_filterCompanyIds.AddRange(savedFilters.FilterCompanyIds ?? []);
 			_activeUserFilter = savedFilters.ActiveFilter;
 			_showCustomersOnly = savedFilters.ShowCustomersOnly;
 			_verifiedFilter = savedFilters.VerifiedFilter;

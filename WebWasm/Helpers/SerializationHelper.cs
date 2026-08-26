@@ -119,4 +119,5 @@ public static class SerializationHelper
 [JsonSerializable(typeof(BackfillResult))]
 [JsonSerializable(typeof(SetPassportRequest))]
 [JsonSerializable(typeof(SortState))]
+[JsonSerializable(typeof(CompanyType))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;

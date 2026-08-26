@@ -120,6 +120,31 @@
 			</div>
 
 			<div class="filter-row">
+				<label class="filter-label">Company</label>
+				<div class="filter-control">
+					<select @onchange="AddFilterCompany" class="search-input filter-select" value="">
+						<option value="" disabled selected hidden>Select Company...</option>
+						@foreach (var company in _companies.Where(c => !_filterCompanyIds.Contains(c.Id)).OrderBy(c => c.Name))
+						{
+							<option value="@company.Id">@company.Name</option>
+						}
+					</select>
+
+					@if (_filterCompanyIds.Count > 0)
+					{
+						<div class="selected-statuses">
+							@foreach (var companyId in _filterCompanyIds)
+							{
+								<span class="role-pill status-pill" @onclick="() => RemoveFilterCompany(companyId)" title="Click to remove">
+									@GetCompanyName(companyId) <span class="pill-remove">&times;</span>
+								</span>
+							}
+						</div>
+					}
+				</div>
+			</div>
+
+			<div class="filter-row">
 				<label class="filter-label">Active Status</label>
 				<div class="filter-control">
 					<div class="kind-switch">

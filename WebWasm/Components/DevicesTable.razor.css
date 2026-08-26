@@ -378,3 +378,92 @@
 	font-size: 0.75rem;
 	min-width: 1em;
 }
+
+/* Grouped rework (Feature 3) */
+.selection-toolbar {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	align-items: center;
+}
+
+.device-groups {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.device-group {
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	background: var(--bg-surface, #FAF7F2);
+	overflow: hidden;
+}
+
+.device-group-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.6rem 0.75rem;
+	background: linear-gradient(135deg, rgba(201, 168, 108, 0.1) 0%, rgba(139, 115, 85, 0.1) 100%);
+	cursor: default;
+}
+
+.group-checkbox {
+	margin-left: 0.25rem;
+}
+
+.group-toggle {
+	font-size: 0.85rem;
+}
+
+.group-name {
+	font-weight: 600;
+	color: var(--text-primary, #3D2E1F);
+}
+
+.group-count {
+	font-size: 0.8rem;
+	color: var(--text-secondary, #7A7A7A);
+}
+
+.device-group-rows {
+	display: flex;
+	flex-direction: column;
+}
+
+.device-row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.6rem 0.75rem;
+	border-top: 1px solid var(--border-color, #E5D5C0);
+	flex-wrap: wrap;
+}
+
+.row-duplicate {
+	background: #FFF8E1;
+}
+
+.duplicate-badge {
+	display: inline-block;
+	padding: 0.15rem 0.5rem;
+	border-radius: 12px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	background: #FFF3E0;
+	color: #F57C00;
+	white-space: nowrap;
+}
+
+.device-cell {
+	min-width: 160px;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.device-name {
+	font-weight: 500;
+	color: var(--text-primary, #3D2E1F);
+}

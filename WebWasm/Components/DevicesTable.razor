@@ -1,92 +1,118 @@
-@using Microsoft.AspNetCore.Components.QuickGrid
 @using WebWasm.Models
 @using WebWasm.Services
 
 <div class="data-grid-container">
 	<div class="data-grid-search">
-		<input type="text" 
-			   placeholder="Search..." 
-			   @bind="_searchText" 
+		<input type="text"
+			   placeholder="Search..."
+			   @bind="_searchText"
 			   @bind:after="SaveSearch"
 			   @bind:event="oninput"
 			   class="search-input" />
 	</div>
 
-	@if (_hasItems)
+	@if (FilteredGroups.Count > 0)
 	{
-		<div class="data-grid-scroll">
-			<QuickGrid Items="@FilteredDevices" Pagination="@_pagination" class="data-grid">
-				<TemplateColumn Title="Device" Sortable="false">
-					<HeaderTemplate>
-						<button class="@SortHelper.GetHeaderClass(_sortState, "device")" @onclick='() => CycleSort("device")'>
-							Device <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "device")</span>
+		<div class="selection-toolbar">
+			<button class="btn-action btn-unbind" @onclick="ShowMultiUnbindConfirmation">
+				🗑️ Unbind Selected (@_selectedTokens.Count)
+			</button>
+			@if (_selectedTokens.Count > 0)
+			{
+				<button class="btn-action" @onclick="ClearSelection">Clear selection</button>
+			}
+		</div>
+
+		<div class="device-groups">
+			@foreach (var group in PagedGroups)
+			{
+				var duplicates = GetDuplicateDevices(group.Items);
+				<div class="device-group">
+					<div class="device-group-header">
+						<input type="checkbox"
+							   class="group-checkbox"
+							   checked="@IsGroupFullySelected(group)"
+							   @onchange="_ => ToggleSelectGroup(group)"
+							   title="Select all in group" />
+						<button class="btn-expand group-toggle" @onclick="() => ToggleGroupExpand(group.Key)">
+							@(IsGroupExpanded(group.Key) ? "▼" : "▶")
 						</button>
-					</HeaderTemplate>
-					<ChildContent>
-						@context.DeviceToken.Device
-					</ChildContent>
-				</TemplateColumn>
-				<TemplateColumn Title="User" Sortable="false">
-					<HeaderTemplate>
-						<button class="@SortHelper.GetHeaderClass(_sortState, "user")" @onclick='() => CycleSort("user")'>
-							User <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "user")</span>
-						</button>
-					</HeaderTemplate>
-					<ChildContent>
-						@context.GetUserName()
-					</ChildContent>
-				</TemplateColumn>
-				<TemplateColumn Title="Token" Sortable="false">
-					<div class="token-cell">
-						<button class="btn-expand" @onclick="() => ToggleExpand(context.DeviceToken.Id)">
-							@(IsExpanded(context.DeviceToken.Id) ? "▼" : "▶") Show Token
-						</button>
-						@if (IsExpanded(context.DeviceToken.Id))
+						<span class="group-name">@group.Name</span>
+						<span class="group-count">@group.Items.Count device(s)</span>
+						@if (duplicates.Count > 0)
 						{
-							<div class="token-expanded">
-								<code class="token-value">@context.DeviceToken.Token</code>
-								<button class="btn-copy" @onclick="() => CopyToClipboard(context.DeviceToken.Token)" title="Copy to clipboard">📋</button>
-							</div>
+							<span class="duplicate-badge" title="Same device string on multiple tokens">⚠️ duplicates</span>
 						}
 					</div>
-				</TemplateColumn>
-				<TemplateColumn Title="Additional Data" Sortable="false">
-					<div class="data-cell">
-						@if (context.DeviceToken.AdditionalData?.Count > 0)
-						{
-							<button class="btn-expand" @onclick="() => ToggleDataExpand(context.DeviceToken.Id)">
-								@(IsDataExpanded(context.DeviceToken.Id) ? "▼" : "▶") @context.DeviceToken.AdditionalData.Count item(s)
-							</button>
-							@if (IsDataExpanded(context.DeviceToken.Id))
+
+					@if (IsGroupExpanded(group.Key))
+					{
+						<div class="device-group-rows">
+							@foreach (var item in group.Items)
 							{
-								<div class="data-expanded">
-									@foreach (var kvp in context.DeviceToken.AdditionalData)
-									{
-										<div class="data-item">
-											<span class="data-key">@kvp.Key:</span>
-											<span class="data-value">@kvp.Value</span>
-										</div>
-									}
+								var isDuplicate = duplicates.Contains(item.DeviceToken.Device.Trim());
+								<div class="device-row @(isDuplicate ? "row-duplicate" : "")">
+									<input type="checkbox"
+										   checked="@IsSelected(item.DeviceToken.Token)"
+										   @onchange="_ => ToggleSelect(item.DeviceToken.Token)"
+										   title="Select for unbind" />
+									<div class="device-cell">
+										<span class="device-name">@item.DeviceToken.Device</span>
+										@if (isDuplicate)
+										{
+											<span class="duplicate-badge" title="Same device string on multiple tokens">⚠️ duplicate</span>
+										}
+									</div>
+									<div class="token-cell">
+										<button class="btn-expand" @onclick="() => ToggleExpand(item.DeviceToken.Id)">
+											@(IsExpanded(item.DeviceToken.Id) ? "▼" : "▶") Show Token
+										</button>
+										@if (IsExpanded(item.DeviceToken.Id))
+										{
+											<div class="token-expanded">
+												<code class="token-value">@item.DeviceToken.Token</code>
+												<button class="btn-copy" @onclick="() => CopyToClipboard(item.DeviceToken.Token)" title="Copy to clipboard">📋</button>
+											</div>
+										}
+									</div>
+									<div class="data-cell">
+										@if (item.DeviceToken.AdditionalData?.Count > 0)
+										{
+											<button class="btn-expand" @onclick="() => ToggleDataExpand(item.DeviceToken.Id)">
+												@(IsDataExpanded(item.DeviceToken.Id) ? "▼" : "▶") @item.DeviceToken.AdditionalData.Count item(s)
+											</button>
+											@if (IsDataExpanded(item.DeviceToken.Id))
+											{
+												<div class="data-expanded">
+													@foreach (var kvp in item.DeviceToken.AdditionalData)
+													{
+														<div class="data-item">
+															<span class="data-key">@kvp.Key:</span>
+															<span class="data-value">@kvp.Value</span>
+														</div>
+													}
+												</div>
+											}
+										}
+										else
+										{
+											<span class="text-muted">No data</span>
+										}
+									</div>
+									<button class="btn-action btn-unbind"
+											@onclick="() => ShowUnbindConfirmation(item.DeviceToken.Token, item.DeviceToken.UserInfoId, item.DeviceToken.Device)">
+										Unbind
+									</button>
 								</div>
 							}
-						}
-						else
-						{
-							<span class="text-muted">No data</span>
-						}
-					</div>
-				</TemplateColumn>
-				<TemplateColumn Title="Actions" Sortable="false">
-					<button class="btn-action btn-unbind" 
-							@onclick="() => ShowUnbindConfirmation(context.DeviceToken.Token, context.DeviceToken.UserInfoId, context.DeviceToken.Device)">
-						Unbind
-					</button>
-				</TemplateColumn>
-			</QuickGrid>
+						</div>
+					}
+				</div>
+			}
 		</div>
 
 		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" />
+			<CustomPaginator State="@_pagination" TotalItems="@FilteredGroups.Count" AfterNavigate="() => StateHasChanged()" />
 		</div>
 	}
 	else
