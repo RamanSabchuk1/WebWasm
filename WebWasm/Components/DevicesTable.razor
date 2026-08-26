@@ -16,8 +16,26 @@
 	{
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredDevices" Pagination="@_pagination" class="data-grid">
-				<PropertyColumn Property="@(d => d.DeviceToken.Device)" Title="Device" Sortable="true" />
-				<PropertyColumn Property="@(d => d.GetUserName())" Title="User" Sortable="true" />
+				<TemplateColumn Title="Device" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "device")" @onclick='() => CycleSort("device")'>
+							Device <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "device")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.DeviceToken.Device
+					</ChildContent>
+				</TemplateColumn>
+				<TemplateColumn Title="User" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "user")" @onclick='() => CycleSort("user")'>
+							User <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "user")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.GetUserName()
+					</ChildContent>
+				</TemplateColumn>
 				<TemplateColumn Title="Token" Sortable="false">
 					<div class="token-cell">
 						<button class="btn-expand" @onclick="() => ToggleExpand(context.DeviceToken.Id)">

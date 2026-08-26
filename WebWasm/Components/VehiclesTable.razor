@@ -16,8 +16,26 @@
 	{
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredVehicles" Pagination="@_pagination" class="data-grid">
-				<PropertyColumn Property="@(v => v.Model)" Title="Model" Sortable="true" />
-				<PropertyColumn Property="@(v => v.RegistrationNumber)" Title="Registration" Sortable="true" />
+				<TemplateColumn Title="Model" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "model")" @onclick='() => CycleSort("model")'>
+							Model <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "model")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.Model
+					</ChildContent>
+				</TemplateColumn>
+				<TemplateColumn Title="Registration" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "registration")" @onclick='() => CycleSort("registration")'>
+							Registration <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "registration")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.RegistrationNumber
+					</ChildContent>
+				</TemplateColumn>
 				<TemplateColumn Title="Driver" Sortable="false">
 					<div class="driver-cell">
 						@if (context.Driver?.UserInfo != null)
@@ -63,8 +81,26 @@
 						}
 					</div>
 				</TemplateColumn>
-				<PropertyColumn Property="@(v => v.VehicleWeight)" Title="Weight (kg)" Sortable="true" />
-				<PropertyColumn Property="@(v => v.LoadCapacity)" Title="Capacity (kg)" Sortable="true" />
+				<TemplateColumn Title="Weight (kg)" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "weight")" @onclick='() => CycleSort("weight")'>
+							Weight (kg) <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "weight")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.VehicleWeight
+					</ChildContent>
+				</TemplateColumn>
+				<TemplateColumn Title="Capacity (kg)" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "capacity")" @onclick='() => CycleSort("capacity")'>
+							Capacity (kg) <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "capacity")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.LoadCapacity
+					</ChildContent>
+				</TemplateColumn>
 				<TemplateColumn Title="Photo" Sortable="false">
 					<div class="photo-cell">
 						@if (!string.IsNullOrEmpty(context.Photo))

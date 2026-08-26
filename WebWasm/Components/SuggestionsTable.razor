@@ -16,8 +16,26 @@
 	{
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredSuggestions" Pagination="@_pagination" class="data-grid">
-				<PropertyColumn Property="@(s => s.Suggestion.Name)" Title="Name" Sortable="true" />
-				<PropertyColumn Property="@(s => s.GetUserName())" Title="User" Sortable="true" />
+				<TemplateColumn Title="Name" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "name")" @onclick='() => CycleSort("name")'>
+							Name <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "name")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.Suggestion.Name
+					</ChildContent>
+				</TemplateColumn>
+				<TemplateColumn Title="User" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "user")" @onclick='() => CycleSort("user")'>
+							User <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "user")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.GetUserName()
+					</ChildContent>
+				</TemplateColumn>
 				<TemplateColumn Title="Data" Sortable="false">
 					<div class="data-cell">
 						@if (context.Suggestion.Data.Count > 0)
@@ -44,7 +62,16 @@
 						}
 					</div>
 				</TemplateColumn>
-				<PropertyColumn Property="@(s => s.Suggestion.Created)" Title="Created" Format="yyyy-MM-dd HH:mm" Sortable="true" />
+				<TemplateColumn Title="Created" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "created")" @onclick='() => CycleSort("created")'>
+							Created <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "created")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.Suggestion.Created.ToString("yyyy-MM-dd HH:mm")
+					</ChildContent>
+				</TemplateColumn>
 				<TemplateColumn Title="Applied" Sortable="false">
 					@if (context.Suggestion.Applied.HasValue)
 					{

@@ -15,7 +15,16 @@
 	{
 		<div class="data-grid-scroll">
 			<QuickGrid Items="@FilteredRegions.AsQueryable()" Pagination="@_pagination" class="data-grid">
-				<PropertyColumn Property="@(r => r.Name)" Title="Name" Sortable="true" />
+				<TemplateColumn Title="Name" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "name")" @onclick='() => CycleSort("name")'>
+							Name <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "name")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@context.Name
+					</ChildContent>
+				</TemplateColumn>
 				<TemplateColumn Title="Level Types" Sortable="false">
 					<div class="level-types-cell">
 						@foreach (var type in GetRegionTypes(context))

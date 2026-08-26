@@ -111,7 +111,16 @@
 					}
 				</TemplateColumn>
 
-				<PropertyColumn Property="@(c => c.CompanyInfo != null ? c.CompanyInfo.CorporateEmail : "")" Title="Email" Sortable="true" />
+				<TemplateColumn Title="Email" Sortable="false">
+					<HeaderTemplate>
+						<button class="@SortHelper.GetHeaderClass(_sortState, "email")" @onclick="() => CycleSortEmail()">
+							Email <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "email")</span>
+						</button>
+					</HeaderTemplate>
+					<ChildContent>
+						@(context.CompanyInfo?.CorporateEmail ?? "")
+					</ChildContent>
+				</TemplateColumn>
 
 				<TemplateColumn Title="Status" Sortable="false">
 					@if (context.IsActive)

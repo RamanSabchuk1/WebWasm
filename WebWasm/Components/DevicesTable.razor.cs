@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.JSInterop;
 using System.Diagnostics.CodeAnalysis;
+using WebWasm.Helpers;
+using WebWasm.Models;
 using WebWasm.Pages;
 using WebWasm.Services;
 
@@ -12,6 +14,7 @@ namespace WebWasm.Components;
 public partial class DevicesTable : ComponentBase
 {
 	private const string SearchKey = "search_devices";
+	private const string SortKey = "sort_devices";
 	[Parameter, EditorRequired] public IEnumerable<DeviceTokenWithUser> Devices { get; set; } = [];
 	[Parameter] public EventCallback<(string, Guid)> OnUnbind { get; set; }
 	[Inject] private IJSRuntime JSRuntime { get; set; } = default!;
@@ -22,6 +25,7 @@ public partial class DevicesTable : ComponentBase
 	private readonly HashSet<Guid> _expandedData = [];
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private string _searchText = string.Empty;
+	private SortState _sortState = new();
 	private bool _hasItems => FilteredDevices.Any();
 
 	// Confirmation dialog state
@@ -29,6 +33,13 @@ public partial class DevicesTable : ComponentBase
 	private string _confirmMessage = string.Empty;
 	private string _pendingToken = string.Empty;
 	private Guid _pendingUserId = Guid.Empty;
+
+	private static readonly IReadOnlyDictionary<string, Func<DeviceTokenWithUser, object?>> _sortSelectors =
+		new Dictionary<string, Func<DeviceTokenWithUser, object?>>
+		{
+			["device"] = d => d.DeviceToken.Device,
+			["user"] = d => d.GetUserName(),
+		};
 
 	private bool IsExpanded(Guid id) => _expandedTokens.Contains(id);
 	private bool IsDataExpanded(Guid id) => _expandedData.Contains(id);
@@ -103,7 +114,7 @@ public partial class DevicesTable : ComponentBase
 						kvp.Value.Contains(lowerSearch, StringComparison.OrdinalIgnoreCase))));
 			}
 
-			return items;
+			return SortHelper.Apply(items, _sortState, _sortSelectors).AsQueryable();
 		}
 	}
 
@@ -111,10 +122,19 @@ public partial class DevicesTable : ComponentBase
 	{
 		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
 		catch { _searchText = string.Empty; }
+
+		try { _sortState = await LocalStorage.GetItemAsync<SortState>(SortKey) ?? new SortState(); }
+		catch { _sortState = new SortState(); }
 	}
 
 	private async Task SaveSearch()
 	{
 		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
+	}
+
+	private async Task CycleSort(string columnKey)
+	{
+		_sortState = SortHelper.Cycle(_sortState, columnKey);
+		try { await LocalStorage.SetItemAsync(SortKey, _sortState); } catch { }
 	}
 }

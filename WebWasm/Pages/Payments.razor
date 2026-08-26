@@ -29,9 +29,36 @@
 		{
 			<div class="data-grid-scroll">
 				<QuickGrid Items="@FilteredCards.AsQueryable()" Pagination="@_pagination" class="data-grid">
-					<PropertyColumn Property="@(c => c.MaskedCard)" Title="Card Number" Sortable="true" />
-					<PropertyColumn Property="@(c => c.ExpirationDate.ToString("MM/yyyy"))" Title="Expiration Date" Sortable="true" />
-					<PropertyColumn Property="@(c => c.UnbindAt.ToString("yyyy-MM-dd"))" Title="Unbind At" Sortable="true" />
+					<TemplateColumn Title="Card Number" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "card")" @onclick='() => CycleSort("card")'>
+								Card Number <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "card")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.MaskedCard
+						</ChildContent>
+					</TemplateColumn>
+					<TemplateColumn Title="Expiration Date" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "expiration")" @onclick='() => CycleSort("expiration")'>
+								Expiration Date <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "expiration")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.ExpirationDate.ToString("MM/yyyy")
+						</ChildContent>
+					</TemplateColumn>
+					<TemplateColumn Title="Unbind At" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "unbind")" @onclick='() => CycleSort("unbind")'>
+								Unbind At <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "unbind")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.UnbindAt.ToString("yyyy-MM-dd")
+						</ChildContent>
+					</TemplateColumn>
 				</QuickGrid>
 			</div>
 

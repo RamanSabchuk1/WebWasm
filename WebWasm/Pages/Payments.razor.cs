@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using System.Diagnostics.CodeAnalysis;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -11,6 +12,7 @@ namespace WebWasm.Pages;
 public partial class Payments : ComponentBase
 {
 	private const string SearchKey = "search_payments";
+	private const string SortKey = "sort_payments";
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
@@ -19,8 +21,17 @@ public partial class Payments : ComponentBase
 
 	private List<CreditCardInfo> _creditCards = [];
 	private string _searchText = string.Empty;
+	private SortState _sortState = new();
 	private bool _hasItems => FilteredCards.Count != 0;
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
+
+	private static readonly IReadOnlyDictionary<string, Func<CreditCardInfo, object?>> _sortSelectors =
+		new Dictionary<string, Func<CreditCardInfo, object?>>
+		{
+			["card"] = c => c.MaskedCard,
+			["expiration"] = c => c.ExpirationDate,
+			["unbind"] = c => c.UnbindAt,
+		};
 
 	private List<CreditCardInfo> FilteredCards
 	{
@@ -32,7 +43,7 @@ public partial class Payments : ComponentBase
 					c.MaskedCard.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
 				)];
 
-			return filtered;
+			return [.. SortHelper.Apply(filtered, _sortState, _sortSelectors)];
 		}
 	}
 
@@ -40,6 +51,10 @@ public partial class Payments : ComponentBase
 	{
 		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
 		catch { _searchText = string.Empty; }
+
+		try { _sortState = await LocalStorage.GetItemAsync<SortState>(SortKey) ?? new SortState(); }
+		catch { _sortState = new SortState(); }
+
 		await LoadCreditCards(true);
 	}
 
@@ -51,5 +66,11 @@ public partial class Payments : ComponentBase
 	private async Task LoadCreditCards(bool useCash)
 	{
 		_creditCards = [.. await CashService.GetData<CreditCardInfo>(useCash)];
+	}
+
+	private async Task CycleSort(string columnKey)
+	{
+		_sortState = SortHelper.Cycle(_sortState, columnKey);
+		try { await LocalStorage.SetItemAsync(SortKey, _sortState); } catch { }
 	}
 }

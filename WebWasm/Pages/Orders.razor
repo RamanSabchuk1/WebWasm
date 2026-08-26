@@ -146,21 +146,64 @@
 		{
 			<div class="data-grid-scroll">
 				<QuickGrid Items="@FilteredOrders" Pagination="@_pagination" class="data-grid">
-					<TemplateColumn Title="Name" Sortable="true" SortBy="@(GridSort<Order>.ByAscending(x => x.Name))">
-						<div class="clickable-cell" @onclick="@(() => NavigateToOrder(context.Id))">
-							@context.Name
-						</div>
+					<TemplateColumn Title="Name" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "name")" @onclick='() => CycleSort("name")'>
+								Name <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "name")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							<div class="clickable-cell" @onclick="@(() => NavigateToOrder(context.Id))">
+								@context.Name
+							</div>
+						</ChildContent>
 					</TemplateColumn>
-					<PropertyColumn Property="@(v => v.Cost)" Title="Cost BYN" Sortable="true" />
+					<TemplateColumn Title="Cost BYN" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "cost")" @onclick='() => CycleSort("cost")'>
+								Cost BYN <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "cost")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.Cost
+						</ChildContent>
+					</TemplateColumn>
 					<TemplateColumn Title="Status" Sortable="false">
 						<span class="badge @GetStatus(context.Status)">@context.Status</span>
 					</TemplateColumn>
-					<PropertyColumn Property="@(v => v.Created)" Title="Created" Sortable="true" />
+					<TemplateColumn Title="Created" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "created")" @onclick='() => CycleSort("created")'>
+								Created <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "created")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.Created
+						</ChildContent>
+					</TemplateColumn>
 					<TemplateColumn Title="Address" Sortable="false">
 						<div class="address">@context.Address</div>
 					</TemplateColumn>
-					<PropertyColumn Property="@(v => v.TotalWeight)" Title="Weight" Sortable="true" />
-					<PropertyColumn Property="@(v => v.PreferredDeliveryTime)" Title="Delivered At" Sortable="true" />
+					<TemplateColumn Title="Weight" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "weight")" @onclick='() => CycleSort("weight")'>
+								Weight <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "weight")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.TotalWeight
+						</ChildContent>
+					</TemplateColumn>
+					<TemplateColumn Title="Delivered At" Sortable="false">
+						<HeaderTemplate>
+							<button class="@SortHelper.GetHeaderClass(_sortState, "delivered")" @onclick='() => CycleSort("delivered")'>
+								Delivered At <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "delivered")</span>
+							</button>
+						</HeaderTemplate>
+						<ChildContent>
+							@context.PreferredDeliveryTime
+						</ChildContent>
+					</TemplateColumn>
 				</QuickGrid>
 			</div>
 

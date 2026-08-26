@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using System.Diagnostics.CodeAnalysis;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -14,6 +15,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	private int _pendingOrders = 0;
 	private int _completedOrders = 0;
 	private string _searchText = string.Empty;
+	private SortState _sortState = new();
 	private bool _hasItems => FilteredOrders.Any();
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private Order[] _orders = [];
@@ -109,6 +111,16 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 		await SaveFilters();
 	}
 
+	private static readonly IReadOnlyDictionary<string, Func<Order, object?>> _sortSelectors =
+		new Dictionary<string, Func<Order, object?>>
+		{
+			["name"] = o => o.Name,
+			["cost"] = o => o.Cost,
+			["created"] = o => o.Created,
+			["weight"] = o => o.TotalWeight,
+			["delivered"] = o => o.PreferredDeliveryTime,
+		};
+
 	private IQueryable<Order> FilteredOrders
 	{
 		get
@@ -149,7 +161,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 				filtered = filtered.Where(o => o.Created.Date <= _toDate.Value.ToDateTime(TimeOnly.MaxValue));
 			}
 
-			return filtered.AsQueryable();
+			return SortHelper.Apply(filtered, _sortState, _sortSelectors).AsQueryable();
 		}
 	}
 
@@ -200,6 +212,9 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 			_toDate = savedFilters.ToDate;
 			_searchText = savedFilters.SearchText ?? string.Empty;
 		}
+
+		try { _sortState = await localStorage.GetItemAsync<SortState>("sort_orders") ?? new SortState(); }
+		catch { _sortState = new SortState(); }
 	}
 
 	private async Task SaveFilters()
@@ -231,5 +246,11 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 		_fromDate = null;
 		_toDate = null;
 		_ = SaveFilters();
+	}
+
+	private async Task CycleSort(string columnKey)
+	{
+		_sortState = SortHelper.Cycle(_sortState, columnKey);
+		try { await localStorage.SetItemAsync("sort_orders", _sortState); } catch { }
 	}
 }
