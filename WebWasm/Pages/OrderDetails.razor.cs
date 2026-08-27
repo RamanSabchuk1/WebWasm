@@ -7,12 +7,15 @@ namespace WebWasm.Pages;
 
 public partial class OrderDetails(ApiClient apiClient, CashService cashService, LoadingService loadingService, ToastService toastService)
 {
+
 	[Parameter]
 	public Guid Id { get; set; }
 
 	private Order? _order;
 	private CalculationInfo? _calculationInfo;
 	private CalculationInfo[] _allCalculationInfo = [];
+	private DriverSlot[] _driverSlots = [];
+	private Vehicle[] _vehicles = [];
 	private Level[] _levels = [];
 	private (Company, Driver)[] _driversWithCompany = [];
 	private readonly Dictionary<double, Guid> _selectedDriverIds = [];
@@ -66,6 +69,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_allCalculationInfo = await cashService.GetData<CalculationInfo>();
 		_levels = [.. (await cashService.GetData<Region>()).SelectMany(r => r.Levels)];
 		_driversWithCompany = await cashService.GetDriverWithCompany();
+		_driverSlots = await cashService.GetSlots();
+		var user = await cashService.GetData<User>();
+		var vichles = await cashService.GetData<Vehicle>();
+		_vehicles = vichles.MapDriversToVehicles(_driversWithCompany, user);
 	}
 
 	private void RequestResetPayments()
@@ -218,11 +225,6 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_userDetailsButtonName = _userDetailsOpen ? "Hide Details" : "Show Details";
 	}
 
-	private static string PrintKey(string key)
-	{
-		return key.FormatJsonKey();
-	}
-
 	private void SetDriverToView(Guid? driverId)
 	{
 		if (driverId == null)
@@ -237,4 +239,20 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			_driverInfo.UserInfo?.Company = driverWithCompany.Item1;
 		}
 	}
+
+	private (Company comapny, Driver driver, bool hasSlot)[] GetDrivers(double duration, uint weight, DateTime deliveryTime)
+	{
+		var acceptableDrivers = _vehicles.Where(v => v.LoadCapacity == weight).Select(v => v.Driver!.Id).ToArray();
+		var slots = _driverSlots.Where(slot => acceptableDrivers.Contains(slot.DriverId)).ToArray();
+
+		return [.. _driversWithCompany
+			.Where(driverWithComapny => acceptableDrivers.Contains(driverWithComapny.Item2.Id))
+			.Select(driverWithComapny => (driverWithComapny.Item1, driverWithComapny.Item2, slots.HasSlot(duration, deliveryTime)))];
+	}
+
+	private static string PrintKey(string key)
+	{
+		return key.FormatJsonKey();
+	}
+
 }

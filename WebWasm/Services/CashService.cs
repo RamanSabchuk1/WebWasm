@@ -178,6 +178,32 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		}
 	}
 
+	public async ValueTask<DriverSlot[]> GetSlots(bool useCash = true)
+	{
+		var users = await GetData<User>(useCash);
+		var companies = await GetData<Company>(useCash);
+		var drivers = await GetData<Driver>(useCash);
+
+		var regionDrivers = drivers
+			.Where(d => d.UserInfo is not null)
+			.Select(d =>
+			{
+				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
+				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
+				return (DriverId: d.Id, CompanyId: companyId);
+			})
+			.Where(x => x.CompanyId.HasValue)
+			.Select(x => (x.DriverId, CompanyId: x.CompanyId!.Value))
+			.Join(companies,
+				d => d.CompanyId,
+				c => c.Id,
+				(d, c) => new { d.DriverId, c.RegionId })
+			.GroupBy(x => x.RegionId)
+			.ToDictionary(g => g.Key, g => g.Select(x => x.DriverId).ToList());
+
+		return await GetSlots(regionDrivers, useCash);
+	}
+
 	public static string Stringify(object? args)
 	{
 		if (args is null)
@@ -193,8 +219,8 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 
 	public async ValueTask<(Company, Driver)[]> GetDriverWithCompany()
 	{
-		var companies = await GetData<Company>(true);
 		var users = await GetData<User>(true);
+		var companies = await GetData<Company>(true);
 		var drivers = await GetData<Driver>(true);
 
 		var driverWithComapny = drivers

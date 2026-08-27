@@ -556,7 +556,7 @@ public partial class Users : ComponentBase
 		_users = await CashService.GetData<User>(useCash);
 		_companies = await CashService.GetData<Company>(useCash);
 		_drivers = await CashService.GetData<Driver>(useCash);
-		_driverSlots = await GetSlots(CashService, _users ?? [], _drivers, _companies);
+		_driverSlots = await CashService.GetSlots(useCash);
 		BuildLookups();
 	}
 
@@ -972,27 +972,5 @@ public partial class Users : ComponentBase
 			_slotStartTime = new TimeOnly(8, 0);
 			_slotEndTime = new TimeOnly(20, 0);
 		}
-	}
-
-	private static async ValueTask<DriverSlot[]> GetSlots(CashService cashService, User[] users, Driver[] drivers, Company[] companies)
-	{
-		var regionDrivers = drivers
-			.Where(d => d.UserInfo is not null)
-			.Select(d =>
-			{
-				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
-				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
-				return (DriverId: d.Id, CompanyId: companyId);
-			})
-			.Where(x => x.CompanyId.HasValue)
-			.Select(x => (x.DriverId, CompanyId: x.CompanyId!.Value))
-			.Join(companies,
-				d => d.CompanyId,
-				c => c.Id,
-				(d, c) => new { d.DriverId, c.RegionId })
-			.GroupBy(x => x.RegionId)
-			.ToDictionary(g => g.Key, g => g.Select(x => x.DriverId).ToList());
-
-		return await cashService.GetSlots(regionDrivers);
 	}
 }

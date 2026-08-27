@@ -65,7 +65,7 @@ else
 			<div class="info-item">
 				<label>User</label>
 				<span>
-					@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.LastName ?? "")
+					@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.MiddleName ?? "") @(_order.UserInfo?.LastName ?? "")
 					<button class="btn-view-driver" @onclick="ShowUserDetails">@_userDetailsButtonName <span class="btn-icon">👤</span></button>
 				</span>
 			</div>
@@ -285,9 +285,11 @@ else
 								@bind:set="(val) => _selectedDriverIds[deliveryGroup.Key] = val"
 								class="form-control" style="margin-bottom: 10px; display: inline-block; width: auto;">
 							<option value="@Guid.Empty">Select a driver...</option>
-							@foreach (var (company, driver) in _driversWithCompany)
+							@foreach (var (company, driver, hasSlot) in GetDrivers(_order.Duration.TotalMinutes, deliveryGroup.Key, _order.PreferredDeliveryTime))
 							{
-								<option value="@driver.Id">@company.Name @(driver.UserInfo?.MobilePhone) @(string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? "Unknown" : driver.UserInfo?.FirstName) </option>
+								<option value="@driver.Id" disabled="@(!hasSlot)">
+									@company.Name @(driver.UserInfo?.MobilePhone) @(string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? "Unknown" : driver.UserInfo?.FirstName)
+								</option>
 							}
 						</select>
 
