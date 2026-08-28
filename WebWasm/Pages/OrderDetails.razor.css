@@ -19,16 +19,16 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.card-header {
-		margin-bottom: 1rem;
-		border-bottom: 1px solid #eee;
-		padding-bottom: 0.5rem;
-	}
-
-.card-header h3 {
-	margin: 0;
-	font-size: 1.2rem;
+.card-header {
+	margin-bottom: 1rem;
+	border-bottom: 1px solid #eee;
+	padding-bottom: 0.5rem;
 }
+
+	.card-header h3 {
+		margin: 0;
+		font-size: 1.2rem;
+	}
 
 .controls-row {
 	display: flex;
@@ -54,22 +54,22 @@
 	flex-direction: column;
 }
 
-.info-item label {
-	font-weight: bold;
-	font-size: 0.8rem;
-	color: #888;
-}
+	.info-item label {
+		font-weight: bold;
+		font-size: 0.8rem;
+		color: #888;
+	}
 
 .table {
 	width: 100%;
 	border-collapse: collapse;
 }
 
-.table th, .table td {
-	padding: 0.5rem;
-	border-bottom: 1px solid #eee;
-	text-align: left;
-}
+	.table th, .table td {
+		padding: 0.5rem;
+		border-bottom: 1px solid #eee;
+		text-align: left;
+	}
 
 .accept-form {
 	display: flex;
@@ -104,10 +104,30 @@
 		opacity: 0.6;
 	}
 
-.btn-primary { background-color: #007bff; color: white; }
-.btn-warning { background-color: #ffc107; color: black; }
-.btn-success { background-color: #28a745; color: white; }
-.btn-sm { padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+.btn-primary {
+	background-color: #007bff;
+	color: white;
+}
+
+.btn-warning {
+	background-color: #ffc107;
+	color: black;
+}
+
+.btn-success {
+	background-color: #28a745;
+	color: white;
+}
+
+.btn-sm {
+	padding: 0.2rem 0.5rem;
+	font-size: 0.8rem;
+}
+
+select.form-control option:disabled {
+	color: #a0a0a0;
+	background-color: #f5f5f5;
+}
 
 .company-photo {
 	margin-top: 0.5rem;
@@ -267,7 +287,7 @@
 
 .formatted-text {
 	font-size: 0.73rem;
-	line-height: 1.1; 
+	line-height: 1.1;
 	text-transform: capitalize;
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -278,12 +298,18 @@
 		padding: 0;
 	}
 
+/* Печатная версия страницы заказа: текстовый документ (глобальные правила — в wwwroot/css/app.css) */
+.print-location {
+	display: none;
+}
+
 @media (max-width: 768px) {
 	.status-control {
 		flex-direction: column;
 		align-items: stretch;
 		width: 100%;
 	}
+
 	.controls-row {
 		flex-direction: column;
 		align-items: stretch;
@@ -347,4 +373,205 @@
 			width: 100%;
 			margin-bottom: 0.25rem;
 		}
+}
+
+@media print {
+	.no-print {
+		display: none !important;
+	}
+
+	/* Координаты вместо интерактивной карты */
+	.print-location {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.page-header {
+		margin-bottom: 0.9rem;
+	}
+
+		.page-header h1 {
+			font-size: 1.3rem;
+			margin: 0;
+			color: #000;
+		}
+
+	.page-subtitle {
+		font-size: 0.72rem;
+		margin: 0.15rem 0 0;
+		color: #444;
+	}
+
+	.content-card {
+		background: #fff;
+		box-shadow: none;
+		border: 1px solid #bbb;
+		border-radius: 4px;
+		padding: 0.6rem 0.9rem;
+		margin-bottom: 0.7rem;
+	}
+
+	.card-header {
+		margin-bottom: 0.4rem;
+		padding-bottom: 0.25rem;
+		border-bottom: 1px solid #999;
+		break-after: avoid;
+	}
+
+		.card-header h3, .card-header h4 {
+			font-size: 0.95rem;
+			margin: 0;
+			color: #000;
+		}
+
+	.info-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.35rem 1rem;
+	}
+
+	.info-item {
+		gap: 0.05rem;
+		break-inside: avoid;
+	}
+
+		.info-item label {
+			font-size: 0.68rem;
+			color: #555;
+		}
+
+		.info-item span {
+			font-size: 0.8rem;
+			color: #000;
+		}
+
+	.info-label {
+		font-size: 0.75rem;
+	}
+
+	/* Таблицы: обычный табличный вид с заголовками вместо мобильных «карточек» */
+	.table {
+		display: table;
+		width: 100%;
+		table-layout: fixed;
+	}
+
+		.table thead {
+			display: table-header-group;
+		}
+
+		.table tbody {
+			display: table-row-group;
+		}
+
+		.table tr {
+			display: table-row;
+			border: none;
+			border-radius: 0;
+			margin: 0;
+			padding: 0;
+			break-inside: avoid;
+		}
+
+		.table th, .table td {
+			display: table-cell;
+			padding: 0.25rem 0.4rem;
+			font-size: 0.72rem;
+			text-align: left;
+			border-bottom: 1px solid #ccc;
+		}
+
+			.table td::before {
+				content: none;
+			}
+
+			/* Пустая колонка действий не печатается */
+			.table td[data-label="Action"],
+			.table th:last-child.no-print {
+				display: none !important;
+			}
+
+	/* Интерактивные элементы и изображения не печатаем — остаётся только текст */
+	button, select, input,
+	.accept-form, .status-control, .controls-row,
+	.circle-btn, .company-photo {
+		display: none !important;
+	}
+
+	/* Паспортные данные пользователя/водителя: сплошным текстом */
+	.formatted-text {
+		display: block;
+		font-size: 0.72rem;
+		line-height: 1.35;
+		text-transform: none;
+	}
+
+		.formatted-text p {
+			margin: 0.12rem 0;
+		}
+
+	.additional-info {
+		background: #fff;
+		border: 1px solid #ccc;
+		padding: 0.6rem 0.8rem;
+		gap: 0.3rem;
+	}
+
+	.driver-name {
+		font-size: 0.78rem;
+		color: #000;
+	}
+
+	.driver-vehicle {
+		font-size: 0.68rem;
+		color: #333;
+	}
+
+	.vehicle-plate {
+		background-color: transparent;
+		padding: 0;
+	}
+
+	.empty-cell {
+		color: #555;
+	}
+
+	/* Детали водителя по каждой доставке печатаются всегда (на экране — раскрываются кнопкой) */
+	.additional-info .circle-btn {
+		display: none !important;
+	}
+
+	.additional-info .user-details {
+		display: block !important;
+	}
+
+	/* Фото материала: печатается, если браузер успел загрузить его с CDN */
+	.company-photo.material-photo {
+		display: block !important;
+	}
+
+	.material-photo img {
+		display: block;
+		max-width: 220px;
+		height: auto;
+		break-inside: avoid;
+	}
+}
+
+/* Видно только при печати (детали пользователя/водителя в документе) */
+.print-only {
+	display: none;
+}
+
+@media print {
+	.print-only {
+		display: block !important;
+	}
+
+	.driver-print-details {
+		margin-top: 0.4rem;
+		border-top: 1px dashed #aaa;
+		padding-top: 0.3rem;
+		break-inside: avoid;
+	}
 }

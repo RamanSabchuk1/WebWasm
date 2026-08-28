@@ -438,3 +438,69 @@ label.checkbox {
 		font-size: 0.7rem;
 	}
 }
+
+/* ============================================================
+   Печать: документы на A4, без навигации и лишних отступов
+   ============================================================ */
+@media print {
+	@page {
+		size: A4 portrait;
+		margin: 12mm 14mm;
+	}
+
+	html, body {
+		height: auto !important;
+		overflow: visible !important;
+		background: #fff !important;
+		font-size: 12px;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+	/* Скрыть навигацию, шапку, мобильное меню, тосты, баннеры обновления */
+	.sidebar,
+	.mobile-nav,
+	.top-header,
+	.toast-container,
+	.update-banner,
+	#blazor-error-ui,
+	.no-print {
+		display: none !important;
+	}
+
+	/* Приложение и контент: убрать принудительную высоту и боковые отступы */
+	.app-container {
+		display: block;
+		min-height: auto;
+		background: #fff !important;
+	}
+
+	.main-content {
+		display: block;
+		width: auto !important;
+		flex: none;
+		padding: 0 !important;
+	}
+
+	.page-content {
+		padding: 0 !important;
+		max-width: none;
+		margin: 0;
+	}
+
+	/* Ссылки печатать как обычный текст без подчёркивания */
+	a {
+		color: #000 !important;
+		text-decoration: none;
+	}
+
+	/* Не разрывать элементы между страницами */
+	h1, h2, h3, h4 {
+		break-after: avoid;
+	}
+
+	img {
+		max-width: 100%;
+		break-inside: avoid;
+	}
+}

@@ -247,8 +247,12 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 		return [.. _driversWithCompany
 			.Where(driverWithComapny => acceptableDrivers.Contains(driverWithComapny.Item2.Id))
-			.Select(driverWithComapny => (driverWithComapny.Item1, driverWithComapny.Item2, slots.HasSlot(duration, deliveryTime)))];
+			.Select(driverWithComapny => (driverWithComapny.Item1, driverWithComapny.Item2, slots.Where(slot => slot.DriverId == driverWithComapny.Item2.Id).ToArray().HasSlot(duration, deliveryTime)))];
 	}
+
+	// Компания водителя для печатных деталей (связь живёт в _driversWithCompany, а не в UserInfo)
+	private Company? GetDriverCompany(Guid driverId) =>
+		_driversWithCompany.FirstOrDefault(dc => dc.Item2.Id == driverId).Item1;
 
 	private static string PrintKey(string key)
 	{

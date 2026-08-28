@@ -2,23 +2,56 @@
 @using WebWasm.Models
 
 <div class="data-grid-container">
-	<div class="data-grid-search">
+	<div class="data-grid-toolbar">
 		<input type="text"
 			   placeholder="Search companies by name, UNP, email, or address..."
 			   @bind="_searchText"
 			   @bind:after="SaveSearch"
 			   @bind:event="oninput"
 			   class="search-input" />
-		<select class="search-input filter-select"
-				value="@(_companyTypeFilter?.ToString() ?? string.Empty)"
-				@onchange="OnTypeFilterChanged">
-			<option value="">All types</option>
-			<option value="Buyer">Buyer</option>
-			<option value="Cargo">Cargo</option>
-			<option value="Provider">Provider</option>
-			<option value="None">No type</option>
-		</select>
+
+		<button class="filter-toggle-btn" @onclick="() => _showFilters = !_showFilters">
+			<span>🔍 Filters</span>
+			@if (_companyTypeFilter != null)
+			{
+				<span class="filter-count-badge">1</span>
+			}
+			<span class="filter-toggle-icon">@(_showFilters ? "▲" : "▼")</span>
+		</button>
 	</div>
+
+	@if (_showFilters)
+	{
+		<div class="filters-panel">
+			<div class="filter-row">
+				<label class="filter-label">Company Type</label>
+				<div class="filter-control">
+					<div class="kind-switch">
+						<button type="button"
+								class="kind-switch-btn @(_companyTypeFilter == null ? "active" : "")"
+								@onclick="() => SetTypeFilter(null)">
+							All
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_companyTypeFilter == CompanyType.Buyer ? "active" : "")"
+								@onclick="() => SetTypeFilter(CompanyType.Buyer)">
+							Buyer
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_companyTypeFilter == CompanyType.Cargo ? "active" : "")"
+								@onclick="() => SetTypeFilter(CompanyType.Cargo)">
+							Cargo
+						</button>
+						<button type="button"
+								class="kind-switch-btn @(_companyTypeFilter == CompanyType.Provider ? "active" : "")"
+								@onclick="() => SetTypeFilter(CompanyType.Provider)">
+							Provider
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
 
 	@if (_hasItems)
 	{

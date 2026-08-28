@@ -23,6 +23,7 @@ public partial class CompaniesTable : ComponentBase
 	private string _searchText = string.Empty;
 	private SortState _sortState = new();
 	private CompanyType? _companyTypeFilter;
+	private bool _showFilters;
 	private bool _hasItems => FilteredCompanies.Any();
 	private readonly HashSet<Guid> _expandedCompanies = [];
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
@@ -52,10 +53,10 @@ public partial class CompaniesTable : ComponentBase
 
 			if (_companyTypeFilter is { } typeFilter)
 			{
-				// None = «без типа» (нет ни Vehicles, ни Producers); остальные — HasFlag (флаги комбинируются).
-				filtered = typeFilter == CompanyType.None
-					? filtered.Where(c => c.CompanyType == CompanyType.None)
-					: filtered.Where(c => (c.CompanyType & typeFilter) == typeFilter);
+				// Временно: API не присылает тип для покупателей (CompanyType.None == Buyer).
+				filtered = filtered.Where(c =>
+					(c.CompanyType & typeFilter) == typeFilter ||
+					(typeFilter == CompanyType.Buyer && c.CompanyType == CompanyType.None));
 			}
 
 			return SortHelper.Apply(filtered, _sortState, _sortSelectors).AsQueryable();
@@ -83,7 +84,9 @@ public partial class CompaniesTable : ComponentBase
 		try
 		{
 			var typeFilter = await LocalStorage.GetItemAsync<string>(TypeFilterKey);
-			_companyTypeFilter = Enum.TryParse<CompanyType>(typeFilter, out var parsed) ? parsed : null;
+			_companyTypeFilter = Enum.TryParse<CompanyType>(typeFilter, out var parsed) && parsed != CompanyType.None
+				? parsed
+				: null;
 		}
 		catch { _companyTypeFilter = null; }
 	}
@@ -99,20 +102,15 @@ public partial class CompaniesTable : ComponentBase
 		try { await LocalStorage.SetItemAsync(SortKey, _sortState); } catch { }
 	}
 
-	private async Task OnTypeFilterChanged(ChangeEventArgs e)
+	private async Task SetTypeFilter(CompanyType? type)
 	{
-		_companyTypeFilter = Enum.TryParse<CompanyType>(e.Value?.ToString(), out var parsed) ? parsed : null;
+		_companyTypeFilter = type;
 		try { await LocalStorage.SetItemAsync(TypeFilterKey, _companyTypeFilter?.ToString() ?? string.Empty); } catch { }
 	}
 
 	private static IEnumerable<CompanyType> GetTypeFlags(CompanyType type)
 	{
-		if (type == CompanyType.None)
-		{
-			yield return CompanyType.None;
-			yield break;
-		}
-
+		// None не показываем: временно API не присылает тип для покупателей.
 		foreach (var flag in new[] { CompanyType.Buyer, CompanyType.Cargo, CompanyType.Provider })
 		{
 			if ((type & flag) == flag)

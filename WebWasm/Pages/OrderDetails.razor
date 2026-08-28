@@ -22,7 +22,7 @@ else
 	</div>
 
 	<!-- Actions -->
-	<div class="content-card">
+	<div class="content-card no-print">
 		<div class="card-header">
 			<h3>Management</h3>
 		</div>
@@ -69,11 +69,11 @@ else
 					<button class="btn-view-driver" @onclick="ShowUserDetails">@_userDetailsButtonName <span class="btn-icon">👤</span></button>
 				</span>
 			</div>
-			@if (_userDetailsOpen && _order.UserInfo != null)
+			@if (_order.UserInfo != null)
 			{
 				<div class="info-item full-width additional-info">
 					<span class="info-label">User Details:</span>
-					<div class="user-details formatted-text">
+					<div class="user-details formatted-text @(_userDetailsOpen ? "" : "print-only")">
 						@{
 							if (_order.UserInfo.Passport != null)
 							{
@@ -103,7 +103,7 @@ else
 		</div>
 		<div class="info-grid">
 			@RenderLocation(_order.Location, "Order location")
-			<div class="info-item">
+			<div class="info-item no-print">
 				@{
 					var level = _levels.FirstOrDefault(l => l.Id == _order.RegionLevelId);
 					if (level is not null)
@@ -129,7 +129,7 @@ else
 			{
 				<div class="info-item full-width">
 					<span class="info-label">Photo:</span>
-					<div class="company-photo">
+					<div class="company-photo material-photo">
 						<img src="@type.Photo" alt="@type.Name" />
 					</div>
 				</div>
@@ -223,7 +223,7 @@ else
 								<th>Cost</th>
 								<th>Weight (Net/Gross/Applied)</th>
 								<th>Driver</th>
-								<th>Action</th>
+								<th class="no-print">Action</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -263,6 +263,11 @@ else
 														View <span class="btn-icon">🧑‍✈️</span>
 													</button>
 												</div>
+											</div>
+
+											<!-- Печатная версия: детали водителя для каждой доставки -->
+											<div class="driver-print-details print-only">
+												@RenderUserDetails(d.Driver.UserInfo, GetDriverCompany(d.Driver.Id))
 											</div>
 										}
 										else
@@ -372,14 +377,47 @@ else
 }
 
 @code {
+	// Паспорт/компания пользователя — для печатной версии (детали водителя по каждой доставке).
+	// company передаётся отдельно: у водителей связь с компанией живёт в _driversWithCompany, а не в UserInfo.
+	private RenderFragment RenderUserDetails(UserInfo? userInfo, Company? company = null) => __builder =>
+	{
+		@if (userInfo != null)
+		{
+			var c = company ?? userInfo.Company;
+			<div class="user-details formatted-text">
+				@if (userInfo.Passport != null)
+				{
+					foreach (var (key, value) in userInfo.Passport)
+					{
+						<p><strong>@PrintKey(key):</strong> @value</p>
+					}
+				}
+				@if (c?.CompanyInfo != null)
+				{
+					<p><strong>Company Name:</strong> @c.Name</p>
+					<p><strong>Company Address:</strong> @c.CompanyInfo.Address</p>
+					<p><strong>Company Unp:</strong> @c.CompanyInfo.UNP</p>
+					<p><strong>Company Legal Type:</strong> @c.CompanyInfo.LegalType</p>
+					<p><strong>Company Bank Account (Number | Bic):</strong> @c.CompanyInfo.BankAccount.BankNumber | @c.CompanyInfo.BankAccount.BIC</p>
+				}
+			</div>
+		}
+	};
+
 	private RenderFragment RenderLocation(Location location, string title) => __builder =>
 	{
 		<div class="info-item">
-			<LocationMapPicker InitialLocation="@location"
-							   MapHeight="240px"
-							   ShowInputs="false"
-							   Title="@title"
-							   OnLocationChanged="_ => {}" />
+			<div class="print-location">
+				<span class="info-label">@title</span>
+				<span>Lat: @location.Latitude.ToString("F6"), Lng: @location.Longitude.ToString("F6")</span>
+			</div>
+			<div class="no-print">
+				<LocationMapPicker InitialLocation="@location"
+								   MapHeight="240px"
+								   ShowInputs="false"
+								   Title="@title"
+								   OnLocationChanged="_ => {}" />
+			</div>
 		</div>
 	};
 }
