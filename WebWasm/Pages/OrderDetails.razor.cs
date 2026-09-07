@@ -34,6 +34,92 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private string _confirmMessage = "Are you sure you want to proceed?";
 	private Func<Task>? _pendingAction;
 
+	// S5.2: SA-правка цены (S4.2) и PreferredDeliveryTime (S4.3)
+	private bool _showPriceEdit;
+	private decimal? _editMaterialCost;
+	private decimal? _editCommission;
+	private string? _priceEditError;
+
+	private bool _showTimeEdit;
+	private DateTime _editPreferredDeliveryTime;
+	private string? _timeEditError;
+
+	private void OpenPriceEdit()
+	{
+		if (_calculationInfo is null)
+		{
+			return;
+		}
+
+		_editMaterialCost = _calculationInfo.MaterialCost;
+		_editCommission = _calculationInfo.Commission;
+		_priceEditError = null;
+		_showPriceEdit = true;
+	}
+
+	private void ClosePriceEdit() => _showPriceEdit = false;
+
+	private async Task SubmitPriceEdit()
+	{
+		if (_editMaterialCost is null && _editCommission is null)
+		{
+			_priceEditError = "At least one of Material Cost / Commission must be set.";
+			return;
+		}
+
+		await loadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await apiClient.Put($"admin/orders/{Id}/calculation", new SetOrderCalculationRequest(_editMaterialCost, _editCommission));
+				toastService.ShowSuccess("Order price updated (audit logged).");
+				_showPriceEdit = false;
+				// Кэш CalculationInfo (TTL 7 мин) — принудительно свежая выборка после правки.
+				_allCalculationInfo = await cashService.GetData<CalculationInfo>(useCash: false);
+				await LoadOrder();
+			}
+			catch (Exception ex)
+			{
+				_priceEditError = ex.Message;
+			}
+		});
+	}
+
+	private void OpenTimeEdit()
+	{
+		if (_order is null)
+		{
+			return;
+		}
+
+		_editPreferredDeliveryTime = _order.PreferredDeliveryTime;
+		_timeEditError = null;
+		_showTimeEdit = true;
+	}
+
+	private void CloseTimeEdit() => _showTimeEdit = false;
+
+	private async Task SubmitTimeEdit()
+	{
+		await loadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await apiClient.Put($"admin/orders/{Id}/preferred-delivery-time", new SetPreferredDeliveryTimeRequest(_editPreferredDeliveryTime));
+				toastService.ShowSuccess("Preferred delivery time updated.");
+				_showTimeEdit = false;
+				// Слоты водителей изменились на backend (restore+reserve) — обновляем все данные страницы.
+				await FetchData();
+				await LoadOrder();
+			}
+			catch (Exception ex)
+			{
+				// 409 от backend (нет слота у назначенного водителя) — текст приходит в теле ответа.
+				_timeEditError = ex.Message;
+			}
+		});
+	}
+
 	protected override async Task OnInitializedAsync()
 	{
 		await FetchData();

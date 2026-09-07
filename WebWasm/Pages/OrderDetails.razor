@@ -10,6 +10,56 @@
 			   OnConfirm="@OnConfirmDialog"
 			   OnCancel="@OnCancelDialog" />
 
+@* S5.2: SA-правка цены заказа (S4.2) — audit пишется на backend (pricingAudit) *@
+<ModalShell IsOpen="@_showPriceEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@ClosePriceEdit">
+	<div class="confirm-header">
+		<h2>Edit Order Price</h2>
+		<button class="btn-close" @onclick="ClosePriceEdit">×</button>
+	</div>
+	<div class="confirm-body">
+		<div class="form-group">
+			<label>Material Cost (BYN)</label>
+			<input type="number" min="0" step="0.01" @bind="_editMaterialCost" />
+		</div>
+		<div class="form-group">
+			<label>Commission (BYN)</label>
+			<input type="number" min="0" step="0.01" @bind="_editCommission" />
+		</div>
+		<p class="page-subtitle">Total Cost пересчитается на сервере (material + доставки + commission). Каждая правка пишется в audit-лог.</p>
+		@if (!string.IsNullOrEmpty(_priceEditError))
+		{
+			<p class="validation-error">@_priceEditError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="ClosePriceEdit">Cancel</button>
+		<button class="btn-primary" @onclick="SubmitPriceEdit">Save</button>
+	</div>
+</ModalShell>
+
+@* S5.2: SA-правка PreferredDeliveryTime (S4.3) — 409 при отсутствии слота у водителя *@
+<ModalShell IsOpen="@_showTimeEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseTimeEdit">
+	<div class="confirm-header">
+		<h2>Edit Preferred Delivery Time</h2>
+		<button class="btn-close" @onclick="CloseTimeEdit">×</button>
+	</div>
+	<div class="confirm-body">
+		<div class="form-group">
+			<label>Preferred Delivery Time (локальное время региона)</label>
+			<input type="datetime-local" @bind="_editPreferredDeliveryTime" />
+		</div>
+		<p class="page-subtitle">Старое окно вернётся в слоты назначенных водителей, новое будет зарезервировано. Если слота нет — backend вернёт 409.</p>
+		@if (!string.IsNullOrEmpty(_timeEditError))
+		{
+			<p class="validation-error">@_timeEditError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="CloseTimeEdit">Cancel</button>
+		<button class="btn-primary" @onclick="SubmitTimeEdit">Save</button>
+	</div>
+</ModalShell>
+
 @if (_order == null)
 {
 	<p>Loading details...</p>
@@ -56,7 +106,7 @@ else
 			<div class="info-item"><label>Address</label><span>@_order.Address</span></div>
 			<div class="info-item"><label>Cost</label><span>@_order.Cost.ToString("F2") BYN</span></div>
 			<div class="info-item"><label>Created</label><span>@_order.Created</span></div>
-			<div class="info-item"><label>Preferred Delivery</label><span>@_order.PreferredDeliveryTime</span></div>
+			<div class="info-item"><label>Preferred Delivery</label><span>@_order.PreferredDeliveryTime <button class="btn-secondary btn-inline no-print" @onclick="OpenTimeEdit">✏️</button></span></div>
 			<div class="info-item"><label>Duration</label><span>@_order.Duration</span></div>
 			<div class="info-item"><label>Total Weight</label><span>@_order.TotalWeight</span></div>
 			<div class="info-item"><label>Total Km</label><span>@_order.TotalKm</span></div>
@@ -180,6 +230,9 @@ else
 		<div class="content-card">
 			<div class="card-header">
 				<h3>Cost Calculation</h3>
+				<div class="header-actions">
+					<button class="btn-secondary" @onclick="OpenPriceEdit">✏️ Edit Price</button>
+				</div>
 			</div>
 			<div class="info-grid">
 				<div class="info-item"><label>Total Cost</label><span>@_calculationInfo.TotalCost.ToString("F2") BYN</span></div>

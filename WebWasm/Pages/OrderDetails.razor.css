@@ -575,3 +575,129 @@ select.form-control option:disabled {
 		break-inside: avoid;
 	}
 }
+
+/* --- S5.2: модалки SA-правок (scoped-копии классов ConfirmDialog/CompanyModal) --- */
+
+.confirm-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1.5rem;
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.confirm-header h2 {
+		margin: 0;
+		color: var(--text-primary, #3D2E1F);
+		font-size: 1.25rem;
+	}
+
+.btn-close {
+	background: none;
+	border: none;
+	font-size: 2rem;
+	line-height: 1;
+	color: var(--text-secondary, #7A7A7A);
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	transition: all 0.2s;
+}
+
+	.btn-close:hover {
+		background: var(--bg-surface, #FAF7F2);
+		color: var(--text-primary, #3D2E1F);
+	}
+
+.confirm-body {
+	padding: 1.5rem;
+	color: var(--text-primary, #3D2E1F);
+	line-height: 1.6;
+}
+
+	.confirm-body p {
+		margin: 0 0 0.75rem;
+	}
+
+.confirm-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	padding: 1.5rem;
+	border-top: 1px solid var(--border-color, #E5D5C0);
+}
+
+.btn-secondary {
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 500;
+	transition: all 0.2s;
+	background: var(--bg-surface, #FAF7F2);
+	color: var(--text-primary, #3D2E1F);
+	border: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.btn-secondary:hover {
+		background: var(--border-color, #E5D5C0);
+	}
+
+.btn-inline {
+	padding: 0.1rem 0.5rem;
+	font-size: 0.85rem;
+	margin-left: 0.5rem;
+}
+
+.form-group {
+	margin-bottom: 1rem;
+}
+
+	.form-group label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 500;
+		color: var(--text-primary, #3D2E1F);
+	}
+
+	.form-group input[type="number"],
+	.form-group input[type="datetime-local"] {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border: 1px solid var(--border-color, #E5D5C0);
+		border-radius: 8px;
+		font-size: 1rem;
+		background: var(--bg-primary, #FFFBF5);
+		color: var(--text-primary, #3D2E1F);
+		box-sizing: border-box;
+	}
+
+.validation-error {
+	color: #D32F2F;
+	font-size: 0.9rem;
+	margin: 0.5rem 0 0;
+}
+
+.page-subtitle {
+	color: var(--text-secondary, #7A7A7A);
+	margin: 0;
+	font-size: 0.9rem;
+}
+
+.header-actions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+/* Модалки SA-правок не печатаются (S5.2; @media print в этом файле остаётся последним) */
+@media print {
+	.modal-overlay {
+		display: none !important;
+	}
+}

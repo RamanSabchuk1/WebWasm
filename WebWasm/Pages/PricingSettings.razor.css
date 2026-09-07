@@ -1,0 +1,212 @@
+/* PricingSettings (S5.1): scoped-стили по конвенции проекта (см. VehicleCapacities.razor.css). */
+
+.page-header {
+	margin-bottom: 2rem;
+}
+
+	.page-header h1 {
+		margin-bottom: 0.5rem;
+	}
+
+.page-subtitle {
+	color: var(--text-secondary, #7A7A7A);
+	margin: 0;
+}
+
+.content-card {
+	background: var(--bg-surface, #FAF7F2);
+	border-radius: 16px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+}
+
+.card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.scope-switch {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.scope-btn {
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	cursor: pointer;
+	font-weight: 500;
+	transition: all 0.2s;
+}
+
+	.scope-btn.active {
+		background: linear-gradient(135deg, var(--color-primary, #C9A86C) 0%, var(--color-primary-dark, #8B7355) 100%);
+		color: white;
+		border-color: transparent;
+	}
+
+.scope-select {
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	font-size: 1rem;
+	background: var(--bg-primary, #FFFBF5);
+	color: var(--text-primary, #3D2E1F);
+	min-width: 240px;
+}
+
+.empty-state {
+	text-align: center;
+	color: var(--text-secondary, #7A7A7A);
+	padding: 2rem;
+}
+
+.inherited {
+	color: var(--text-secondary, #7A7A7A);
+	font-style: italic;
+}
+
+/* --- модалка (по ConfirmDialog.razor.css) --- */
+
+.confirm-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1.5rem;
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.confirm-header h2 {
+		margin: 0;
+		color: var(--text-primary, #3D2E1F);
+		font-size: 1.25rem;
+	}
+
+.btn-close {
+	background: none;
+	border: none;
+	font-size: 2rem;
+	line-height: 1;
+	color: var(--text-secondary, #7A7A7A);
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	transition: all 0.2s;
+}
+
+	.btn-close:hover {
+		background: var(--bg-surface, #FAF7F2);
+		color: var(--text-primary, #3D2E1F);
+	}
+
+.confirm-body {
+	padding: 1.5rem;
+	color: var(--text-primary, #3D2E1F);
+	line-height: 1.6;
+}
+
+	.confirm-body p {
+		margin: 0 0 0.75rem;
+	}
+
+.confirm-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	padding: 1.5rem;
+	border-top: 1px solid var(--border-color, #E5D5C0);
+}
+
+.btn-secondary, .btn-danger {
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 500;
+	transition: all 0.2s;
+}
+
+.btn-secondary {
+	background: var(--bg-surface, #FAF7F2);
+	color: var(--text-primary, #3D2E1F);
+	border: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.btn-secondary:hover {
+		background: var(--border-color, #E5D5C0);
+	}
+
+.btn-danger {
+	background: #D32F2F;
+	color: white;
+}
+
+	.btn-danger:hover {
+		background: #B71C1C;
+	}
+
+.form-group {
+	margin-bottom: 1rem;
+}
+
+	.form-group label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 500;
+		color: var(--text-primary, #3D2E1F);
+	}
+
+	.form-group input[type="number"] {
+		width: 100%;
+		padding: 0.6rem 0.75rem;
+		border: 1px solid var(--border-color, #E5D5C0);
+		border-radius: 8px;
+		font-size: 1rem;
+		background: var(--bg-primary, #FFFBF5);
+		color: var(--text-primary, #3D2E1F);
+		box-sizing: border-box;
+	}
+
+.validation-error {
+	color: #D32F2F;
+	font-size: 0.9rem;
+	margin: 0.5rem 0 0;
+}
+
+@media (max-width: 768px) {
+	.card-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.scope-switch {
+		width: 100%;
+	}
+
+		.scope-switch .scope-btn {
+			flex: 1;
+		}
+
+	.scope-select {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.confirm-header,
+	.confirm-body,
+	.confirm-footer {
+		padding: 1rem;
+	}
+}

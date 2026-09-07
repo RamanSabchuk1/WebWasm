@@ -1,0 +1,180 @@
+@page "/vehicle-capacities"
+@using WebWasm.Components
+@using WebWasm.Models
+
+<PageTitle>Vehicle Capacities</PageTitle>
+
+<div class="page-header">
+	<h1>⚖️ Vehicle Capacities</h1>
+	<p class="page-subtitle">Допустимые тоннажи машин и дефолтные цены fallback (0/0 = дефолт не настроен, fallback не срабатывает)</p>
+</div>
+
+<div class="content-card">
+	<div class="card-header">
+		<h3>Capacities</h3>
+		<div class="header-actions">
+			<button class="btn-primary" @onclick="OpenCreateDialog">+ Add Capacity</button>
+		</div>
+	</div>
+
+	@if (_capacities.Count == 0)
+	{
+		<div class="empty-state">
+			<p>No vehicle capacities found.</p>
+		</div>
+	}
+	else
+	{
+		<div style="overflow-x: auto;">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Weight</th>
+						<th>Default Min Price</th>
+						<th>Default Max Price</th>
+						<th>Status</th>
+						<th>Updated</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var capacity in _capacities)
+					{
+						<tr>
+							<td>@FormatWeight(capacity.WeightKg)</td>
+							<td>@capacity.DefaultMinPrice.ToString("0.####")</td>
+							<td>@capacity.DefaultMaxPrice.ToString("0.####")</td>
+							<td>
+								@if (capacity.IsActive)
+								{
+									<span class="status-badge active">Active</span>
+								}
+								else
+								{
+									<span class="status-badge inactive">Inactive</span>
+								}
+							</td>
+							<td>@capacity.Updated.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+							<td>
+								<button class="btn-secondary" @onclick="() => OpenEditDialog(capacity)">✏️ Edit</button>
+								<button class="btn-danger" @onclick="() => OpenDeleteDialog(capacity)">🗑️ Delete</button>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+</div>
+
+@* Добавление: вес + дефолт Min/MaxPrice *@
+<ModalShell IsOpen="@_showCreateDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseCreateDialog">
+	<div class="confirm-header">
+		<h2>Add Capacity</h2>
+		<button class="btn-close" @onclick="CloseCreateDialog">×</button>
+	</div>
+	<div class="confirm-body">
+		<div class="form-group">
+			<label>Weight (kg)</label>
+			<input type="number" min="1" step="500" @bind="_createWeightKg" />
+		</div>
+		<div class="form-group">
+			<label>Default Min Price</label>
+			<input type="number" min="0" step="0.01" @bind="_createMinPrice" />
+		</div>
+		<div class="form-group">
+			<label>Default Max Price</label>
+			<input type="number" min="0" step="0.01" @bind="_createMaxPrice" />
+		</div>
+		<p class="page-subtitle">0/0 = дефолт не настроен: fallback в расчёте не срабатывает (400 при отсутствии веса в регионе, как раньше).</p>
+		@if (!string.IsNullOrEmpty(_createError))
+		{
+			<p class="validation-error">@_createError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="CloseCreateDialog">Cancel</button>
+		<button class="btn-primary" @onclick="SubmitCreate">Create</button>
+	</div>
+</ModalShell>
+
+@* Редактирование: дефолтные цены + активность *@
+<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog">
+	<div class="confirm-header">
+		<h2>Edit — @FormatWeight(_editWeightKg)</h2>
+		<button class="btn-close" @onclick="CloseEditDialog">×</button>
+	</div>
+	<div class="confirm-body">
+		<div class="form-group">
+			<label>Default Min Price</label>
+			<input type="number" min="0" step="0.01" @bind="_editMinPrice" />
+		</div>
+		<div class="form-group">
+			<label>Default Max Price</label>
+			<input type="number" min="0" step="0.01" @bind="_editMaxPrice" />
+		</div>
+		<div class="form-group">
+			<label class="checkbox-label">
+				<input type="checkbox" @bind="_editIsActive" /> Active
+			</label>
+		</div>
+		@if (!string.IsNullOrEmpty(_editError))
+		{
+			<p class="validation-error">@_editError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="CloseEditDialog">Cancel</button>
+		<button class="btn-primary" @onclick="SubmitEdit">Save</button>
+	</div>
+</ModalShell>
+
+@* Удаление (destructive, S4.5.3): переназначить машины ИЛИ удалить машины (+каскад слотов) *@
+<ModalShell IsOpen="@_showDeleteDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseDeleteDialog">
+	<div class="confirm-header">
+		<h2>Delete — @FormatWeight(_deleteWeightKg)</h2>
+		<button class="btn-close" @onclick="CloseDeleteDialog">×</button>
+	</div>
+	<div class="confirm-body">
+		<p><strong>Что делать с машинами этого тоннажа?</strong></p>
+		<div class="form-group">
+			<label class="checkbox-label">
+				<input type="radio" name="deleteMode" checked="@(_deleteModeReassign)" @onclick="() => _deleteModeReassign = true" />
+				Переназначить машины на другой вес
+			</label>
+			@if (_deleteModeReassign)
+			{
+				<select @bind="_reassignToWeightKg">
+					@foreach (var target in _capacities.Where(x => x.WeightKg != _deleteWeightKg))
+					{
+						<option value="@target.WeightKg">@FormatWeight(target.WeightKg)</option>
+					}
+				</select>
+				@if (!_capacities.Any(x => x.WeightKg != _deleteWeightKg))
+				{
+					<p class="validation-error">Нет другого тоннажа для переназначения — сначала добавьте целевой вес.</p>
+				}
+			}
+			<label class="checkbox-label" style="margin-top: 0.5rem;">
+				<input type="radio" name="deleteMode" checked="@(!_deleteModeReassign)" @onclick="() => _deleteModeReassign = false" />
+				Удалить машины этого тоннажа
+			</label>
+			@if (!_deleteModeReassign)
+			{
+				<p class="validation-error">
+					⚠️ Машины этого тоннажа будут деактивированы (soft-delete), а слоты их водителей
+					удалены КАСКАДНО и безвозвратно. Водители перестанут получать заказы до создания
+					новой машины и слотов.
+				</p>
+			}
+		</div>
+		@if (!string.IsNullOrEmpty(_deleteError))
+		{
+			<p class="validation-error">@_deleteError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="CloseDeleteDialog">Cancel</button>
+		<button class="btn-danger" @onclick="SubmitDelete" disabled="@(_deleteModeReassign && !_capacities.Any(x => x.WeightKg != _deleteWeightKg))">Delete</button>
+	</div>
+</ModalShell>

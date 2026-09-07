@@ -120,4 +120,14 @@ public static class SerializationHelper
 [JsonSerializable(typeof(SetPassportRequest))]
 [JsonSerializable(typeof(SortState))]
 [JsonSerializable(typeof(CompanyType))]
+// Pricing overhaul S5.0/S5.1: тоннажи и настройки ценообразования
+[JsonSerializable(typeof(VehicleCapacity))]
+[JsonSerializable(typeof(VehicleCapacity[]))]
+[JsonSerializable(typeof(CreateVehicleCapacityRequest))]
+[JsonSerializable(typeof(UpdateVehicleCapacityRequest))]
+[JsonSerializable(typeof(PricingSettingItem))]
+[JsonSerializable(typeof(PricingSettingItem[]))]
+[JsonSerializable(typeof(SetPricingSettingRequest))]
+[JsonSerializable(typeof(SetOrderCalculationRequest))]
+[JsonSerializable(typeof(SetPreferredDeliveryTimeRequest))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;

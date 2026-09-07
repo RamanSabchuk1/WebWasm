@@ -1,0 +1,123 @@
+@page "/pricing-settings"
+@using WebWasm.Components
+@using WebWasm.Models
+
+<PageTitle>Pricing Settings</PageTitle>
+
+<div class="page-header">
+	<h1>💰 Pricing Settings</h1>
+	<p class="page-subtitle">Приоритет переопределений: <strong>Company</strong> → <strong>MaterialType</strong> → <strong>Global</strong> → дефолт ключа. Пустой override = наследование.</p>
+</div>
+
+<div class="content-card">
+	<div class="card-header">
+		<div class="scope-switch">
+			<button class="scope-btn @(_scope == "Global" ? "active" : "")" @onclick='() => ChangeScope("Global")'>Global</button>
+			<button class="scope-btn @(_scope == "Company" ? "active" : "")" @onclick='() => ChangeScope("Company")'>Company</button>
+			<button class="scope-btn @(_scope == "MaterialType" ? "active" : "")" @onclick='() => ChangeScope("MaterialType")'>MaterialType</button>
+		</div>
+		@if (_scope == "Company")
+		{
+			<select class="scope-select" value="@(_companyId?.ToString() ?? "")" @onchange="OnCompanyChanged">
+				<option value="">— выберите компанию —</option>
+				@foreach (var company in _companies)
+				{
+					<option value="@company.Id">@company.Name</option>
+				}
+			</select>
+		}
+		else if (_scope == "MaterialType")
+		{
+			<select class="scope-select" value="@(_materialTypeId?.ToString() ?? "")" @onchange="OnMaterialTypeChanged">
+				<option value="">— выберите тип материала —</option>
+				@foreach (var materialType in _materialTypes)
+				{
+					<option value="@materialType.Id">@materialType.Name</option>
+				}
+			</select>
+		}
+	</div>
+
+	@if (_scope != "Global" && _scopeId is null)
+	{
+		<div class="empty-state">
+			<p>Выберите @(_scope == "Company" ? "компанию" : "тип материала") для просмотра переопределений.</p>
+		</div>
+	}
+	else if (_items.Count == 0)
+	{
+		<div class="empty-state">
+			<p>No pricing settings found.</p>
+		</div>
+	}
+	else
+	{
+		<div style="overflow-x: auto;">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Key</th>
+						<th>Description</th>
+						<th>Default</th>
+						<th>Override (@_scope)</th>
+						<th>Effective</th>
+						<th>Updated</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in _items)
+					{
+						<tr>
+							<td><code>@item.Key</code></td>
+							<td>@item.Description</td>
+							<td>@(item.Default?.ToString("0.####") ?? "—")</td>
+							<td>
+								@if (item.OverrideValue is not null)
+								{
+									<strong>@item.OverrideValue.Value.ToString("0.####")</strong>
+								}
+								else
+								{
+									<span class="inherited">наследуется</span>
+								}
+							</td>
+							<td>@(item.EffectiveValue?.ToString("0.####") ?? "не задано")</td>
+							<td>@(item.Updated?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+							<td>
+								<button class="btn-secondary" @onclick="() => OpenEditDialog(item)">✏️ Set</button>
+								@if (item.OverrideValue is not null)
+								{
+									<button class="btn-danger" @onclick="() => ResetOverride(item)">↩︎ Reset</button>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+</div>
+
+@* Установка override значения *@
+<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog">
+	<div class="confirm-header">
+		<h2>@_editKey (@_scope)</h2>
+		<button class="btn-close" @onclick="CloseEditDialog">×</button>
+	</div>
+	<div class="confirm-body">
+		<div class="form-group">
+			<label>Value (дефолт: @(_editDefault?.ToString("0.####") ?? "—"))</label>
+			<input type="number" step="0.0001" @bind="_editValue" />
+		</div>
+		<p class="page-subtitle">Пустое действие не предусмотрено — для сброса override используйте ↩︎ Reset в таблице (вернёт наследование по цепочке).</p>
+		@if (!string.IsNullOrEmpty(_editError))
+		{
+			<p class="validation-error">@_editError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="CloseEditDialog">Cancel</button>
+		<button class="btn-primary" @onclick="SubmitEdit">Save</button>
+	</div>
+</ModalShell>
