@@ -10,6 +10,31 @@
 	</div>
 </div>
 
+<div class="turnover-filter">
+	<span class="turnover-filter-title">💳 Turnover period:</span>
+	<div class="turnover-presets">
+		@foreach (var (key, label) in _turnoverPresets)
+		{
+			<button type="button"
+					class="turnover-preset-btn @(_turnoverPreset == key ? "active" : "")"
+					@onclick="() => ApplyTurnoverPreset(key)">
+				@label
+			</button>
+		}
+	</div>
+	<input type="date"
+		   class="turnover-date"
+		   value="@FormatDate(_turnoverFrom)"
+		   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
+		   @onchange="OnTurnoverFromChanged" />
+	<span class="turnover-date-sep">—</span>
+	<input type="date"
+		   class="turnover-date"
+		   value="@FormatDate(_turnoverTo)"
+		   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
+		   @onchange="OnTurnoverToChanged" />
+</div>
+
 <div class="quick-stats">
 	<div class="quick-stat-card primary">
 		<span class="quick-stat-icon">📦</span>
@@ -36,7 +61,8 @@
 		<span class="quick-stat-icon">💳</span>
 		<div class="quick-stat-info">
 			<span class="quick-stat-value">@GetRevenue()</span>
-			<span class="quick-stat-label">Turnover</span>
+			<span class="quick-stat-subvalue">Profit (pre-tax): @GetProfit()</span>
+			<span class="quick-stat-label">Turnover (@GetTurnoverPeriodLabel())</span>
 		</div>
 	</div>
 </div>

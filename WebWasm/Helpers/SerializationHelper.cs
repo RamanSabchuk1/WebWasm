@@ -71,6 +71,8 @@ public static class SerializationHelper
 [JsonSerializable(typeof(UpdateLevelPriceInfo))]
 [JsonSerializable(typeof(UsersFilterState))]
 [JsonSerializable(typeof(OrdersFilterState))]
+[JsonSerializable(typeof(TurnoverFilterState))]
+[JsonSerializable(typeof(TurnoverInfo))]
 [JsonSerializable(typeof(PhotoDto))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(Level))]
@@ -123,6 +125,8 @@ public static class SerializationHelper
 // Pricing overhaul S5.0/S5.1: тоннажи и настройки ценообразования
 [JsonSerializable(typeof(VehicleCapacity))]
 [JsonSerializable(typeof(VehicleCapacity[]))]
+[JsonSerializable(typeof(VehicleCapacityOption))]
+[JsonSerializable(typeof(VehicleCapacityOption[]))]
 [JsonSerializable(typeof(CreateVehicleCapacityRequest))]
 [JsonSerializable(typeof(UpdateVehicleCapacityRequest))]
 [JsonSerializable(typeof(PricingSettingItem))]

@@ -304,6 +304,9 @@
 									<button class="btn-action" @onclick="() => OpenPassportModal(user)" title="Set passport data (SuperAdmin only)">
 										🪪 Passport
 									</button>
+									<button class="btn-action" @onclick="() => RequestResetPassword(user)" title="Generate a new password and send it to the user via SMS (SuperAdmin only)">
+										🔑 Reset Password
+									</button>
 									@if (driver is not null && hasCompany)
 									{
 										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">

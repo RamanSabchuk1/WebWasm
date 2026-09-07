@@ -1,5 +1,6 @@
 @using WebWasm.Models
 @using WebWasm.Services
+@inject ApiClient ApiClient
 
 <ModalShell IsOpen="true" ContainerClass="modal-large" OnClose="() => OnCancel.InvokeAsync()">
 		<div class="modal-header">
@@ -39,11 +40,19 @@
 
 					<div class="form-group">
 						<label for="capacityInput">Capacity (kg) *</label>
-						<input id="capacityInput" 
-							   type="number" 
-							   @bind="_loadCapacity" 
-							   placeholder="0"
-							   class="form-control" />
+						<select id="capacityInput"
+								@bind="_loadCapacity"
+								class="form-control">
+							<option value="0" disabled>Select capacity...</option>
+							@foreach (var capacity in _capacities)
+							{
+								<option value="@capacity.WeightKg">@capacity.WeightKg kg</option>
+							}
+						</select>
+						@if (!string.IsNullOrEmpty(_capacitiesError))
+						{
+							<small class="error-message">@_capacitiesError</small>
+						}
 					</div>
 				</div>
 

@@ -27,6 +27,22 @@ public partial class VehicleModal
 	private string _photo = string.Empty;
 	private Guid _selectedCompanyId;
 	private Guid _selectedDriverId;
+	private IReadOnlyList<VehicleCapacityOption> _capacities = [];
+	private string _capacitiesError = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		// Тоннажи задаёт только SA (справочник vehicle-capacities) — свободный ввод убран.
+		try
+		{
+			_capacities = await ApiClient.Get<VehicleCapacityOption[]>("vehicle-capacities");
+		}
+		catch (Exception ex)
+		{
+			_capacities = [];
+			_capacitiesError = $"Failed to load capacities: {ex.Message}";
+		}
+	}
 
 	protected override void OnParametersSet()
 	{

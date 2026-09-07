@@ -298,6 +298,31 @@ public partial class Users : ComponentBase
 		_showConfirmDialog = true;
 	}
 
+	private void RequestResetPassword(User user)
+	{
+		var name = GetDisplayName(user.UserInfo);
+		_confirmTitle = "Reset Password";
+		_confirmMessage = $"Reset password for '{name}' (login: {user.Login})? A new password will be generated and sent to the user via SMS. The old password will stop working immediately.";
+		_confirmAction = async () => await ResetPasswordConfirmed(user.Id);
+		_showConfirmDialog = true;
+	}
+
+	private async Task ResetPasswordConfirmed(Guid userId)
+	{
+		await LoadingService.ExecuteWithLoading(async () =>
+		{
+			try
+			{
+				await ApiClient.Post($"users/{userId}/password-reset");
+				ToastService.ShowSuccess("Password reset — the new password was sent to the user via SMS");
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Failed to reset password: {ex.Message}");
+			}
+		});
+	}
+
 	private async Task DeleteUserInfoConfirmed(Guid userInfoId)
 	{
 		await LoadingService.ExecuteWithLoading(async () =>

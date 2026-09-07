@@ -11,3 +11,9 @@ public record CreateVehicleCapacityRequest(int WeightKg, decimal DefaultMinPrice
 
 /// <summary>Тело PUT /admin/vehicle-capacities/{weightKg} (S5.0).</summary>
 public record UpdateVehicleCapacityRequest(decimal DefaultMinPrice, decimal DefaultMaxPrice, bool IsActive);
+
+/// <summary>
+/// Публичный read-model тоннажа (контракт backend GET /vehicle-capacities, любой auth).
+/// Используется для выбора Capacity при создании машины — значения задаёт только SA.
+/// </summary>
+public record VehicleCapacityOption(int WeightKg);
