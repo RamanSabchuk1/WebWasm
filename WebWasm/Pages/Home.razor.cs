@@ -86,7 +86,7 @@ public partial class Home(CashService cashService, ApiClient api, ILocalStorageS
 			"1m" => (today.AddMonths(-1), today),
 			"2m" => (today.AddMonths(-2), today),
 			"1q" => (today.AddMonths(-3), today),
-			_ => (null, null),
+			_ => ((DateOnly?)null, (DateOnly?)null),
 		};
 	}
 
