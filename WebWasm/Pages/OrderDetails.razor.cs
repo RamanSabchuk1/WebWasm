@@ -38,6 +38,11 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private bool _showPriceEdit;
 	private decimal? _editMaterialCost;
 	private decimal? _editCommission;
+	// S5: суммарная стоимость доставок с НДС (Σ DeliveryInfo.TotalPrice).
+	private decimal? _editDeliveryCost;
+	private decimal? _originalDeliveryCost;
+	private int _deliveryCount;
+	private bool _hasAcceptedDelivery;
 	private string? _priceEditError;
 
 	private bool _showTimeEdit;
@@ -53,6 +58,11 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 		_editMaterialCost = _calculationInfo.MaterialCost;
 		_editCommission = _calculationInfo.Commission;
+		_deliveryCount = _calculationInfo.DeliveryInfo.Length;
+		_originalDeliveryCost = _calculationInfo.DeliveryInfo.Sum(x => x.TotalPrice);
+		_editDeliveryCost = _originalDeliveryCost;
+		// Предупреждаем, если доставка уже у водителя: правка меняет его вознаграждение.
+		_hasAcceptedDelivery = _order?.Deliveries?.Any(d => d.Driver is not null) == true;
 		_priceEditError = null;
 		_showPriceEdit = true;
 	}
@@ -61,17 +71,33 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 	private async Task SubmitPriceEdit()
 	{
-		if (_editMaterialCost is null && _editCommission is null)
+		if (_editMaterialCost is null && _editCommission is null && _editDeliveryCost is null)
 		{
-			_priceEditError = "At least one of Material Cost / Commission must be set.";
+			_priceEditError = "At least one of Material Cost / Commission / Deliveries Total must be set.";
 			return;
 		}
+
+		if (_editMaterialCost < 0m || _editCommission < 0m || _editDeliveryCost < 0m)
+		{
+			_priceEditError = "Values cannot be negative.";
+			return;
+		}
+
+		if (_editDeliveryCost is not null && _deliveryCount == 0)
+		{
+			_priceEditError = "Order has no deliveries, Deliveries Total cannot be applied.";
+			return;
+		}
+
+		// Не гоняем на backend неизменённую сумму: иначе каждое открытие модалки писало бы
+		// в аудит «правку доставки» и перезаписывало цены из-за округления при распределении.
+		var deliveryCost = _editDeliveryCost == _originalDeliveryCost ? null : _editDeliveryCost;
 
 		await loadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
-				await apiClient.Put($"admin/orders/{Id}/calculation", new SetOrderCalculationRequest(_editMaterialCost, _editCommission));
+				await apiClient.Put($"admin/orders/{Id}/calculation", new SetOrderCalculationRequest(_editMaterialCost, _editCommission, deliveryCost));
 				toastService.ShowSuccess("Order price updated (audit logged).");
 				_showPriceEdit = false;
 				// Кэш CalculationInfo (TTL 7 мин) — принудительно свежая выборка после правки.

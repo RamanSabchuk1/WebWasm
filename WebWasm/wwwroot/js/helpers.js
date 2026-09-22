@@ -17,6 +17,19 @@ window.getElementHeight = (element) => {
 	return element.getBoundingClientRect().height;
 };
 
+// S5: Enter в модалке = submit. Но Enter внутри textarea — это перевод строки,
+// а внутри <select> и у нативных кнопок/ссылок — их собственное действие.
+// Blazor KeyboardEventArgs не отдаёт target, поэтому спрашиваем DOM напрямую.
+window.isEnterSubmitBlocked = () => {
+	const el = document.activeElement;
+	if (!el) return false;
+	const tag = el.tagName ? el.tagName.toLowerCase() : '';
+	if (tag === 'textarea' || tag === 'select' || tag === 'button' || tag === 'a') return true;
+	if (el.isContentEditable) return true;
+	// Открытый список автокомплита/datalist сам обрабатывает Enter.
+	return el.getAttribute && el.getAttribute('aria-expanded') === 'true';
+};
+
 window.clickOutside = {
 	register: function (element, dotnetHelper) {
 		element.clickOutsideHandler = function (event) {

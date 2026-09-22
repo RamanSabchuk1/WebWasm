@@ -25,7 +25,24 @@
 			<label>Commission (BYN)</label>
 			<input type="number" min="0" step="0.01" @bind="_editCommission" />
 		</div>
+		@* S5: суммарная стоимость доставок — бэкенд распределит её пропорционально по доставкам *@
+		<div class="form-group">
+			<label>Deliveries Total (BYN, с НДС)</label>
+			<input type="number" min="0" step="0.01" @bind="_editDeliveryCost" disabled="@(_deliveryCount == 0)" />
+			@if (_deliveryCount == 0)
+			{
+				<p class="field-hint">У заказа нет доставок — стоимость доставки менять нельзя.</p>
+			}
+			else if (_deliveryCount > 1)
+			{
+				<p class="field-hint">Сумма распределится между @_deliveryCount доставками пропорционально текущим ценам.</p>
+			}
+		</div>
 		<p class="page-subtitle">Total Cost пересчитается на сервере (material + доставки + commission). Каждая правка пишется в audit-лог.</p>
+		@if (_hasAcceptedDelivery)
+		{
+			<p class="validation-warning">⚠️ По заказу уже есть принятые доставки: правка стоимости доставки изменит вознаграждение перевозчика.</p>
+		}
 		@if (!string.IsNullOrEmpty(_priceEditError))
 		{
 			<p class="validation-error">@_priceEditError</p>
@@ -231,7 +248,10 @@ else
 			<div class="card-header">
 				<h3>Cost Calculation</h3>
 				<div class="header-actions">
-					<button class="btn-secondary" @onclick="OpenPriceEdit">✏️ Edit Price</button>
+					@* Единый стиль с кнопкой Accept (.btn-view-driver), а не крупный .btn-secondary из футера модалки *@
+					<button class="btn-view-driver" @onclick="OpenPriceEdit">
+						Edit Price <span class="btn-icon">✏️</span>
+					</button>
 				</div>
 			</div>
 			<div class="info-grid">
