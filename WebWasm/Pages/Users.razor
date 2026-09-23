@@ -462,7 +462,7 @@
 	}
 </div>
 
-<ModalShell IsOpen="_showCreateUserModal" OnClose="CloseCreateUserModal">
+<ModalShell IsOpen="_showCreateUserModal" OnClose="CloseCreateUserModal" OnSubmit="CreateUser">
 			<div class="modal-header">
 				<h2>Add User</h2>
 				<button class="btn-close" @onclick="CloseCreateUserModal">×</button>
@@ -521,7 +521,7 @@
 			</div>
 </ModalShell>
 
-<ModalShell IsOpen="_showCreateDriverModal" OnClose="CloseCreateDriverModal">
+<ModalShell IsOpen="_showCreateDriverModal" OnClose="CloseCreateDriverModal" OnSubmit="CreateDriver">
 			<div class="modal-header">
 				<h2>Add Driver</h2>
 				<button class="btn-close" @onclick="CloseCreateDriverModal">×</button>
@@ -572,7 +572,7 @@
 			</div>
 </ModalShell>
 
-<ModalShell IsOpen="_showDriverSlotModal" OnClose="CloseDriverSlotModal">
+<ModalShell IsOpen="_showDriverSlotModal" OnClose="CloseDriverSlotModal" OnSubmit="CreateDriverSlot">
 			<div class="modal-header">
 				<h2>Add Driver Slot</h2>
 				<button class="btn-close" @onclick="CloseDriverSlotModal">×</button>
@@ -624,7 +624,7 @@
 			</div>
 </ModalShell>
 
-<ModalShell IsOpen="_showRolesModal" OnClose="CloseRolesModal">
+<ModalShell IsOpen="_showRolesModal" OnClose="CloseRolesModal" OnSubmit="UpdateRoles">
 			<div class="modal-header">
 				<h2>Edit Roles</h2>
 				<button class="btn-close" @onclick="CloseRolesModal">×</button>
@@ -653,7 +653,7 @@
 			</div>
 </ModalShell>
 
-<ModalShell IsOpen="_showAssignCompanyModal" OnClose="CloseAssignCompanyModal">
+<ModalShell IsOpen="_showAssignCompanyModal" OnClose="CloseAssignCompanyModal" OnSubmit="ConfirmAssignCompany">
 			<div class="modal-header">
 				<h2>Assign Company</h2>
 				<button class="btn-close" @onclick="CloseAssignCompanyModal">×</button>
@@ -686,7 +686,7 @@
 					 OnClose="CloseSecurityLevelModal"
 					 OnSubmit="ConfirmSecurityLevel" />
 
-<ModalShell IsOpen="_showPassportModal" OnClose="ClosePassportModal">
+<ModalShell IsOpen="_showPassportModal" OnClose="ClosePassportModal" OnSubmit="SubmitPassport">
 			<div class="modal-header">
 				<h2>Set Passport Data@(_passportTargetUser is null ? string.Empty : $": {GetDisplayName(_passportTargetUser.UserInfo)}")</h2>
 				<button class="btn-close" @onclick="ClosePassportModal">×</button>

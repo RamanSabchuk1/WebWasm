@@ -1,6 +1,6 @@
 @using WebWasm.Models
 
-<ModalShell IsOpen="IsOpen" OnClose="CloseModal">
+<ModalShell IsOpen="IsOpen" OnClose="CloseModal" OnSubmit="HandleSubmit">
 	<div class="modal-header">
 		<h2>@(IsEditMode ? "Edit Region" : "Add New Region")</h2>
 		<button class="btn-close" @onclick="CloseModal">×</button>

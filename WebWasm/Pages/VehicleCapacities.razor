@@ -55,9 +55,12 @@
 								}
 							</td>
 							<td>@capacity.Updated.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-							<td>
-								<button class="btn-secondary" @onclick="() => OpenEditDialog(capacity)">✏️ Edit</button>
-								<button class="btn-danger" @onclick="() => OpenDeleteDialog(capacity)">🗑️ Delete</button>
+							@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
+							<td class="actions-cell">
+								<ActionsDropdown Title="Действия" MenuHeight="110">
+									<button class="btn-action" @onclick="() => OpenEditDialog(capacity)">✏️ Edit</button>
+									<button class="btn-action btn-action-danger" @onclick="() => OpenDeleteDialog(capacity)">🗑️ Delete</button>
+								</ActionsDropdown>
 							</td>
 						</tr>
 					}
@@ -68,7 +71,7 @@
 </div>
 
 @* Добавление: вес + дефолт Min/MaxPrice *@
-<ModalShell IsOpen="@_showCreateDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseCreateDialog">
+<ModalShell IsOpen="@_showCreateDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseCreateDialog" OnSubmit="SubmitCreate">
 	<div class="confirm-header">
 		<h2>Add Capacity</h2>
 		<button class="btn-close" @onclick="CloseCreateDialog">×</button>
@@ -99,7 +102,7 @@
 </ModalShell>
 
 @* Редактирование: дефолтные цены + активность *@
-<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog">
+<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog" OnSubmit="SubmitEdit">
 	<div class="confirm-header">
 		<h2>Edit — @FormatWeight(_editWeightKg)</h2>
 		<button class="btn-close" @onclick="CloseEditDialog">×</button>
@@ -114,8 +117,10 @@
 			<input type="number" min="0" step="0.01" @bind="_editMaxPrice" />
 		</div>
 		<div class="form-group">
-			<label class="checkbox-label">
-				<input type="checkbox" @bind="_editIsActive" /> Active
+			@* Стайлгайд: глобальный стиль привязан к label.checkbox (app.css), иначе чекбокс остаётся синим нативным *@
+			<label class="checkbox checkbox-label">
+				<input type="checkbox" @bind="_editIsActive" />
+				<span>Active</span>
 			</label>
 		</div>
 		@if (!string.IsNullOrEmpty(_editError))
@@ -130,7 +135,7 @@
 </ModalShell>
 
 @* Удаление (destructive, S4.5.3): переназначить машины ИЛИ удалить машины (+каскад слотов) *@
-<ModalShell IsOpen="@_showDeleteDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseDeleteDialog">
+<ModalShell IsOpen="@_showDeleteDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseDeleteDialog" OnSubmit="SubmitDelete">
 	<div class="confirm-header">
 		<h2>Delete — @FormatWeight(_deleteWeightKg)</h2>
 		<button class="btn-close" @onclick="CloseDeleteDialog">×</button>
@@ -138,9 +143,9 @@
 	<div class="confirm-body">
 		<p><strong>Что делать с машинами этого тоннажа?</strong></p>
 		<div class="form-group">
-			<label class="checkbox-label">
+			<label class="checkbox checkbox-label">
 				<input type="radio" name="deleteMode" checked="@(_deleteModeReassign)" @onclick="() => _deleteModeReassign = true" />
-				Переназначить машины на другой вес
+				<span>Переназначить машины на другой вес</span>
 			</label>
 			@if (_deleteModeReassign)
 			{
@@ -155,9 +160,9 @@
 					<p class="validation-error">Нет другого тоннажа для переназначения — сначала добавьте целевой вес.</p>
 				}
 			}
-			<label class="checkbox-label" style="margin-top: 0.5rem;">
+			<label class="checkbox checkbox-label" style="margin-top: 0.5rem;">
 				<input type="radio" name="deleteMode" checked="@(!_deleteModeReassign)" @onclick="() => _deleteModeReassign = false" />
-				Удалить машины этого тоннажа
+				<span>Удалить машины этого тоннажа</span>
 			</label>
 			@if (!_deleteModeReassign)
 			{

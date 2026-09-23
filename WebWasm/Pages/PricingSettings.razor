@@ -84,12 +84,15 @@
 							</td>
 							<td>@(item.EffectiveValue?.ToString("0.####") ?? "не задано")</td>
 							<td>@(item.Updated?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-							<td>
-								<button class="btn-secondary" @onclick="() => OpenEditDialog(item)">✏️ Set</button>
-								@if (item.OverrideValue is not null)
-								{
-									<button class="btn-danger" @onclick="() => ResetOverride(item)">↩︎ Reset</button>
-								}
+							@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
+							<td class="actions-cell">
+								<ActionsDropdown Title="Действия" MenuHeight="110">
+									<button class="btn-action" @onclick="() => OpenEditDialog(item)">✏️ Set</button>
+									@if (item.OverrideValue is not null)
+									{
+										<button class="btn-action btn-action-danger" @onclick="() => ResetOverride(item)">↩︎ Reset</button>
+									}
+								</ActionsDropdown>
 							</td>
 						</tr>
 					}
@@ -100,7 +103,7 @@
 </div>
 
 @* Установка override значения *@
-<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog">
+<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog" OnSubmit="SubmitEdit">
 	<div class="confirm-header">
 		<h2>@_editKey (@_scope)</h2>
 		<button class="btn-close" @onclick="CloseEditDialog">×</button>

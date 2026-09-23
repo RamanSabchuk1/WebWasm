@@ -1,6 +1,8 @@
 @using WebWasm.Models
 
-<ModalShell IsOpen="IsOpen" ContainerClass="modal-fullscreen" OnClose="CloseEditor">
+@* S5: Enter = Create Level. В режиме редактирования success-path кнопки в футере нет
+   (только Close и локальный «Update Prices»), поэтому Enter там не навешиваем. *@
+<ModalShell IsOpen="IsOpen" ContainerClass="modal-fullscreen" OnClose="CloseEditor" OnSubmit="@(IsEditMode ? EventCallback.Empty : EventCallback.Factory.Create(this, HandleSubmit))">
 			<div class="modal-header">
 				<h2>@(IsEditMode ? "Edit Level" : "Add New Level")</h2>
 				<button class="btn-close" @onclick="CloseEditor">×</button>

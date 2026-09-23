@@ -29,26 +29,39 @@
 	margin-bottom: 1rem;
 }
 
+/* Единый стиль свичей с фильтрами таблиц (эталон — Users.razor.css: .kind-switch). */
 .scope-switch {
-	display: flex;
-	gap: 0.5rem;
+	display: inline-flex;
+	background: var(--bg-primary, #FFFBF5);
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 8px;
+	padding: 4px;
+	gap: 4px;
+	max-width: 100%;
+	flex-wrap: wrap;
 }
 
 .scope-btn {
 	padding: 0.5rem 1rem;
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: 8px;
-	background: var(--bg-primary, #FFFBF5);
-	color: var(--text-primary, #3D2E1F);
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-secondary, #7A7A7A);
 	cursor: pointer;
+	font-size: 0.85rem;
 	font-weight: 500;
+	white-space: nowrap;
 	transition: all 0.2s;
 }
+
+	.scope-btn:hover {
+		color: var(--text-primary, #3D2E1F);
+	}
 
 	.scope-btn.active {
 		background: linear-gradient(135deg, var(--color-primary, #C9A86C) 0%, var(--color-primary-dark, #8B7355) 100%);
 		color: white;
-		border-color: transparent;
+		box-shadow: 0 2px 4px rgba(139, 115, 85, 0.2);
 	}
 
 .scope-select {
@@ -209,4 +222,10 @@
 	.confirm-footer {
 		padding: 1rem;
 	}
+}
+
+/* table_actions_fix: ячейка с кнопкой «три точки» (эталон — Users.razor.css). */
+.actions-cell {
+	text-align: center;
+	width: 60px;
 }

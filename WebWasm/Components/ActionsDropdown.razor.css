@@ -81,3 +81,19 @@
 		box-shadow: 0px -10px 30px rgba(0,0,0,0.2);
 	}
 }
+
+/* table_actions_fix: деструктивные пункты меню (Delete/Reset) — красным.
+   Пункты приходят через ChildContent с CSS-скоупом вызывающего, поэтому ::deep. */
+.dropdown-menu-content ::deep button.btn-action.btn-action-danger {
+	color: #D32F2F;
+}
+
+	.dropdown-menu-content ::deep button.btn-action.btn-action-danger:hover {
+		background-color: #FDECEA;
+		color: #B71C1C;
+	}
+
+.dropdown-menu-content ::deep button.btn-action:disabled {
+	opacity: 0.5;
+	cursor: default;
+}

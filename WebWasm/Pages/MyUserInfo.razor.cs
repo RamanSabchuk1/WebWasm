@@ -15,6 +15,54 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 	private SetUserNames _updateUser = new(string.Empty, string.Empty, string.Empty);
 	private List<PushNotificationItem> _notifications = [];
 
+	// ФИО меняют один раз, поэтому по умолчанию показываем их текстом, а не формой.
+	private bool _isEditingNames;
+
+	private string FullName
+	{
+		get
+		{
+			var parts = new[] { _userInfo?.LastName, _userInfo?.FirstName, _userInfo?.MiddleName }
+				.Where(x => !string.IsNullOrWhiteSpace(x));
+			var name = string.Join(' ', parts);
+			return string.IsNullOrWhiteSpace(name) ? "Имя не заполнено" : name;
+		}
+	}
+
+	private string Initials
+	{
+		get
+		{
+			var first = _userInfo?.FirstName?.Trim();
+			var last = _userInfo?.LastName?.Trim();
+			var initials = string.Concat(
+				string.IsNullOrEmpty(first) ? string.Empty : first[..1],
+				string.IsNullOrEmpty(last) ? string.Empty : last[..1]);
+			return string.IsNullOrEmpty(initials) ? "👤" : initials.ToUpperInvariant();
+		}
+	}
+
+	private void StartEditNames()
+	{
+		_updateUser = new SetUserNames(_userInfo?.FirstName ?? string.Empty, _userInfo?.MiddleName, _userInfo?.LastName ?? string.Empty);
+		_isEditingNames = true;
+	}
+
+	private void CancelEditNames() => _isEditingNames = false;
+
+	/// <summary>Кликабельны только уведомления с действием — иначе курсор обещает переход, которого нет.</summary>
+	private static bool IsClickable(PushNotificationItem note)
+	{
+		if (note.Data.ValueKind != JsonValueKind.Object)
+		{
+			return false;
+		}
+
+		var action = GetProperty(note.Data, "clickAction");
+		return (action is "OPEN_ORDER_DETAILS" or "OPEN_DELIVERY_DETAILS")
+			&& !string.IsNullOrEmpty(GetProperty(note.Data, "orderId"));
+	}
+
 	protected override async Task OnInitializedAsync()
 	{
 		await LoadData(true);
@@ -70,6 +118,7 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 			{
 				await apiClient.Put("Users/user-info", _updateUser);
 				await LoadData(false);
+				_isEditingNames = false;
 				toastService.ShowSuccess("User successfully updated!");
 			}
 			catch (Exception ex)

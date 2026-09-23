@@ -212,3 +212,9 @@
 		text-align: center;
 	}
 }
+
+/* table_actions_fix: ячейка с кнопкой «три точки» (эталон — Users.razor.css). */
+.actions-cell {
+	text-align: center;
+	width: 60px;
+}

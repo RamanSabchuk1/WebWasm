@@ -2,46 +2,91 @@
 @inject IJSRuntime JSRuntime
 @using WebWasm.Models
 
-@if (isLoading)
+@* Compact: компактный колокольчик вместо кнопки во всю ширину (профиль). *@
+@if (Compact)
 {
-	<div class="spinner-border text-primary" role="status">
-		<span class="visually-hidden">Loading...</span>
+	<div class="bell-wrap">
+		<button class="bell @(IsSubscribed ? "is-on" : null)"
+				@onclick="Subscribe"
+				disabled="@(isSubscribing || isLoading || IsSubscribed || HasError)"
+				title="@BellTitle"
+				aria-label="@BellTitle">
+			@if (isSubscribing || isLoading)
+			{
+				<span class="bell-spinner" role="status"></span>
+			}
+			else
+			{
+				<span class="bell-glyph">@(HasError ? "🔕" : "🔔")</span>
+			}
+		</button>
+		<span class="bell-caption">@BellCaption</span>
 	</div>
 }
 else
 {
-	<button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribing">
-		@if (isSubscribing)
-		{
-			<span class="spinner-border spinner-border-sm me-2" role="status"></span>
-		}
-		Subscribe to Notifications
-	</button>
-}
+	@if (isLoading)
+	{
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
+	}
+	else
+	{
+		<button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribing">
+			@if (isSubscribing)
+			{
+				<span class="spinner-border spinner-border-sm me-2" role="status"></span>
+			}
+			Subscribe to Notifications
+		</button>
+	}
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-	<div class="alert alert-danger mt-3" role="alert">
-		<strong>Error:</strong> @errorMessage
-	</div>
-}
+	@if (!string.IsNullOrEmpty(errorMessage))
+	{
+		<div class="alert alert-danger mt-3" role="alert">
+			<strong>Error:</strong> @errorMessage
+		</div>
+	}
 
-@if (!string.IsNullOrEmpty(fcmToken))
-{
-	<div class="alert alert-success mt-3" role="alert">
-		<p><strong>Success!</strong> Push notifications enabled.</p>
-		<details>
-			<summary>View FCM Token</summary>
-			<pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@fcmToken</code></pre>
-		</details>
-	</div>
+	@if (!string.IsNullOrEmpty(fcmToken))
+	{
+		<div class="alert alert-success mt-3" role="alert">
+			<p><strong>Success!</strong> Push notifications enabled.</p>
+			<details>
+				<summary>View FCM Token</summary>
+				<pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@fcmToken</code></pre>
+			</details>
+		</div>
+	}
 }
 
 @code {
+	/// <summary>Компактный режим (колокольчик) для шапки профиля.</summary>
+	[Parameter] public bool Compact { get; set; }
+
 	private string? fcmToken;
 	private string? errorMessage;
 	private bool isLoading = true;
 	private bool isSubscribing = false;
+
+	private bool IsSubscribed => !string.IsNullOrEmpty(fcmToken);
+	private bool HasError => !string.IsNullOrEmpty(errorMessage);
+
+	private string BellTitle => (isSubscribing, IsSubscribed, HasError) switch
+	{
+		(true, _, _) => "Subscribing…",
+		(_, true, _) => "Push-уведомления включены",
+		(_, _, true) => errorMessage!,
+		_ => "Включить push-уведомления",
+	};
+
+	private string BellCaption => (IsSubscribed, HasError) switch
+	{
+		(true, _) => "Включены",
+		(_, true) => "Недоступно",
+		_ => "Уведомления",
+	};
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{

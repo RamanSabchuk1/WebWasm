@@ -83,9 +83,12 @@
 					<div class="material-description">@material.Description</div>
 					<div class="material-solidity">Solidity: <span class="badge">@material.Solidity</span></div>
 				</div>
-				<div class="material-actions">
-					<button class="btn-action btn-edit" @onclick="() => OnEdit.InvokeAsync(material)">✏️ Edit</button>
-					<button class="btn-action btn-delete" @onclick="() => ShowDeleteConfirmation(material)">🗑️ Delete</button>
+				@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
+				<div class="material-actions actions-cell">
+					<ActionsDropdown Title="Действия" MenuHeight="110">
+						<button class="btn-action" @onclick="() => OnEdit.InvokeAsync(material)">✏️ Edit</button>
+						<button class="btn-action btn-action-danger" @onclick="() => ShowDeleteConfirmation(material)">🗑️ Delete</button>
+					</ActionsDropdown>
 				</div>
 			</div>
 		</div>

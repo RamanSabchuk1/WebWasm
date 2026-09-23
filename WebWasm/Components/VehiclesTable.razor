@@ -122,11 +122,13 @@
 					</div>
 				</TemplateColumn>
 				<TemplateColumn Title="Actions" Sortable="false">
-					<div class="vehicle-actions">
-						<button class="btn-action btn-delete" 
-								@onclick="() => OnDelete.InvokeAsync(context)">
-							🗑️ Delete
-						</button>
+					@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
+					<div class="actions-cell">
+						<ActionsDropdown Title="Действия" MenuHeight="70">
+							<button class="btn-action btn-action-danger" @onclick="() => OnDelete.InvokeAsync(context)">
+								🗑️ Delete
+							</button>
+						</ActionsDropdown>
 					</div>
 				</TemplateColumn>
 			</QuickGrid>

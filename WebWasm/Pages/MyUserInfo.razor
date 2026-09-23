@@ -2,70 +2,95 @@
 
 <PageTitle>My Profile</PageTitle>
 
-<div class="content-card">
-	<div class="profile-card">
-		<div class="profile-header">
-			<div class="profile-avatar">👤</div>
-			<h2>My Profile</h2>
-			<p class="profile-subtitle">Update your personal information @_userInfo?.MobilePhone</p>
+<div class="profile-page">
+
+	@* Identity: ФИО меняют один раз в жизни, поэтому по умолчанию это read-only шапка,
+	   а не форма во весь экран. Правка — по карандашу. Колокольчик уведомлений — справа. *@
+	<section class="identity-card">
+		<div class="identity-avatar">@Initials</div>
+
+		<div class="identity-main">
+			@if (_isEditingNames)
+			{
+				<EditForm Model="@_updateUser" OnValidSubmit="HandleSave" class="identity-form">
+					<DataAnnotationsValidator />
+
+					<div class="name-fields">
+						<div class="field">
+							<label for="firstName">First Name</label>
+							<InputText id="firstName" @bind-Value="_updateUser.FirstName" placeholder="First name" class="field-input" />
+							<ValidationMessage For="@(() => _updateUser.FirstName)" />
+						</div>
+						<div class="field">
+							<label for="middleName">Middle Name</label>
+							<InputText id="middleName" @bind-Value="_updateUser.MiddleName" placeholder="Middle name" class="field-input" />
+							<ValidationMessage For="@(() => _updateUser.MiddleName)" />
+						</div>
+						<div class="field">
+							<label for="lastName">Last Name</label>
+							<InputText id="lastName" @bind-Value="_updateUser.LastName" placeholder="Last name" class="field-input" />
+							<ValidationMessage For="@(() => _updateUser.LastName)" />
+						</div>
+					</div>
+
+					<div class="identity-actions">
+						<button type="button" class="btn-ghost" @onclick="CancelEditNames">Cancel</button>
+						<button type="submit" class="btn-accent">Save</button>
+					</div>
+				</EditForm>
+			}
+			else
+			{
+				<h1 class="identity-name">
+					@FullName
+					<button class="btn-icon-inline" title="Edit name" aria-label="Edit name" @onclick="StartEditNames">✏️</button>
+				</h1>
+				<p class="identity-meta">@(_userInfo?.MobilePhone ?? "—")</p>
+			}
 		</div>
 
-		@if (_userInfo is not null)
-		{
-			<EditForm Model="@_updateUser" OnValidSubmit="HandleSave" class="profile-form">
-				<DataAnnotationsValidator />
-
-				<div class="form-group">
-					<label for="firstName">First Name</label>
-					<InputText id="firstName" @bind-Value="_updateUser.FirstName" placeholder="Enter first name" class="form-input" />
-					<ValidationMessage For="@(() => _updateUser.FirstName)" />
-				</div>
-
-				<div class="form-group">
-					<label for="middleName">Middle Name</label>
-					<InputText id="middleName" @bind-Value="_updateUser.MiddleName" placeholder="Enter middle name" class="form-input" />
-					<ValidationMessage For="@(() => _updateUser.MiddleName)" />
-				</div>
-
-				<div class="form-group">
-					<label for="lastName">Last Name</label>
-					<InputText id="lastName" @bind-Value="_updateUser.LastName" placeholder="Enter last name" class="form-input" />
-					<ValidationMessage For="@(() => _updateUser.LastName)" />
-				</div>
-
-				<button type="submit" class="save-button">
-					<span>Save Changes</span>
-				</button>
-			</EditForm>
-		}
-	</div>
-
-	<div class="notification-section">
-		<PushSubscription />
-	</div>
-
-	<div class="content-card">
-		<div class="card-header">
-			<h4>Notification History</h4>
+		@* Колокольчик вместо кнопки-простыни «Subscribe to Notifications» *@
+		<div class="identity-aside">
+			<PushSubscription Compact="true" />
 		</div>
-		@if (_notifications.Any())
+	</section>
+
+	@* История PUSH — самостоятельный блок со счётчиком и внятным пустым состоянием *@
+	<section class="notifications-card">
+		<header class="notifications-header">
+			<h2>Notifications</h2>
+			@if (_notifications.Count > 0)
+			{
+				<span class="notifications-count">@_notifications.Count</span>
+			}
+		</header>
+
+		@if (_notifications.Count > 0)
 		{
-			<div class="notification-list">
+			<ul class="notification-list">
 				@foreach (var note in _notifications)
 				{
-					<div class="notification-item" @onclick="() => NavigateToNotification(note)">
-						<div class="note-header">
-							<span class="note-title">@note.Title</span>
-							<span class="note-time">@note.Timestamp.ToLocalTime().ToString("g")</span>
+					<li class="notification-item @(IsClickable(note) ? "is-clickable" : null)"
+						@onclick="() => NavigateToNotification(note)">
+						<div class="note-dot"></div>
+						<div class="note-content">
+							<div class="note-title">@note.Title</div>
+							<div class="note-body">@note.Body</div>
 						</div>
-						<div class="note-body">@note.Body</div>
-					</div>
+						<time class="note-time">@note.Timestamp.ToLocalTime().ToString("g")</time>
+					</li>
 				}
-			</div>
+			</ul>
 		}
 		else
 		{
-			<div class="empty-state">No recent notifications</div>
+			<div class="empty-state">
+				<div class="empty-icon">🔔</div>
+				<p class="empty-title">Тут пока пусто</p>
+				<p class="empty-hint">
+					Уведомления о заказах появятся здесь. Если колокольчик неактивен — включите подписку.
+				</p>
+			</div>
 		}
-	</div>
+	</section>
 </div>

@@ -84,13 +84,16 @@
 														📍 @place.Location.Latitude.ToString("F6"), @place.Location.Longitude.ToString("F6")
 													</span>
 												</div>
-												<div class="place-actions">
-													<button class="btn-action btn-edit" @onclick="() => OnEditLoadingPlace.InvokeAsync((context.Id, place))">
-														✏️ Edit
-													</button>
-													<button class="btn-action btn-delete" @onclick="() => OnDeleteLoadingPlace.InvokeAsync((context.Id, place.Id))">
-														🗑️ Delete
-													</button>
+												@* table_actions_fix и для вложенного списка точек погрузки *@
+												<div class="place-actions actions-cell">
+													<ActionsDropdown Title="Действия" MenuHeight="110">
+														<button class="btn-action" @onclick="() => OnEditLoadingPlace.InvokeAsync((context.Id, place))">
+															✏️ Edit
+														</button>
+														<button class="btn-action btn-action-danger" @onclick="() => OnDeleteLoadingPlace.InvokeAsync((context.Id, place.Id))">
+															🗑️ Delete
+														</button>
+													</ActionsDropdown>
 												</div>
 											</div>
 											<div class="place-details">
@@ -122,13 +125,16 @@
 				</TemplateColumn>
 
 				<TemplateColumn Title="Actions" Sortable="false">
-					<div class="producer-actions">
-						<button class="btn-action btn-edit" @onclick="() => OnEditProducer.InvokeAsync(context)">
-							✏️ Edit
-						</button>
-						<button class="btn-action btn-delete" @onclick="() => OnDeleteProducer.InvokeAsync(context.Id)">
-							🗑️ Delete
-						</button>
+					@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
+					<div class="actions-cell">
+						<ActionsDropdown Title="Действия" MenuHeight="110">
+							<button class="btn-action" @onclick="() => OnEditProducer.InvokeAsync(context)">
+								✏️ Edit
+							</button>
+							<button class="btn-action btn-action-danger" @onclick="() => OnDeleteProducer.InvokeAsync(context.Id)">
+								🗑️ Delete
+							</button>
+						</ActionsDropdown>
 					</div>
 				</TemplateColumn>
 			</QuickGrid>

@@ -11,7 +11,7 @@
 			   OnCancel="@OnCancelDialog" />
 
 @* S5.2: SA-правка цены заказа (S4.2) — audit пишется на backend (pricingAudit) *@
-<ModalShell IsOpen="@_showPriceEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@ClosePriceEdit">
+<ModalShell IsOpen="@_showPriceEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@ClosePriceEdit" OnSubmit="SubmitPriceEdit">
 	<div class="confirm-header">
 		<h2>Edit Order Price</h2>
 		<button class="btn-close" @onclick="ClosePriceEdit">×</button>
@@ -55,7 +55,7 @@
 </ModalShell>
 
 @* S5.2: SA-правка PreferredDeliveryTime (S4.3) — 409 при отсутствии слота у водителя *@
-<ModalShell IsOpen="@_showTimeEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseTimeEdit">
+<ModalShell IsOpen="@_showTimeEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseTimeEdit" OnSubmit="SubmitTimeEdit">
 	<div class="confirm-header">
 		<h2>Edit Preferred Delivery Time</h2>
 		<button class="btn-close" @onclick="CloseTimeEdit">×</button>

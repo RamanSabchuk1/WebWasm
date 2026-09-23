@@ -83,11 +83,16 @@
 					}
 				</TemplateColumn>
 				<TemplateColumn Title="Actions" Sortable="false">
-					<button class="btn-action" 
-							disabled="@context.Suggestion.Applied.HasValue"
-							@onclick="() => OnApply.InvokeAsync(context.Suggestion.Id)">
-						@(context.Suggestion.Applied.HasValue ? "Applied" : "Apply")
-					</button>
+					@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
+					<div class="actions-cell">
+						<ActionsDropdown Title="Действия" MenuHeight="70">
+							<button class="btn-action"
+									disabled="@context.Suggestion.Applied.HasValue"
+									@onclick="() => OnApply.InvokeAsync(context.Suggestion.Id)">
+								@(context.Suggestion.Applied.HasValue ? "✅ Applied" : "✔️ Apply")
+							</button>
+						</ActionsDropdown>
+					</div>
 				</TemplateColumn>
 			</QuickGrid>
 		</div>

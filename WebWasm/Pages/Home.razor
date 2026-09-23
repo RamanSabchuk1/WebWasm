@@ -10,29 +10,32 @@
 	</div>
 </div>
 
+@* Переключатели периода — в едином стиле kind-switch (эталон: фильтры на Users/Companies) *@
 <div class="turnover-filter">
 	<span class="turnover-filter-title">💳 Turnover period:</span>
-	<div class="turnover-presets">
+	<div class="kind-switch turnover-presets">
 		@foreach (var (key, label) in _turnoverPresets)
 		{
 			<button type="button"
-					class="turnover-preset-btn @(_turnoverPreset == key ? "active" : "")"
+					class="kind-switch-btn @(_turnoverPreset == key ? "active" : "")"
 					@onclick="() => ApplyTurnoverPreset(key)">
 				@label
 			</button>
 		}
 	</div>
-	<input type="date"
-		   class="turnover-date"
-		   value="@FormatDate(_turnoverFrom)"
-		   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
-		   @onchange="OnTurnoverFromChanged" />
-	<span class="turnover-date-sep">—</span>
-	<input type="date"
-		   class="turnover-date"
-		   value="@FormatDate(_turnoverTo)"
-		   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
-		   @onchange="OnTurnoverToChanged" />
+	<div class="turnover-range">
+		<input type="date"
+			   class="turnover-date"
+			   value="@FormatDate(_turnoverFrom)"
+			   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
+			   @onchange="OnTurnoverFromChanged" />
+		<span class="turnover-date-sep">—</span>
+		<input type="date"
+			   class="turnover-date"
+			   value="@FormatDate(_turnoverTo)"
+			   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
+			   @onchange="OnTurnoverToChanged" />
+	</div>
 </div>
 
 <div class="quick-stats">

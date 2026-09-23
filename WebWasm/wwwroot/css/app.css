@@ -397,10 +397,39 @@ label.checkbox {
 				transform: rotate(45deg);
 			}
 
-		label.checkbox input[type="checkbox"]:focus-visible {
+		label.checkbox input[type="checkbox"]:focus-visible,
+		label.checkbox input[type="radio"]:focus-visible {
 			outline: 2px solid var(--color-accent, #E8A545);
 			outline-offset: 2px;
 		}
+
+	/* Radio в том же стайлгайде: круглая рамка и точка вместо синего нативного. */
+	label.checkbox input[type="radio"] {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 18px;
+		height: 18px;
+		margin: 0;
+		border: 1.5px solid var(--color-primary, #C9A86C);
+		border-radius: 50%;
+		background: var(--bg-surface, #FAF7F2);
+		cursor: pointer;
+		position: relative;
+		transition: background 0.15s, border-color 0.15s;
+		flex-shrink: 0;
+	}
+
+		label.checkbox input[type="radio"]:checked {
+			border-color: #8B7355;
+		}
+
+			label.checkbox input[type="radio"]:checked::after {
+				content: '';
+				position: absolute;
+				inset: 3px;
+				border-radius: 50%;
+				background: linear-gradient(135deg, #C9A86C 0%, #8B7355 100%);
+			}
 
 /* ============================================
    Compact action buttons across all tables
