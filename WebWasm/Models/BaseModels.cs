@@ -9,8 +9,9 @@ public record DriverSlot(Guid Id, Guid DriverId, TimeOnly StartTime, TimeOnly En
 // D-po-25: хвост — разбивка D-po-21 (backend CalculationInfoDto); null = заказ создан до разбивки.
 public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] DeliveryInfo, decimal[] CommissionPercentages, decimal Commission, decimal TotalCost,
 	decimal? MaterialNetto = null, decimal? MaterialVatAmount = null, decimal? MaterialFeeAmount = null,
-	decimal? DeliveryFeeAmount = null, decimal? CommissionVatAmount = null, decimal? CommissionFeeAmount = null);
-public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat, decimal VatAmount = 0m);
+	decimal? CommissionVatAmount = null, decimal? CommissionFeeAmount = null);
+// D-po-26: вся детализация доставки (в т.ч. её доля Fee) — здесь.
+public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat, decimal VatAmount = 0m, decimal FeeAmount = 0m);
 public record CreditCardInfo(Guid Id, Guid UserInfoId, string MaskedCard, DateTime ExpirationDate, DateTime UnbindAt);
 public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
 // Форма совпадает с backend UserDto (Kliffort.Application/Users/Models/UserDto.cs): без User-level IsActive

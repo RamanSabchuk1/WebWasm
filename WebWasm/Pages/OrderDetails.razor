@@ -257,7 +257,7 @@ else
 			@* D-po-21/25: инвариант по каждой составляющей: netto + НДС + fee = итог. «—» = заказ создан до разбивки. *@
 			<div class="info-grid">
 				<div class="info-item"><label>Total Cost</label><span>@Money(_calculationInfo.TotalCost)</span></div>
-				<div class="info-item"><label>Deliveries Total (incl. fee)</label><span>@Money(_calculationInfo.TotalCost - _calculationInfo.MaterialCost - _calculationInfo.Commission)</span></div>
+				<div class="info-item"><label>Deliveries Total</label><span>@Money(_calculationInfo.TotalCost - _calculationInfo.MaterialCost - _calculationInfo.Commission)</span></div>
 				<div class="info-item"><label>Total VAT</label><span>@Money((_calculationInfo.MaterialVatAmount ?? 0) + _calculationInfo.DeliveryInfo.Sum(x => x.VatAmount) + (_calculationInfo.CommissionVatAmount ?? 0))</span></div>
 			</div>
 			<div class="card-header" style="padding-top: 1.5rem;">
@@ -280,9 +280,6 @@ else
 			<div class="card-header" style="padding-top: 1.5rem;">
 				<h3>Deliveries</h3>
 			</div>
-			<div class="info-grid">
-				<div class="info-item"><label>Delivery Fee (per order)</label><span>@Money(_calculationInfo.DeliveryFeeAmount)</span></div>
-			</div>
 			@foreach (var d in _calculationInfo.DeliveryInfo)
 			{
 				<div class="info-grid">
@@ -290,6 +287,7 @@ else
 					<div class="info-item"><label>Total</label><span>@Money(d.TotalPrice)</span></div>
 					<div class="info-item"><label>Netto</label><span>@Money(d.Cost)</span></div>
 					<div class="info-item"><label>VAT (@((d.Vat * 100).ToString("0.##"))%)</label><span>@Money(d.VatAmount)</span></div>
+					<div class="info-item"><label>Fee</label><span>@Money(d.FeeAmount)</span></div>
 				</div>
 			}
 		</div>
