@@ -118,7 +118,7 @@
 		</div>
 		<div class="form-group">
 			@* Стайлгайд: глобальный стиль привязан к label.checkbox (app.css), иначе чекбокс остаётся синим нативным *@
-			<label class="checkbox checkbox-label">
+			<label class="checkbox">
 				<input type="checkbox" @bind="_editIsActive" />
 				<span>Active</span>
 			</label>
@@ -143,7 +143,7 @@
 	<div class="confirm-body">
 		<p><strong>Что делать с машинами этого тоннажа?</strong></p>
 		<div class="form-group">
-			<label class="checkbox checkbox-label">
+			<label class="checkbox">
 				<input type="radio" name="deleteMode" checked="@(_deleteModeReassign)" @onclick="() => _deleteModeReassign = true" />
 				<span>Переназначить машины на другой вес</span>
 			</label>
@@ -160,7 +160,7 @@
 					<p class="validation-error">Нет другого тоннажа для переназначения — сначала добавьте целевой вес.</p>
 				}
 			}
-			<label class="checkbox checkbox-label" style="margin-top: 0.5rem;">
+			<label class="checkbox" style="margin-top: 0.5rem;">
 				<input type="radio" name="deleteMode" checked="@(!_deleteModeReassign)" @onclick="() => _deleteModeReassign = false" />
 				<span>Удалить машины этого тоннажа</span>
 			</label>

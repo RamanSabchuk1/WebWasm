@@ -173,19 +173,15 @@
 		color: var(--text-primary, #3D2E1F);
 	}
 
-.checkbox-label {
+/* Чекбокс/radio из app.css (label.checkbox): scoped `.form-group label { display: block }`
+   растягивал их на всю ширину, а прежний `input { width: auto }` схлопывал само поле
+   (при appearance: none у него нет собственной ширины). Размер input берётся из app.css. */
+.form-group > label.checkbox {
 	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	cursor: pointer;
-	font-weight: 400 !important;
+	width: fit-content;
+	margin-bottom: 0;
+	font-weight: 400;
 }
-
-	.checkbox-label input[type="checkbox"],
-	.checkbox-label input[type="radio"] {
-		width: auto;
-		margin: 0;
-	}
 
 .validation-error {
 	color: #D32F2F;

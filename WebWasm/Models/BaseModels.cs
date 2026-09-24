@@ -6,8 +6,11 @@ public record DeviceTokenInfo(string DeviceToken, string Name, Dictionary<string
 public record BankAccount(string BankNumber, string BIC);
 public record Location(double Longitude, double Latitude);
 public record DriverSlot(Guid Id, Guid DriverId, TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);
-public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] DeliveryInfo, decimal[] CommissionPercentages, decimal Commission, decimal TotalCost);
-public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat);
+// D-po-25: хвост — разбивка D-po-21 (backend CalculationInfoDto); null = заказ создан до разбивки.
+public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] DeliveryInfo, decimal[] CommissionPercentages, decimal Commission, decimal TotalCost,
+	decimal? MaterialNetto = null, decimal? MaterialVatAmount = null, decimal? MaterialFeeAmount = null,
+	decimal? DeliveryFeeAmount = null, decimal? CommissionVatAmount = null, decimal? CommissionFeeAmount = null);
+public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat, decimal VatAmount = 0m);
 public record CreditCardInfo(Guid Id, Guid UserInfoId, string MaskedCard, DateTime ExpirationDate, DateTime UnbindAt);
 public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
 // Форма совпадает с backend UserDto (Kliffort.Application/Users/Models/UserDto.cs): без User-level IsActive
