@@ -149,7 +149,7 @@
 			</label>
 			@if (_deleteModeReassign)
 			{
-				<select @bind="_reassignToWeightKg">
+				<select @bind="_reassignToWeightKg" style="margin-top: 7px;">
 					@foreach (var target in _capacities.Where(x => x.WeightKg != _deleteWeightKg))
 					{
 						<option value="@target.WeightKg">@FormatWeight(target.WeightKg)</option>
