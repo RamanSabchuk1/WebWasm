@@ -1,4 +1,3 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -14,10 +13,9 @@ builder.Services.AddHttpClient();
 
 var options = SerializationHelper.SerializerOptions();
 
-builder.Services.AddBlazoredLocalStorageAsSingleton(o => o.JsonSerializerOptions = options);
+builder.Services.AddSingleton<LocalStorageService>();
 
 builder.Services.AddSingleton(options);
-builder.Services.AddSingleton<AppJsService>();
 builder.Services.AddSingleton<EncryptionService>();
 builder.Services.AddSingleton<ToastService>();
 builder.Services.AddSingleton<LoadingService>();

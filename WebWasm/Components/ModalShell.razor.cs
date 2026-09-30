@@ -30,8 +30,14 @@ public partial class ModalShell : ComponentBase
 		if (IsOpen && !_prevIsOpen)
 		{
 			_prevIsOpen = true;
-			try { await _overlayRef.FocusAsync(); }
-			catch { /* focus may fail in some scenarios */ }
+			try
+			{
+				await _overlayRef.FocusAsync();
+			}
+			catch
+			{
+				// Focus may fail in some scenarios (element already gone); the modal still works.
+			}
 		}
 		else if (!IsOpen)
 		{

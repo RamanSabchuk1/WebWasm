@@ -82,21 +82,14 @@ public partial class PricingSettings : ComponentBase
 			return;
 		}
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var query = _scopeId is null
-					? $"admin/pricing-settings?scope={_scope}"
-					: $"admin/pricing-settings?scope={_scope}&scopeId={_scopeId}";
-				var items = await ApiClient.Get<PricingSettingItem[]>(query);
-				_items = [.. items.OrderBy(x => x.Key)];
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to load pricing settings: {ex.Message}");
-			}
-		});
+			var query = _scopeId is null
+				? $"admin/pricing-settings?scope={_scope}"
+				: $"admin/pricing-settings?scope={_scope}&scopeId={_scopeId}";
+			var items = await ApiClient.Get<PricingSettingItem[]>(query);
+			_items = [.. items.OrderBy(x => x.Key)];
+		}, "Failed to load pricing settings: ");
 	}
 
 	private void OpenEditDialog(PricingSettingItem item)

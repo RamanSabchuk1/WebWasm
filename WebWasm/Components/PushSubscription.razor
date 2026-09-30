@@ -1,5 +1,3 @@
-@inject ApiClient ApiClient
-@inject IJSRuntime JSRuntime
 @using WebWasm.Models
 
 @* Compact: компактный колокольчик вместо кнопки во всю ширину (профиль). *@
@@ -8,10 +6,10 @@
 	<div class="bell-wrap">
 		<button class="bell @(IsSubscribed ? "is-on" : null)"
 				@onclick="Subscribe"
-				disabled="@(isSubscribing || isLoading || IsSubscribed || HasError)"
+				disabled="@(_isSubscribing || _isLoading || IsSubscribed || HasError)"
 				title="@BellTitle"
 				aria-label="@BellTitle">
-			@if (isSubscribing || isLoading)
+			@if (_isSubscribing || _isLoading)
 			{
 				<span class="bell-spinner" role="status"></span>
 			}
@@ -25,7 +23,7 @@
 }
 else
 {
-	@if (isLoading)
+	@if (_isLoading)
 	{
 		<div class="spinner-border text-primary" role="status">
 			<span class="visually-hidden">Loading...</span>
@@ -33,8 +31,8 @@ else
 	}
 	else
 	{
-		<button class="btn btn-primary" @onclick="Subscribe" disabled="@isSubscribing">
-			@if (isSubscribing)
+		<button class="btn btn-primary" @onclick="Subscribe" disabled="@_isSubscribing">
+			@if (_isSubscribing)
 			{
 				<span class="spinner-border spinner-border-sm me-2" role="status"></span>
 			}
@@ -42,111 +40,21 @@ else
 		</button>
 	}
 
-	@if (!string.IsNullOrEmpty(errorMessage))
+	@if (!string.IsNullOrEmpty(_errorMessage))
 	{
 		<div class="alert alert-danger mt-3" role="alert">
-			<strong>Error:</strong> @errorMessage
+			<strong>Error:</strong> @_errorMessage
 		</div>
 	}
 
-	@if (!string.IsNullOrEmpty(fcmToken))
+	@if (!string.IsNullOrEmpty(_fcmToken))
 	{
 		<div class="alert alert-success mt-3" role="alert">
 			<p><strong>Success!</strong> Push notifications enabled.</p>
 			<details>
 				<summary>View FCM Token</summary>
-				<pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@fcmToken</code></pre>
+				<pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@_fcmToken</code></pre>
 			</details>
 		</div>
-	}
-}
-
-@code {
-	/// <summary>Компактный режим (колокольчик) для шапки профиля.</summary>
-	[Parameter] public bool Compact { get; set; }
-
-	private string? fcmToken;
-	private string? errorMessage;
-	private bool isLoading = true;
-	private bool isSubscribing = false;
-
-	private bool IsSubscribed => !string.IsNullOrEmpty(fcmToken);
-	private bool HasError => !string.IsNullOrEmpty(errorMessage);
-
-	private string BellTitle => (isSubscribing, IsSubscribed, HasError) switch
-	{
-		(true, _, _) => "Subscribing…",
-		(_, true, _) => "Push-уведомления включены",
-		(_, _, true) => errorMessage!,
-		_ => "Включить push-уведомления",
-	};
-
-	private string BellCaption => (IsSubscribed, HasError) switch
-	{
-		(true, _) => "Включены",
-		(_, true) => "Недоступно",
-		_ => "Уведомления",
-	};
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			// Check if notifications are supported
-			var isSupported = await JSRuntime.InvokeAsync<bool>("eval", "'Notification' in window && 'serviceWorker' in navigator");
-			if (!isSupported)
-			{
-				errorMessage = "Push notifications are not supported in this browser.";
-			}
-			isLoading = false;
-			StateHasChanged();
-		}
-	}
-
-	private async Task Subscribe()
-	{
-		errorMessage = null;
-		isSubscribing = true;
-		StateHasChanged();
-
-		try
-		{
-			// Request notification permission
-			var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
-
-			if (permission != "granted")
-			{
-				errorMessage = "Notification permission was denied. Please enable notifications in your browser settings.";
-				return;
-			}
-
-			var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
-			if (!string.IsNullOrEmpty(token))
-			{
-				fcmToken = token;
-
-				// Send token to backend
-				var info = new DeviceTokenInfo(fcmToken, "WebWasm PWA", new Dictionary<string, string>
-				{
-					{ "platform", "web" },
-					{ "userAgent", await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent") }
-				});
-
-				await ApiClient.Post("DeviceTokens", info);
-			}
-			else
-			{
-				errorMessage = "Could not retrieve FCM token. Please check the browser console for more details.";
-			}
-		}
-		catch (Exception ex)
-		{
-			errorMessage = $"An error occurred: {ex.Message}";
-		}
-		finally
-		{
-			isSubscribing = false;
-			StateHasChanged();
-		}
 	}
 }

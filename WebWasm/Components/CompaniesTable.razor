@@ -53,10 +53,11 @@
 		</div>
 	}
 
-	@if (_hasItems)
+	@{ var filteredRows = FilteredCompanies; }
+	@if (filteredRows.Length > 0)
 	{
 		<div class="data-grid-scroll">
-			<QuickGrid Items="@FilteredCompanies" Pagination="@_pagination" class="data-grid">
+			<QuickGrid ItemsProvider="@GridItems.From(filteredRows)" Pagination="@_pagination" class="data-grid">
 				<TemplateColumn Title="Company" Sortable="false">
 					<div class="company-cell">
 						<button class="btn-expand" @onclick="() => ToggleExpand(context.Id)">

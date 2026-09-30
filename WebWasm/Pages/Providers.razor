@@ -13,9 +13,8 @@
 		<h3>Producer List</h3>
 		<button class="btn-primary" @onclick="OpenAddProducerModal">+ Add Producer</button>
 	</div>
-	<ProducersTable @ref="_producersTableRef"
+	<ProducersTable
 					Producers="@_producers"
-					Companies="@_companies"
 					OnEditProducer="@HandleEditProducer"
 					OnDeleteProducer="@HandleDeleteProducer"
 					OnAddLoadingPlace="@HandleAddLoadingPlace"
@@ -35,10 +34,10 @@
 				   OnClose="@CloseLoadingPlaceModal"
 				   OnSubmit="@HandleLoadingPlaceSubmit" />
 
-<ConfirmDialog IsOpen="@_showConfirmDialog"
-			   Title="@_confirmTitle"
-			   Message="@_confirmMessage"
+<ConfirmDialog IsOpen="_confirm.IsOpen"
+			   Title="@_confirm.Title"
+			   Message="@_confirm.Message"
 			   ConfirmText="Delete"
 			   CancelText="Cancel"
-			   OnConfirm="@HandleConfirm"
-			   OnCancel="@CloseConfirmDialog" />
+			   OnConfirm="_confirm.Confirm"
+			   OnCancel="_confirm.Cancel" />

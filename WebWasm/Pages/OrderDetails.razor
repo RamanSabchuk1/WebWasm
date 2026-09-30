@@ -4,11 +4,11 @@
 
 <PageTitle>Order Details</PageTitle>
 
-<ConfirmDialog IsOpen="@_isConfirmOpen"
-			   Title="@_confirmTitle"
-			   Message="@_confirmMessage"
-			   OnConfirm="@OnConfirmDialog"
-			   OnCancel="@OnCancelDialog" />
+<ConfirmDialog IsOpen="_confirm.IsOpen"
+			   Title="@_confirm.Title"
+			   Message="@_confirm.Message"
+			   OnConfirm="_confirm.Confirm"
+			   OnCancel="_confirm.Cancel" />
 
 @* S5.2: SA-правка цены заказа (S4.2) — audit пишется на backend (pricingAudit) *@
 <ModalShell IsOpen="@_showPriceEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@ClosePriceEdit" OnSubmit="SubmitPriceEdit">
@@ -101,7 +101,7 @@ else
 
 			<div class="status-control">
 				<select @bind="_newStatus" class="form-control">
-					@foreach (var status in Enum.GetValues<OrderStatus>())
+					@foreach (var status in _allStatuses)
 					{
 						<option value="@status">@status</option>
 					}
@@ -140,25 +140,7 @@ else
 			{
 				<div class="info-item full-width additional-info">
 					<span class="info-label">User Details:</span>
-					<div class="user-details formatted-text @(_userDetailsOpen ? "" : "print-only")">
-						@{
-							if (_order.UserInfo.Passport != null)
-							{
-								foreach (var (key, value) in _order.UserInfo.Passport)
-								{
-									<p><strong>@PrintKey(key):</strong> @value</p>
-								}
-							}
-							if (_order.UserInfo.Company != null && _order.UserInfo.Company.CompanyInfo != null)
-							{
-								<p><strong>Company Name:</strong> @_order.UserInfo.Company.Name</p>
-								<p><strong>Company Address:</strong> @_order.UserInfo.Company.CompanyInfo.Address</p>
-								<p><strong>Company Unp:</strong> @_order.UserInfo.Company.CompanyInfo.UNP</p>
-								<p><strong>Company Legal Type:</strong> @_order.UserInfo.Company.CompanyInfo.LegalType</p>
-								<p><strong>Company Bank Account (Number | Bic):</strong> @_order.UserInfo.Company.CompanyInfo.BankAccount.BankNumber | @_order.UserInfo.Company.CompanyInfo.BankAccount.BIC</p>
-							}
-						}
-					</div>
+					@RenderUserDetails(_order.UserInfo, extraClass: _userDetailsOpen ? "" : "print-only")
 				</div>
 			}
 		</div>
@@ -401,25 +383,7 @@ else
 				<div class="info-item full-width additional-info">
 					<span class="info-label">Driver Details:</span>
 					<button class="circle-btn" @onclick="_ => SetDriverToView(null)">❌</button>
-					<div class="user-details formatted-text">
-						@{
-							if (_driverInfo.UserInfo.Passport != null)
-							{
-								foreach (var (key, value) in _driverInfo.UserInfo.Passport)
-								{
-									<p><strong>@PrintKey(key):</strong> @value</p>
-								}
-							}
-							if (_driverInfo.UserInfo.Company?.CompanyInfo != null)
-							{
-								<p><strong>Company Name:</strong> @_driverInfo.UserInfo.Company.Name</p>
-								<p><strong>Company Address:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.Address</p>
-								<p><strong>Company Unp:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.UNP</p>
-								<p><strong>Company Legal Type:</strong> @_driverInfo.UserInfo.Company.CompanyInfo.LegalType</p>
-								<p><strong>Company Bank Account (Number | Bic):</strong> @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BankNumber | @_driverInfo.UserInfo.Company.CompanyInfo.BankAccount.BIC</p>
-							}
-						}
-					</div>
+					@RenderUserDetails(_driverInfo.UserInfo)
 				</div>
 			}
 		}
@@ -468,16 +432,16 @@ else
 }
 
 @code {
-	// Паспорт/компания пользователя — для печатной версии (детали водителя по каждой доставке).
-	// company передаётся отдельно: у водителей связь с компанией живёт в _driversWithCompany, а не в UserInfo.
 	private static string Money(decimal? value) => value is { } v ? $"{v:F2} BYN" : "—";
 
-	private RenderFragment RenderUserDetails(UserInfo? userInfo, Company? company = null) => __builder =>
+	// Паспорт/компания пользователя: заказчик, выбранный водитель и печатные детали водителей по доставкам.
+	// company передаётся отдельно: у водителей связь с компанией живёт в _driversWithCompany, а не в UserInfo.
+	private RenderFragment RenderUserDetails(UserInfo? userInfo, Company? company = null, string extraClass = "") => __builder =>
 	{
 		@if (userInfo != null)
 		{
 			var c = company ?? userInfo.Company;
-			<div class="user-details formatted-text">
+			<div class="user-details formatted-text @extraClass">
 				@if (userInfo.Passport != null)
 				{
 					foreach (var (key, value) in userInfo.Passport)

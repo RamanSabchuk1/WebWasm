@@ -1,45 +1,40 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
-using System.Diagnostics.CodeAnalysis;
+using WebWasm.Helpers;
 using WebWasm.Models;
+using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
 public partial class ProducersTable : ComponentBase
 {
 	private const string SearchKey = "search_providers";
 	[Parameter] public List<Producer> Producers { get; set; } = [];
-	[Parameter] public List<Company> Companies { get; set; } = [];
 	[Parameter] public EventCallback<Producer> OnEditProducer { get; set; }
 	[Parameter] public EventCallback<Guid> OnDeleteProducer { get; set; }
 	[Parameter] public EventCallback<Producer> OnAddLoadingPlace { get; set; }
 	[Parameter] public EventCallback<(Guid ProducerId, LoadingPlace LoadingPlace)> OnEditLoadingPlace { get; set; }
 	[Parameter] public EventCallback<(Guid ProducerId, Guid LoadingPlaceId)> OnDeleteLoadingPlace { get; set; }
-	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+	[Inject] private LocalStorageService LocalStorage { get; set; } = default!;
 
 	private string _searchText = string.Empty;
-	private bool _hasItems => FilteredProducers.Any();
 	private readonly HashSet<Guid> _expandedProducers = [];
 	private readonly HashSet<Guid> _expandedWorkingTimes = [];
 	private readonly HashSet<Guid> _expandedLoadingPlaces = [];
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
-	private IQueryable<Producer> FilteredProducers
+	private IReadOnlyList<Producer> FilteredProducers
 	{
 		get
 		{
-			var filtered = string.IsNullOrWhiteSpace(_searchText)
+			return string.IsNullOrWhiteSpace(_searchText)
 				? Producers
-				: Producers.Where(p =>
+				: [.. Producers.Where(p =>
 					p.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
 					p.LoadingPlaces.Any(lp =>
 						lp.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
 						(lp.MaterialType != null && lp.MaterialType.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)))
-				).ToList();
-
-			return filtered.AsQueryable();
+				)];
 		}
 	}
 
@@ -47,29 +42,9 @@ public partial class ProducersTable : ComponentBase
 	private bool IsWorkingTimeExpanded(Guid id) => _expandedWorkingTimes.Contains(id);
 	private bool IsLoadingPlacesExpanded(Guid id) => _expandedLoadingPlaces.Contains(id);
 
-	private void ToggleProducerExpand(Guid id)
-	{
-		if (!_expandedProducers.Remove(id))
-		{
-			_expandedProducers.Add(id);
-		}
-	}
-
-	private void ToggleWorkingTimeExpand(Guid id)
-	{
-		if (!_expandedWorkingTimes.Remove(id))
-		{
-			_expandedWorkingTimes.Add(id);
-		}
-	}
-
-	private void ToggleLoadingPlacesExpand(Guid id)
-	{
-		if (!_expandedLoadingPlaces.Remove(id))
-		{
-			_expandedLoadingPlaces.Add(id);
-		}
-	}
+	private void ToggleProducerExpand(Guid id) => _expandedProducers.Toggle(id);
+	private void ToggleWorkingTimeExpand(Guid id) => _expandedWorkingTimes.Toggle(id);
+	private void ToggleLoadingPlacesExpand(Guid id) => _expandedLoadingPlaces.Toggle(id);
 
 	private static string GetCompanyName(Producer producer)
 	{
@@ -90,12 +65,11 @@ public partial class ProducersTable : ComponentBase
 
 	protected override async Task OnInitializedAsync()
 	{
-		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
-		catch { _searchText = string.Empty; }
+		_searchText = await LocalStorage.GetItemOrDefaultAsync(SearchKey, string.Empty);
 	}
 
 	private async Task SaveSearch()
 	{
-		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
+		await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty);
 	}
 }

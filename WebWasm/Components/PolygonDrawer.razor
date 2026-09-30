@@ -1,9 +1,9 @@
 @using WebWasm.Models
-@implements IAsyncDisposable
+@inherits LeafletMapBase
 
 <div class="polygon-drawer-container">
 	<div class="map-wrapper">
-		<div @ref="_mapElement" class="leaflet-map"></div>
+		<div @ref="MapElement" class="leaflet-map"></div>
 	</div>
 
 	<div class="drawing-controls">

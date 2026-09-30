@@ -1,25 +1,4 @@
-// Load Leaflet from CDN
-const loadLeaflet = () => {
-	return new Promise((resolve, reject) => {
-		if (window.L) {
-			resolve();
-			return;
-		}
-
-		// Load CSS
-		const link = document.createElement('link');
-		link.rel = 'stylesheet';
-		link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
-		document.head.appendChild(link);
-
-		// Load JS
-		const script = document.createElement('script');
-		script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-		script.onload = () => resolve();
-		script.onerror = () => reject(new Error('Failed to load Leaflet'));
-		document.head.appendChild(script);
-	});
-};
+import { loadLeaflet } from './leaflet-loader.js';
 
 export async function initMap(mapElement, triangles, color) {
 	await loadLeaflet();
@@ -46,7 +25,7 @@ export async function initMap(mapElement, triangles, color) {
 
 	// Add tile layer
 	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: '© OpenStreetMap contributors',
+		attribution: 'Â© OpenStreetMap contributors',
 		maxZoom: 19
 	}).addTo(map);
 

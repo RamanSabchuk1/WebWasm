@@ -25,10 +25,11 @@
 				   class="search-input" />
 		</div>
 
-		@if (_hasItems)
+		@{ var filteredRows = FilteredCards; }
+		@if (filteredRows.Count > 0)
 		{
 			<div class="data-grid-scroll">
-				<QuickGrid Items="@FilteredCards.AsQueryable()" Pagination="@_pagination" class="data-grid">
+				<QuickGrid ItemsProvider="@GridItems.From(filteredRows)" Pagination="@_pagination" class="data-grid">
 					<TemplateColumn Title="Card Number" Sortable="false">
 						<HeaderTemplate>
 							<button class="@SortHelper.GetHeaderClass(_sortState, "card")" @onclick='() => CycleSort("card")'>

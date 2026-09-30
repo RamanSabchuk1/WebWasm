@@ -1,11 +1,10 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Home(CashService cashService, ApiClient api, ILocalStorageService localStorage)
+public partial class Home(CashService cashService, ApiClient api, LocalStorageService localStorage)
 {
 	private const string TurnoverFilterStorageKey = "home_turnover_filter";
 
@@ -38,11 +37,16 @@ public partial class Home(CashService cashService, ApiClient api, ILocalStorageS
 
 	private async ValueTask LoadData()
 	{
-		_activityRecords = await cashService.GetData<ActivityRecord>();
-		_ordersTodayCount = await api.Get<int>("Counts/orders-today");
-		_usersCount = await api.Get<int>("Counts/users");
-		_companiesCount = await api.Get<int>("Counts/companies");
-		await LoadTurnover();
+		var activities = cashService.GetData<ActivityRecord>().AsTask();
+		var ordersToday = api.Get<int>("Counts/orders-today").AsTask();
+		var users = api.Get<int>("Counts/users").AsTask();
+		var companies = api.Get<int>("Counts/companies").AsTask();
+		await Task.WhenAll(activities, ordersToday, users, companies, LoadTurnover());
+
+		_activityRecords = activities.Result;
+		_ordersTodayCount = ordersToday.Result;
+		_usersCount = users.Result;
+		_companiesCount = companies.Result;
 	}
 
 	private async Task LoadTurnover()
@@ -108,42 +112,28 @@ public partial class Home(CashService cashService, ApiClient api, ILocalStorageS
 
 	private async Task RestoreTurnoverFilter()
 	{
-		try
+		var saved = await localStorage.GetItemOrDefaultAsync<TurnoverFilterState?>(TurnoverFilterStorageKey, null);
+		if (saved is null)
 		{
-			var saved = await localStorage.GetItemAsync<TurnoverFilterState>(TurnoverFilterStorageKey);
-			if (saved is null)
-			{
-				return;
-			}
-
-			_turnoverPreset = saved.Preset ?? "all";
-			if (_turnoverPreset is "custom")
-			{
-				_turnoverFrom = saved.From;
-				_turnoverTo = saved.To;
-			}
-			else
-			{
-				// Пресеты относительные («от текущей даты») — пересчитываем, а не берём сохранённые даты
-				ApplyPresetDates(_turnoverPreset);
-			}
+			return;
 		}
-		catch
+
+		_turnoverPreset = saved.Preset ?? "all";
+		if (_turnoverPreset is "custom")
 		{
-			_turnoverPreset = "all";
+			_turnoverFrom = saved.From;
+			_turnoverTo = saved.To;
+		}
+		else
+		{
+			// Пресеты относительные («от текущей даты») — пересчитываем, а не берём сохранённые даты
+			ApplyPresetDates(_turnoverPreset);
 		}
 	}
 
 	private async Task SaveTurnoverFilter()
 	{
-		try
-		{
-			await localStorage.SetItemAsync(TurnoverFilterStorageKey, new TurnoverFilterState(_turnoverPreset, _turnoverFrom, _turnoverTo));
-		}
-		catch
-		{
-			// localStorage недоступен — фильтр просто не сохранится
-		}
+		await localStorage.SetItemAsync(TurnoverFilterStorageKey, new TurnoverFilterState(_turnoverPreset, _turnoverFrom, _turnoverTo));
 	}
 
 	private string GetTurnoverPeriodLabel()
@@ -162,6 +152,4 @@ public partial class Home(CashService cashService, ApiClient api, ILocalStorageS
 	private string GetProfit() => $"{_turnover.Profit:F2} BYN";
 	private static string GetDate(ActivityRecord record) => record.Date.ToString("MM.dd - HH:mm");
 }
-
-public record CountsInfo(int Orders, int Users, int Companies, decimal Turnover, ICollection<ActivityRecord> Activities);
 

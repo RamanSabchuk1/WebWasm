@@ -1,11 +1,5 @@
 @page "/logs"
 @using WebWasm.Models
-@using WebWasm.Services
-@using Microsoft.JSInterop
-@inject ApiClient ApiClient
-@inject LoadingService LoadingService
-@inject ToastService ToastService
-@inject IJSRuntime JSRuntime
 
 <PageTitle>Logs</PageTitle>
 
@@ -150,60 +144,3 @@
 		}
 	}
 </style>
-
-@code {
-	private List<LogItem> _logItems = [];
-
-	private class LogItem
-	{
-		public Log Log { get; set; } = default!;
-		public bool IsExpanded { get; set; }
-	}
-
-	private bool HasException(Log log) => !string.IsNullOrEmpty(log.Exception);
-
-	private string GetRowClass(string level) => level?.ToLower() switch
-	{
-		"error" or "fatal" => "log-row-error",
-		"warning" => "log-row-warning",
-		_ => "log-row-info"
-	};
-
-	private void ToggleExpand(LogItem item)
-	{
-		if (HasException(item.Log))
-		{
-			item.IsExpanded = !item.IsExpanded;
-		}
-	}
-
-	private async Task CopyToClipboard(string text)
-	{
-		try
-		{
-			await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-			ToastService.ShowSuccess("Template copied");
-		}
-		catch
-		{
-			ToastService.ShowError("Failed to copy");
-		}
-	}
-
-	protected override async Task OnInitializedAsync()
-	{
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				var logs = await ApiClient.Get<Log[]>("Counts/logs");
-				_logItems = logs.Select(l => new LogItem { Log = l }).ToList();
-				ToastService.ShowSuccess("Logs loaded successfully");
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to load logs: {ex.Message}");
-			}
-		});
-	}
-}

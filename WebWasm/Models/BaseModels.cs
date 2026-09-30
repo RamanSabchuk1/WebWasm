@@ -13,7 +13,6 @@ public record CalculationInfo(Guid Id, decimal MaterialCost, DeliveryInfo[] Deli
 // D-po-26: вся детализация доставки (в т.ч. её доля Fee) — здесь.
 public record DeliveryInfo(Guid DeliveryId, double DeliveryRebate, decimal Cost, decimal TotalPrice, uint Weight, decimal Vat, decimal VatAmount = 0m, decimal FeeAmount = 0m);
 public record CreditCardInfo(Guid Id, Guid UserInfoId, string MaskedCard, DateTime ExpirationDate, DateTime UnbindAt);
-public record Role(Guid Id, RoleType Name, ICollection<string> Scopes);
 // Форма совпадает с backend UserDto (Kliffort.Application/Users/Models/UserDto.cs): без User-level IsActive
 // (активность пользователя живёт на UserInfo.IsActive). SecurityClearanceLevel — позиционный (как в backend DTO),
 // дефолт Public не мешает STJ-десериализации (отсутствует в JSON → Public).
@@ -59,12 +58,14 @@ public record struct PriceInfo(decimal MinPrice, decimal MaxPrice);
 
 public record MutateLoadingPlace(string Name, Location Location, Guid MaterialTypeId, decimal Cost, int Volume);
 public record CalculationInfoRequest(ICollection<Guid> OrderIds);
-public record OrderCostRequest(Guid LoadingPlaceId, TimeSpan Duration, decimal Distance, int[] Weights);
-public record OrderCostResponse(Guid LoadingPlaceId, decimal Cost);
 public record MaterialTypeInfo(Guid? ParentId, string Name, string Description, double Solidity, string Photo);
 public record UpdateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime);
 public record UpdateRegion(string Name, string TimeZone);
 public record CreateCompany(Location Location, BankAccount BankAccount, string Photo, string Name, string Address, string CorporateEmail, string UNP, string LegalType, double Rebate);
+public record CompanyUpdate(Guid CompanyId, UpdateCompany Data);
+
+/// <summary>Result of the company form: a new company or changes to an existing one (C# 15 union, closed set).</summary>
+public union CompanySubmit(CreateCompany, CompanyUpdate);
 public record CreateDriver(string Photo, string FirstName, string MiddleName, string LastName, string MobilePhone, Guid? CompanyId);
 public record CreateDriverSlot(TimeOnly StartTime, TimeOnly EndTime, DateOnly WorkingDay);
 public record CreateProducer(ICollection<ProducerWorkingTime> ProducerWorkingTime, string Name);

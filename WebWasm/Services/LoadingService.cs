@@ -7,31 +7,20 @@ public class LoadingService
 
 	public bool IsLoading => _loadingCount > 0;
 
+	// Subscribers only read IsLoading, so they are notified only when it flips: nested loads no longer re-render the overlay each time.
 	public void Show()
 	{
-		_loadingCount++;
-		OnChange?.Invoke();
-	}
-
-	public void Hide()
-	{
-		if (_loadingCount > 0)
+		if (++_loadingCount == 1)
 		{
-			_loadingCount--;
 			OnChange?.Invoke();
 		}
 	}
 
-	public async Task<T> ExecuteWithLoading<T>(Func<Task<T>> action)
+	public void Hide()
 	{
-		Show();
-		try
+		if (_loadingCount > 0 && --_loadingCount == 0)
 		{
-			return await action();
-		}
-		finally
-		{
-			Hide();
+			OnChange?.Invoke();
 		}
 	}
 

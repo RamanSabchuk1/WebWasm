@@ -12,10 +12,11 @@
 			   class="search-input" />
 	</div>
 
-	@if (_hasItems)
+	@{ var filteredRows = FilteredSuggestions; }
+	@if (filteredRows.Length > 0)
 	{
 		<div class="data-grid-scroll">
-			<QuickGrid Items="@FilteredSuggestions" Pagination="@_pagination" class="data-grid">
+			<QuickGrid ItemsProvider="@GridItems.From(filteredRows)" Pagination="@_pagination" class="data-grid">
 				<TemplateColumn Title="Name" Sortable="false">
 					<HeaderTemplate>
 						<button class="@SortHelper.GetHeaderClass(_sortState, "name")" @onclick='() => CycleSort("name")'>

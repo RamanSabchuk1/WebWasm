@@ -4,4 +4,5 @@
     <File Path="../.github/workflows/deploy-gh-pages.yml" />
   </Folder>
   <Project Path="WebWasm.csproj" />
+  <Project Path="../WebWasm.Tests/WebWasm.Tests.csproj" />
 </Solution>

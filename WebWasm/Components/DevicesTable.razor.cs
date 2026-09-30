@@ -1,7 +1,7 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.JSInterop;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Pages;
 using WebWasm.Services;
@@ -22,7 +22,7 @@ public partial class DevicesTable : ComponentBase
 	[Parameter] public EventCallback<List<(string Token, Guid UserInfoId)>> OnUnbindMultiple { get; set; }
 	[Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
-	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+	[Inject] private LocalStorageService LocalStorage { get; set; } = default!;
 
 	private readonly HashSet<Guid> _expandedTokens = [];
 	private readonly HashSet<Guid> _expandedData = [];
@@ -43,37 +43,10 @@ public partial class DevicesTable : ComponentBase
 	private bool IsGroupExpanded(string key) => _expandedGroups.Contains(key);
 	private bool IsSelected(string token) => _selectedTokens.Contains(token);
 
-	private void ToggleExpand(Guid id)
-	{
-		if (!_expandedTokens.Remove(id))
-		{
-			_expandedTokens.Add(id);
-		}
-	}
-
-	private void ToggleDataExpand(Guid id)
-	{
-		if (!_expandedData.Remove(id))
-		{
-			_expandedData.Add(id);
-		}
-	}
-
-	private void ToggleGroupExpand(string key)
-	{
-		if (!_expandedGroups.Remove(key))
-		{
-			_expandedGroups.Add(key);
-		}
-	}
-
-	private void ToggleSelect(string token)
-	{
-		if (!_selectedTokens.Remove(token))
-		{
-			_selectedTokens.Add(token);
-		}
-	}
+	private void ToggleExpand(Guid id) => _expandedTokens.Toggle(id);
+	private void ToggleDataExpand(Guid id) => _expandedData.Toggle(id);
+	private void ToggleGroupExpand(string key) => _expandedGroups.Toggle(key);
+	private void ToggleSelect(string token) => _selectedTokens.Toggle(token);
 
 	private void ClearSelection() => _selectedTokens.Clear();
 
@@ -128,10 +101,7 @@ public partial class DevicesTable : ComponentBase
 		}
 	}
 
-	// Пагинация по группам (пользователей много — owner, 2026-08-27), механика как на Users: Skip/Take + CustomPaginator.
-	private List<DeviceGroup> PagedGroups => [.. FilteredGroups
-		.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage)
-		.Take(_pagination.ItemsPerPage)];
+	// Пагинация по группам (пользователей много — owner, 2026-08-27): Skip/Take в разметке по одному расчёту FilteredGroups.
 
 	// Дубли: одинаковое Device (case-insensitive, trimmed) более чем у одного токена внутри группы.
 	private static HashSet<string> GetDuplicateDevices(IEnumerable<DeviceTokenWithUser> items) =>
@@ -150,14 +120,13 @@ public partial class DevicesTable : ComponentBase
 
 	protected override async Task OnInitializedAsync()
 	{
-		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
-		catch { _searchText = string.Empty; }
+		_searchText = await LocalStorage.GetItemOrDefaultAsync(SearchKey, string.Empty);
 	}
 
 	private async Task SaveSearch()
 	{
 		_ = _pagination.SetCurrentPageIndexAsync(0);
-		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
+		await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty);
 	}
 
 	private void ShowUnbindConfirmation(string token, Guid userId, string deviceName)
@@ -205,16 +174,5 @@ public partial class DevicesTable : ComponentBase
 		_pendingUnbinds = [];
 	}
 
-	private async Task CopyToClipboard(string text)
-	{
-		try
-		{
-			await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-			ToastService.ShowSuccess("Copied to clipboard!");
-		}
-		catch
-		{
-			// Copy failed, user will see in logs
-		}
-	}
+	private Task CopyToClipboard(string text) => JSRuntime.CopyToClipboard(ToastService, text, "Copied to clipboard!");
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using WebWasm.Components;
 using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -17,6 +18,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private DriverSlot[] _driverSlots = [];
 	private Vehicle[] _vehicles = [];
 	private Level[] _levels = [];
+	private static readonly OrderStatus[] _allStatuses = Enum.GetValues<OrderStatus>();
 	private (Company, Driver)[] _driversWithCompany = [];
 	private readonly Dictionary<double, Guid> _selectedDriverIds = [];
 	private bool _userDetailsOpen;
@@ -29,10 +31,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private string _newState = string.Empty;
 
 	// Confirmation Dialog
-	private bool _isConfirmOpen;
-	private string _confirmTitle = "Confirm Action";
-	private string _confirmMessage = "Are you sure you want to proceed?";
-	private Func<Task>? _pendingAction;
+	private readonly ConfirmState _confirm = new();
 
 	// S5.2: SA-правка цены (S4.2) и PreferredDeliveryTime (S4.3)
 	private bool _showPriceEdit;
@@ -178,45 +177,41 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 	private async ValueTask FetchData()
 	{
-		_allCalculationInfo = await cashService.GetData<CalculationInfo>();
-		_levels = [.. (await cashService.GetData<Region>()).SelectMany(r => r.Levels)];
-		_driversWithCompany = await cashService.GetDriverWithCompany();
+		// Independent cache keys load in parallel; slots and users then come from the cache filled here.
+		var calculationInfo = cashService.GetData<CalculationInfo>().AsTask();
+		var regions = cashService.GetData<Region>().AsTask();
+		var driversWithCompany = cashService.GetDriverWithCompany().AsTask();
+		var vehicles = cashService.GetData<Vehicle>().AsTask();
+		await Task.WhenAll(calculationInfo, regions, driversWithCompany, vehicles);
+
+		_allCalculationInfo = calculationInfo.Result;
+		_levels = [.. regions.Result.SelectMany(r => r.Levels)];
+		_driversWithCompany = driversWithCompany.Result;
 		_driverSlots = await cashService.GetSlots();
 		var user = await cashService.GetData<User>();
-		var vichles = await cashService.GetData<Vehicle>();
-		_vehicles = vichles.MapDriversToVehicles(_driversWithCompany, user);
+		_vehicles = vehicles.Result.MapDriversToVehicles(_driversWithCompany, user);
 	}
 
 	private void RequestResetPayments()
 	{
-		_confirmTitle = "Reset Payments";
-		_confirmMessage = "Are you sure you want to reset all payments for this order? This action cannot be undone.";
-		_pendingAction = ResetPayments;
-		_isConfirmOpen = true;
+		_confirm.Ask("Reset Payments", "Are you sure you want to reset all payments for this order? This action cannot be undone.", ResetPayments);
 	}
 
 	private async Task ResetPayments()
 	{
-		await loadingService.ExecuteWithLoading(async () =>
+		await loadingService.Run(toastService, async () =>
 		{
-			try
-			{
-				await apiClient.Post($"Orders/{Id}/payments/reset");
-				toastService.ShowSuccess("Payments reset successfully");
-				await LoadOrder(); // Refresh
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Error resetting payments: {ex.Message}");
-			}
-		});
+			await apiClient.Post($"Orders/{Id}/payments/reset");
+			toastService.ShowSuccess("Payments reset successfully");
+			await LoadOrder(); // Refresh
+		}, "Error resetting payments: ");
 	}
 
 	private void RequestAcceptDelivery(double weight)
 	{
 		_selectedDriverIds.TryGetValue(weight, out var selectedDriverId);
 
-		var companyId = GetCompanyId(selectedDriverId);
+		var companyId = _driversWithCompany.CompanyOf(selectedDriverId)?.Id ?? Guid.Empty;
 		if (selectedDriverId == Guid.Empty)
 		{
 			toastService.ShowError("Please select a driver.");
@@ -229,82 +224,33 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			return;
 		}
 
-		_confirmTitle = "Accept Delivery";
-		_confirmMessage = $"Are you sure you want to assign this delivery with weight {weight} to the selected driver?";
-		_pendingAction = async () => await AcceptDelivery(weight, companyId, selectedDriverId);
-		_isConfirmOpen = true;
+		_confirm.Ask("Accept Delivery", $"Are you sure you want to assign this delivery with weight {weight} to the selected driver?", async () => await AcceptDelivery(weight, companyId, selectedDriverId));
 	}
 
 	private async Task AcceptDelivery(double weight, Guid companyId, Guid driverId)
 	{
-		await loadingService.ExecuteWithLoading(async () =>
+		await loadingService.Run(toastService, async () =>
 		{
-			try
-			{
-				await apiClient.Post($"Orders/{Id}/accept?companyId={companyId}&weight={weight}&driverId={driverId}");
-				toastService.ShowSuccess("Delivery accepted successfully");
-				_selectedDriverIds.Remove(weight);
-				await LoadOrder();
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Error accepting delivery: {ex.Message}");
-			}
-		});
+			await apiClient.Post($"Orders/{Id}/accept?companyId={companyId}&weight={weight}&driverId={driverId}");
+			toastService.ShowSuccess("Delivery accepted successfully");
+			_selectedDriverIds.Remove(weight);
+			await LoadOrder();
+		}, "Error accepting delivery: ");
 	}
 
 	private void RequestUpdateStatus()
 	{
-		_confirmTitle = "Update Status";
-		_confirmMessage = $"Are you sure you want to update the status to {_newStatus}?";
-		_pendingAction = UpdateStatus;
-		_isConfirmOpen = true;
+		_confirm.Ask("Update Status", $"Are you sure you want to update the status to {_newStatus}?", UpdateStatus);
 	}
 
 	private async Task UpdateStatus()
 	{
-		await loadingService.ExecuteWithLoading(async () =>
+		await loadingService.Run(toastService, async () =>
 		{
-			try
-			{
-				await apiClient.Post($"Orders/{Id}/status?status={_newStatus}&state={Uri.EscapeDataString(_newState)}");
-				toastService.ShowSuccess("Status updated successfully");
-				await LoadOrder();
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Error updating status: {ex.Message}");
-			}
-		});
-	}
-
-	private async Task OnConfirmDialog()
-	{
-		_isConfirmOpen = false;
-		if (_pendingAction != null)
-		{
-			await _pendingAction.Invoke();
-			_pendingAction = null;
-		}
-	}
-
-	private void OnCancelDialog()
-	{
-		_isConfirmOpen = false;
-		_pendingAction = null;
-	}
-
-	private Guid GetCompanyId(Guid driverId)
-	{
-		foreach (var (company, driver) in _driversWithCompany)
-		{
-			if (driver.Id == driverId)
-			{
-				return company.Id;
-			}
-		}
-
-		return Guid.Empty;
+			await apiClient.Post($"Orders/{Id}/status?status={_newStatus}&state={Uri.EscapeDataString(_newState)}");
+			toastService.ShowSuccess("Status updated successfully");
+			await LoadOrder();
+		}, "Error updating status: ");
 	}
 
 	private string GetAdminState()
@@ -354,17 +300,17 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 	private (Company comapny, Driver driver, bool hasSlot)[] GetDrivers(double duration, uint weight, DateTime deliveryTime)
 	{
-		var acceptableDrivers = _vehicles.Where(v => v.LoadCapacity == weight).Select(v => v.Driver!.Id).ToArray();
-		var slots = _driverSlots.Where(slot => acceptableDrivers.Contains(slot.DriverId)).ToArray();
+		// Called from markup for every delivery group on every render: set and lookup instead of nested scans.
+		var acceptableDrivers = _vehicles.Where(v => v.LoadCapacity == weight).Select(v => v.Driver!.Id).ToHashSet();
+		var slotsByDriver = _driverSlots.Where(slot => acceptableDrivers.Contains(slot.DriverId)).ToLookup(slot => slot.DriverId);
 
 		return [.. _driversWithCompany
-			.Where(driverWithComapny => acceptableDrivers.Contains(driverWithComapny.Item2.Id))
-			.Select(driverWithComapny => (driverWithComapny.Item1, driverWithComapny.Item2, slots.Where(slot => slot.DriverId == driverWithComapny.Item2.Id).ToArray().HasSlot(duration, deliveryTime)))];
+			.Where(driverWithCompany => acceptableDrivers.Contains(driverWithCompany.Item2.Id))
+			.Select(driverWithCompany => (driverWithCompany.Item1, driverWithCompany.Item2, slotsByDriver[driverWithCompany.Item2.Id].ToArray().HasSlot(duration, deliveryTime)))];
 	}
 
 	// Компания водителя для печатных деталей (связь живёт в _driversWithCompany, а не в UserInfo)
-	private Company? GetDriverCompany(Guid driverId) =>
-		_driversWithCompany.FirstOrDefault(dc => dc.Item2.Id == driverId).Item1;
+	private Company? GetDriverCompany(Guid driverId) => _driversWithCompany.CompanyOf(driverId);
 
 	private static string PrintKey(string key)
 	{

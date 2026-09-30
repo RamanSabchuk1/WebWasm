@@ -13,7 +13,7 @@
 		<h3>Material List</h3>
 		<button class="btn-primary" @onclick="OpenAddModal">+ Add Material</button>
 	</div>
-	<MaterialsTable @ref="_materialsTableRef"
+	<MaterialsTable
 					Materials="@_materials"
 					OnEdit="@HandleEdit"
 					OnDelete="@HandleDelete" />

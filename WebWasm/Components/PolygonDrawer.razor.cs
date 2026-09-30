@@ -4,70 +4,36 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class PolygonDrawer : ComponentBase, IAsyncDisposable
+public partial class PolygonDrawer : LeafletMapBase
 {
-	[Inject] protected IJSRuntime JS { get; set; } = default!;
-
 	[Parameter] public ICollection<Location>? InitialPoints { get; set; }
 	[Parameter] public EventCallback OnCancel { get; set; }
 	[Parameter] public EventCallback<ICollection<Location>> OnConfirm { get; set; }
 
-	private ElementReference _mapElement;
-	private IJSObjectReference? _jsModule;
-	private IJSObjectReference? _mapInstance;
 	private List<Location> _points = [];
 	private string _errorMessage = string.Empty;
+	private DotNetObjectReference<PolygonDrawer>? _dotNetRef;
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	protected override string ModulePath => "./js/polygon-drawer.js";
+
+	// The drawer shows map errors to the user: without the map nothing can be drawn.
+	protected override void OnMapError(string message)
 	{
-		if (firstRender)
-		{
-			await LoadMapScript();
-			await InitializeMap();
-		}
+		_errorMessage = message;
+		StateHasChanged();
 	}
 
-	private async Task LoadMapScript()
+	protected override (string Function, object?[] Args) MapInit()
 	{
-		try
+		if (InitialPoints?.Count > 0)
 		{
-			_jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/polygon-drawer.js");
+			_points = [.. InitialPoints];
 		}
-		catch (Exception ex)
-		{
-			_errorMessage = $"Failed to load map: {ex.Message}";
-		}
+
+		return ("initDrawingMap", [PointsData(), _dotNetRef = DotNetObjectReference.Create(this)]);
 	}
 
-	private async Task InitializeMap()
-	{
-		if (_jsModule is null)
-		{
-			return;
-		}
-
-		try
-		{
-			// Load initial points if provided
-			if (InitialPoints?.Count > 0)
-			{
-				_points = InitialPoints.ToList();
-			}
-
-			var pointsData = _points.Select(p => new { lat = p.Latitude, lng = p.Longitude }).ToList();
-
-			_mapInstance = await _jsModule.InvokeAsync<IJSObjectReference>(
-				"initDrawingMap",
-				_mapElement,
-				pointsData,
-				DotNetObjectReference.Create(this)
-			);
-		}
-		catch (Exception ex)
-		{
-			_errorMessage = $"Failed to initialize map: {ex.Message}";
-		}
-	}
+	private List<object> PointsData() => [.. _points.Select(p => new { lat = p.Latitude, lng = p.Longitude })];
 
 	[JSInvokable]
 	public async Task OnMapClick(double lat, double lng)
@@ -90,17 +56,16 @@ public partial class PolygonDrawer : ComponentBase, IAsyncDisposable
 
 	private async Task RedrawPolygon()
 	{
-		if (_jsModule is null || _mapInstance is null)
+		if (MapInstance is null)
 		{
 			return;
 		}
 
 		try
 		{
-			var pointsData = _points.Select(p => new { lat = p.Latitude, lng = p.Longitude }).ToList();
-			await _mapInstance.InvokeVoidAsync("redrawPolygon", pointsData);
+			await MapInstance.InvokeVoidAsync("redrawPolygon", PointsData());
 		}
-		catch (Exception ex)
+		catch (JSException ex)
 		{
 			Console.WriteLine($"Error redrawing polygon: {ex.Message}");
 		}
@@ -141,21 +106,9 @@ public partial class PolygonDrawer : ComponentBase, IAsyncDisposable
 		await OnConfirm.InvokeAsync(_points);
 	}
 
-	async ValueTask IAsyncDisposable.DisposeAsync()
+	public override async ValueTask DisposeAsync()
 	{
-		if (_mapInstance is not null)
-		{
-			try
-			{
-				await _mapInstance.InvokeVoidAsync("dispose");
-				await _mapInstance.DisposeAsync();
-			}
-			catch { }
-		}
-
-		if (_jsModule is not null)
-		{
-			await _jsModule.DisposeAsync();
-		}
+		await base.DisposeAsync();
+		_dotNetRef?.Dispose();
 	}
 }

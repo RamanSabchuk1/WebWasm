@@ -1,22 +1,19 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
-using System.Diagnostics.CodeAnalysis;
 using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
-public partial class Orders(CashService cashService, NavigationManager navigationManager, ILocalStorageService localStorage)
+public partial class Orders(CashService cashService, NavigationManager navigationManager, LocalStorageService localStorage)
 {
 	private int _totalOrders = 0;
 	private int _pendingOrders = 0;
 	private int _completedOrders = 0;
 	private string _searchText = string.Empty;
 	private SortState _sortState = new();
-	private bool _hasItems => FilteredOrders.Any();
+	private static readonly OrderStatus[] _allStatuses = Enum.GetValues<OrderStatus>();
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 	private Order[] _orders = [];
 
@@ -121,7 +118,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 			["delivered"] = o => o.PreferredDeliveryTime,
 		};
 
-	private IQueryable<Order> FilteredOrders
+	private Order[] FilteredOrders
 	{
 		get
 		{
@@ -161,7 +158,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 				filtered = filtered.Where(o => o.Created.Date <= _toDate.Value.ToDateTime(TimeOnly.MaxValue));
 			}
 
-			return SortHelper.Apply(filtered, _sortState, _sortSelectors).AsQueryable();
+			return [.. SortHelper.Apply(filtered, _sortState, _sortSelectors)];
 		}
 	}
 
@@ -202,7 +199,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	{
 		await LoadData(true);
 
-		var savedFilters = await localStorage.GetItemAsync<OrdersFilterState>("orders_filters");
+		var savedFilters = await localStorage.GetItemOrDefaultAsync<OrdersFilterState?>("orders_filters", null);
 		if (savedFilters is not null)
 		{
 			_selectedStatuses = savedFilters.SelectedStatuses ?? [];
@@ -213,8 +210,7 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 			_searchText = savedFilters.SearchText ?? string.Empty;
 		}
 
-		try { _sortState = await localStorage.GetItemAsync<SortState>("sort_orders") ?? new SortState(); }
-		catch { _sortState = new SortState(); }
+		_sortState = await localStorage.GetItemOrDefaultAsync("sort_orders", new SortState());
 	}
 
 	private async Task SaveFilters()
@@ -251,6 +247,6 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 	private async Task CycleSort(string columnKey)
 	{
 		_sortState = SortHelper.Cycle(_sortState, columnKey);
-		try { await localStorage.SetItemAsync("sort_orders", _sortState); } catch { }
+		await localStorage.SetItemAsync("sort_orders", _sortState);
 	}
 }

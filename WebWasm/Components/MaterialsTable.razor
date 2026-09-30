@@ -17,7 +17,8 @@
 		<div class="data-grid-scroll">
 			<div class="materials-tree">
 				@{
-					var itemsToShow = FilteredMaterials
+					var roots = FilteredMaterials;
+					var itemsToShow = roots
 						.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage)
 						.Take(_pagination.ItemsPerPage)
 						.ToList();
@@ -30,7 +31,7 @@
 		</div>
 
 		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" TotalItems="@FilteredMaterials.Count" AfterNavigate="() => StateHasChanged()" />
+			<CustomPaginator State="@_pagination" TotalItems="@roots.Count" AfterNavigate="() => StateHasChanged()" />
 		</div>
 	}
 	else
@@ -52,9 +53,9 @@
 @code {
 	private RenderFragment RenderMaterialRow(MaterialType material, int level) => __builder =>
 	{
-		var hasChildren = Materials.Any(m => m.ParentId == material.Id);
+		var hasChildren = _childrenByParent[material.Id].Any();
 
-		<div class="material-row" style="padding-left: @(level * 30)px">
+		<div class="material-row" @key="material.Id" style="padding-left: @(level * 30)px">
 			<div class="material-content">
 				<div class="material-expand">
 					@if (hasChildren)
@@ -95,7 +96,7 @@
 
 		@if (hasChildren && _expandedIds.Contains(material.Id))
 		{
-			var children = Materials.Where(m => m.ParentId == material.Id).ToList();
+			var children = _childrenByParent[material.Id];
 			foreach (var child in children)
 			{
 				@RenderMaterialRow(child, level + 1)

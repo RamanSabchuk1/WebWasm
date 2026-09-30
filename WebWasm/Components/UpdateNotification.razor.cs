@@ -17,14 +17,20 @@ public partial class UpdateNotification : ComponentBase, IAsyncDisposable
 		if (firstRender)
 		{
 			_objRef = DotNetObjectReference.Create(this);
-			await JSRuntime.InvokeVoidAsync("serviceWorkerInterop.initialize", _objRef);
+			try
+			{
+				await JSRuntime.InvokeVoidAsync("serviceWorkerInterop.initialize", _objRef);
+			}
+			catch (JSException ex)
+			{
+				Console.WriteLine($"serviceWorkerInterop.initialize failed: {ex.Message}");
+			}
 		}
 	}
 
 	[JSInvokable]
 	public void OnUpdateAvailable(string version)
 	{
-		Console.WriteLine($"current version {version}");
 		_updateAvailable = true;
 		StateHasChanged();
 	}
@@ -67,7 +73,14 @@ public partial class UpdateNotification : ComponentBase, IAsyncDisposable
 
 	private async Task ReloadApp()
 	{
-		await JSRuntime.InvokeVoidAsync("location.reload");
+		try
+		{
+			await JSRuntime.InvokeVoidAsync("serviceWorkerInterop.applyUpdate");
+		}
+		catch (JSException ex)
+		{
+			ToastService.ShowError($"Reload failed: {ex.Message}");
+		}
 	}
 
 	private void DismissUpdate()
@@ -80,7 +93,13 @@ public partial class UpdateNotification : ComponentBase, IAsyncDisposable
 		GC.SuppressFinalize(this);
 		if (_objRef != null)
 		{
-			await JSRuntime.InvokeVoidAsync("serviceWorkerInterop.dispose");
+			try
+			{
+				await JSRuntime.InvokeVoidAsync("serviceWorkerInterop.dispose");
+			}
+			catch (JSDisconnectedException)
+			{
+			}
 			_objRef.Dispose();
 		}
 	}

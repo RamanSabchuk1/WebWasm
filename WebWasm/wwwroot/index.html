@@ -35,25 +35,16 @@
 		<span class="dismiss">🗙</span>
 	</div>
 
-	<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
 	<script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
-	<script src="rxjs.umd.min.js"></script>
+	<script src="js/notification-store.js"></script>
 	<script src="js/service-worker-interop.js"></script>
 	<script src="js/helpers.js"></script>
+	<script src="js/firebase-config.js"></script>
+	<!-- Firebase is not needed to render the app: defer so it does not delay Blazor start -->
+	<script defer src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+	<script defer src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
 
 	<script>
-		const firebaseConfig = {
-			apiKey: "AIzaSyCcnA6c8s9ML0VJu35JhwzTGQoG-PcNnN0",
-			authDomain: "kliffort-site.firebaseapp.com",
-			projectId: "kliffort-site",
-			storageBucket: "kliffort-site.firebasestorage.app",
-			messagingSenderId: "250756228052",
-			appId: "1:250756228052:web:e0623066a48c50c8512c41"
-		};
-
-		firebase.initializeApp(firebaseConfig);
-
 		let messaging = null;
 		let swRegistration = null;
 
@@ -70,18 +61,10 @@
 
 				messaging = firebase.messaging();
 
+				// The only foreground handler: save to history, show a toast in the app (UpdateNotification).
 				messaging.onMessage((payload) => {
-					console.log('Foreground message received:', payload);
-
-					if (Notification.permission === 'granted') {
-						const notificationTitle = payload.notification?.title || 'New Message';
-						const notificationOptions = {
-							body: payload.notification?.body || '',
-							icon: 'icon-512.png',
-							data: payload.data
-						};
-						new Notification(notificationTitle, notificationOptions);
-					}
+					notificationStore.save(payload);
+					window.onForegroundPush?.(payload);
 				});
 
 				return true;
@@ -121,7 +104,10 @@
 			}
 		}
 
-		initializeFirebaseMessaging();
+		window.addEventListener('DOMContentLoaded', () => {
+			firebase.initializeApp(firebaseConfig);
+			initializeFirebaseMessaging();
+		});
 	</script>
 </body>
 

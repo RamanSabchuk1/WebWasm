@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -8,7 +9,6 @@ namespace WebWasm.Pages;
 public partial class Supports(CashService cashService, ApiClient apiClient, ToastService toastService, LoadingService loadingService) : ComponentBase
 {
 	private ICollection<SuggestionsWithUser> _suggestions = [];
-	private SuggestionsTable? _suggestionsTableRef;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -25,30 +25,16 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 
 	private async Task HandleApply(Guid suggestionId)
 	{
-		await loadingService.ExecuteWithLoading(async () =>
+		await loadingService.Run(toastService, async () =>
 		{
-			try
-			{
-				await apiClient.Post($"Supports/suggestion/apply?suggestionId={suggestionId}");
-				toastService.ShowSuccess("Suggestion applied successfully!");
-				await LoadSuggestions(false);
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Failed to apply suggestion: {ex.Message}");
-			}
-		});
+			await apiClient.Post($"Supports/suggestion/apply?suggestionId={suggestionId}");
+			toastService.ShowSuccess("Suggestion applied successfully!");
+			await LoadSuggestions(false);
+		}, "Failed to apply suggestion: ");
 	}
 
 	public record SuggestionsWithUser(Suggestion Suggestion, User? User)
 	{
-		public string GetUserName()
-		{
-			return User is null
-				? "Anonymous"
-				: string.IsNullOrEmpty(User.UserInfo.FirstName)
-					? User.Login
-					: $"{User.UserInfo.FirstName} {User.UserInfo.LastName}";
-		}
+		public string GetUserName() => User.ShortName;
 	}
 }

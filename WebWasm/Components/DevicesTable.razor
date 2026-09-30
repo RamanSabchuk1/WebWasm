@@ -11,7 +11,8 @@
 			   class="search-input" />
 	</div>
 
-	@if (FilteredGroups.Count > 0)
+	@{ var groups = FilteredGroups; }
+	@if (groups.Count > 0)
 	{
 		<div class="selection-toolbar">
 			<button class="btn-action btn-unbind" @onclick="ShowMultiUnbindConfirmation">
@@ -24,10 +25,10 @@
 		</div>
 
 		<div class="device-groups">
-			@foreach (var group in PagedGroups)
+			@foreach (var group in groups.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage).Take(_pagination.ItemsPerPage))
 			{
 				var duplicates = GetDuplicateDevices(group.Items);
-				<div class="device-group">
+				<div class="device-group" @key="group.Key">
 					<div class="device-group-header">
 						<input type="checkbox"
 							   class="group-checkbox"
@@ -51,7 +52,7 @@
 							@foreach (var item in group.Items)
 							{
 								var isDuplicate = duplicates.Contains(item.DeviceToken.Device.Trim());
-								<div class="device-row @(isDuplicate ? "row-duplicate" : "")">
+								<div class="device-row @(isDuplicate ? "row-duplicate" : "")" @key="item.DeviceToken.Id">
 									<input type="checkbox"
 										   checked="@IsSelected(item.DeviceToken.Token)"
 										   @onchange="_ => ToggleSelect(item.DeviceToken.Token)"
@@ -112,7 +113,7 @@
 		</div>
 
 		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" TotalItems="@FilteredGroups.Count" AfterNavigate="() => StateHasChanged()" />
+			<CustomPaginator State="@_pagination" TotalItems="@groups.Count" AfterNavigate="() => StateHasChanged()" />
 		</div>
 	}
 	else

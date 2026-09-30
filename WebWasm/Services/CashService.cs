@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using WebWasm.Helpers;
@@ -7,8 +6,6 @@ using WebWasm.Models;
 
 namespace WebWasm.Services;
 
-[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "All types are registered in AppJsonSerializerContext")]
-[UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "All types are registered in AppJsonSerializerContext")]
 public class CashService(ApiClient apiClient, ToastService toastService, LoadingService loadingService)
 {
 	private static readonly JsonSerializerOptions _serOptions = SerializationHelper.SerializerOptions();
@@ -25,6 +22,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(User)] = TimeSpan.FromMinutes(6),
 		[nameof(Order)] = TimeSpan.FromMinutes(7),
 		[nameof(CalculationInfo)] = TimeSpan.FromMinutes(7),
+		[nameof(DriverSlot)] = TimeSpan.FromMinutes(5),
 	};
 
 	private readonly ConcurrentDictionary<string, Func<object?, Task<JsonElement>>> _typeFetch = new()
@@ -32,7 +30,6 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		[nameof(Order)] = async _ => await apiClient.Get<JsonElement>("Orders"),
 		[nameof(CalculationInfo)] = async args => await apiClient.Post<CalculationInfoRequest, JsonElement>("Orders/info", args as CalculationInfoRequest ?? throw new NotSupportedException()),
 		[nameof(User)] = async _ => await apiClient.Get<JsonElement>("Users/all"),
-		[nameof(Role)] = async _ => await apiClient.Get<JsonElement>("Users/roles"),
 		[nameof(Company)] = async _ => await apiClient.Get<JsonElement>("Companies"),
 		[nameof(Producer)] = async _ => await apiClient.Get<JsonElement>("Producers"),
 		[nameof(Vehicle)] = async _ => await apiClient.Get<JsonElement>("Companies/vehicle"),
@@ -64,7 +61,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
 		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
-			return cachedInfo.Data.Deserialize<T[]>(_serOptions) ?? [];
+			return cachedInfo.Data.Deserialize(_serOptions.TypeInfo<T[]>()) ?? [];
 		}
 
 		var (cashValue, result) = await FetchData<T>(key, fetchFunc, useCash);
@@ -93,7 +90,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
 		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
-			return cachedInfo.Data.Deserialize<UserInfo>(_serOptions);
+			return cachedInfo.Data.Deserialize(_serOptions.TypeInfo<UserInfo>());
 		}
 
 		UserInfo? result = null;
@@ -102,12 +99,11 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			try
 			{
 				var response = await fetchFunc(default);
-				result = response.Deserialize<UserInfo>(_serOptions);
+				result = response.Deserialize(_serOptions.TypeInfo<UserInfo>());
 				if (result is not null)
 				{
 					cachedInfo = new CashedInfo(DateTime.UtcNow, response);
 				}
-				;
 			}
 			catch (Exception ex)
 			{
@@ -115,12 +111,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			}
 		});
 
-
-		if (cachedInfo is not null)
-		{
-			_cachedData[key] = cachedInfo;
-		}
-
+		_cachedData[key] = cachedInfo;
 		return result;
 	}
 
@@ -135,10 +126,11 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		var expirationTime = _typeExpiration.GetValueOrDefault(key, _defaultExpirationTime);
 		if (DateTime.UtcNow - cachedInfo.Cached <= expirationTime && useCash)
 		{
-			return cachedInfo.Data.Deserialize<DriverSlot[]>(_serOptions) ?? [];
+			return cachedInfo.Data.Deserialize(_serOptions.TypeInfo<DriverSlot[]>()) ?? [];
 		}
 
 		List<DriverSlot> result = [];
+		var loaded = false;
 		await loadingService.ExecuteWithLoading(async () =>
 		{
 			try
@@ -148,6 +140,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 					var response = await apiClient.Get<DriverSlot[]>($"Drivers/slots/filter{GetArgs(drivers, regionId)}");
 					result.AddRange(response);
 				}
+				loaded = true;
 			}
 			catch (Exception ex)
 			{
@@ -155,13 +148,14 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			}
 		});
 
-		if (result is not null)
+		DriverSlot[] slots = [.. result];
+		// Before: the old empty entry was stored back, so slots were never served from cache.
+		if (loaded)
 		{
-			_cachedData[key] = cachedInfo;
-			return [.. result];
+			_cachedData[key] = new CashedInfo(DateTime.UtcNow, JsonSerializer.SerializeToElement(slots, _serOptions.TypeInfo<DriverSlot[]>()));
 		}
 
-		return [];
+		return slots;
 
 		static string GetArgs(List<Guid> drivers, Guid regionId)
 		{
@@ -180,66 +174,73 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 
 	public async ValueTask<DriverSlot[]> GetSlots(bool useCash = true)
 	{
-		var users = await GetData<User>(useCash);
-		var companies = await GetData<Company>(useCash);
-		var drivers = await GetData<Driver>(useCash);
+		var (users, companies, drivers) = await GetUsersCompaniesDrivers(useCash);
+		return await GetSlots(drivers, users, companies, useCash);
+	}
 
-		var regionDrivers = drivers
-			.Where(d => d.UserInfo is not null)
-			.Select(d =>
-			{
-				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
-				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
-				return (DriverId: d.Id, CompanyId: companyId);
-			})
-			.Where(x => x.CompanyId.HasValue)
-			.Select(x => (x.DriverId, CompanyId: x.CompanyId!.Value))
+	/// <summary>Slots for already loaded lists (avoids fetching users, companies and drivers a second time).</summary>
+	public async ValueTask<DriverSlot[]> GetSlots(Driver[] drivers, User[] users, Company[] companies, bool useCash = true)
+	{
+		var regionDrivers = DriverCompanies(drivers, users)
 			.Join(companies,
 				d => d.CompanyId,
 				c => c.Id,
-				(d, c) => new { d.DriverId, c.RegionId })
+				(d, c) => new { DriverId = d.Driver.Id, c.RegionId })
 			.GroupBy(x => x.RegionId)
 			.ToDictionary(g => g.Key, g => g.Select(x => x.DriverId).ToList());
 
 		return await GetSlots(regionDrivers, useCash);
 	}
 
-	public static string Stringify(object? args)
+	/// <summary>The three lists behind driver/company lookups, fetched in parallel (different cache keys).</summary>
+	public async ValueTask<(User[] Users, Company[] Companies, Driver[] Drivers)> GetUsersCompaniesDrivers(bool useCash = true)
 	{
-		if (args is null)
-		{
-			return string.Empty;
-		}
-		return args switch
-		{
-			string str => str,
-			_ => JsonSerializer.Serialize(args, _serOptions)
-		};
+		var users = GetData<User>(useCash).AsTask();
+		var companies = GetData<Company>(useCash).AsTask();
+		var drivers = GetData<Driver>(useCash).AsTask();
+		await Task.WhenAll(users, companies, drivers);
+		return (users.Result, companies.Result, drivers.Result);
 	}
 
 	public async ValueTask<(Company, Driver)[]> GetDriverWithCompany()
 	{
-		var users = await GetData<User>(true);
-		var companies = await GetData<Company>(true);
-		var drivers = await GetData<Driver>(true);
+		var (users, companies, drivers) = await GetUsersCompaniesDrivers();
 
-		var driverWithComapny = drivers
-			.Where(d => d.UserInfo is not null)
-			.Select(d =>
-			{
-				var user = users.FirstOrDefault(u => u.UserInfo?.Id == d.UserInfo!.Id);
-				var companyId = user?.UserInfo?.Company?.Id ?? d.UserInfo?.Company?.Id;
-				return (Driver: d, CompanyId: companyId);
-			})
-			.Where(x => x.CompanyId.HasValue)
-			.Select(x => (x.Driver, CompanyId: x.CompanyId!.Value))
+		var driverWithCompany = DriverCompanies(drivers, users)
 			.Join(companies,
 				d => d.CompanyId,
 				c => c.Id,
 				(d, c) => (c, d.Driver));
 
-		return [.. driverWithComapny];
+		return [.. driverWithCompany];
+	}
 
+	/// <summary>Company of each driver: from the driver's user (Users/all) if known, else from the driver's own UserInfo.</summary>
+	private static IEnumerable<(Driver Driver, Guid CompanyId)> DriverCompanies(Driver[] drivers, User[] users)
+	{
+		// First user wins on duplicate UserInfo ids, as FirstOrDefault did before.
+		var userByInfoId = new Dictionary<Guid, User>();
+		foreach (var user in users)
+		{
+			if (user.UserInfo is not null)
+			{
+				userByInfoId.TryAdd(user.UserInfo.Id, user);
+			}
+		}
+
+		foreach (var driver in drivers)
+		{
+			if (driver.UserInfo is null)
+			{
+				continue;
+			}
+
+			var companyId = userByInfoId.GetValueOrDefault(driver.UserInfo.Id)?.UserInfo?.Company?.Id ?? driver.UserInfo.Company?.Id;
+			if (companyId is { } id)
+			{
+				yield return (driver, id);
+			}
+		}
 	}
 
 	private async Task<(CashedInfo?, T[])> FetchData<T>(string key, Func<object?, Task<JsonElement>> fetchFunc, bool useCash)
@@ -252,7 +253,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			{
 				var args = await BuildCalculationInfoRequest(key, useCash);
 				var response = await fetchFunc(args);
-				var res = response.Deserialize<T[]>(_serOptions);
+				var res = response.Deserialize(_serOptions.TypeInfo<T[]>());
 				if (res is not null)
 				{
 					cashValue = new CashedInfo(DateTime.UtcNow, response);
@@ -276,20 +277,6 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			var orders = await GetData<Order>(useCash);
 			return new CalculationInfoRequest([.. orders.Select(o => o.Id)]);
 		}
-
-		//Changed contract
-		//if (key == nameof(DriverSlot))
-		//{
-		//	var drivers = await GetData<Driver>(useCash);
-		//	var strBuilder = new StringBuilder("?");
-		//	for (var i = 0; i < drivers.Length; i++)
-		//	{
-		//		var driver = drivers[i];
-		//		strBuilder.Append(i == 0 ? $"driverIds={driver.Id}" : $"&driverIds={driver.Id}");
-		//	}
-
-		//	return strBuilder.ToString();
-		//}
 
 		return null;
 	}

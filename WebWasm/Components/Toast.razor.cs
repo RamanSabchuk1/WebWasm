@@ -22,21 +22,27 @@ public partial class Toast : ComponentBase, IDisposable
 
 		var cts = new CancellationTokenSource();
 		_timers[toastMessage] = cts;
-
-		_ = Task.Run(async () =>
-		{
-			await Task.Delay(4000, cts.Token);
-			if (!cts.Token.IsCancellationRequested)
-			{
-				await InvokeAsync(() =>
-				{
-					RemoveMessage(toastMessage);
-					StateHasChanged();
-				});
-			}
-		}, cts.Token);
+		_ = HideAfterDelay(toastMessage, cts.Token);
 
 		StateHasChanged();
+	}
+
+	private async Task HideAfterDelay(ToastMessage message, CancellationToken token)
+	{
+		try
+		{
+			await Task.Delay(4000, token);
+		}
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+
+		await InvokeAsync(() =>
+		{
+			RemoveMessage(message);
+			StateHasChanged();
+		});
 	}
 
 	private void RemoveMessage(ToastMessage message)
@@ -44,6 +50,7 @@ public partial class Toast : ComponentBase, IDisposable
 		if (_timers.TryGetValue(message, out var cts))
 		{
 			cts.Cancel();
+			cts.Dispose();
 			_timers.Remove(message);
 		}
 		_messages.Remove(message);

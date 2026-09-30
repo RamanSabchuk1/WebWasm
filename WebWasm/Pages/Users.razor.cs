@@ -1,6 +1,7 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
+using WebWasm.Components;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -12,7 +13,7 @@ public partial class Users : ComponentBase
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
-	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+	[Inject] private LocalStorageService LocalStorage { get; set; } = default!;
 
 	private User[]? _users;
 	private Driver[] _drivers = [];
@@ -22,7 +23,6 @@ public partial class Users : ComponentBase
 	private Dictionary<Guid, List<DriverSlot>> _slotsByDriverId = [];
 	private readonly HashSet<Guid> _expandedUsers = [];
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
-	private bool _isInitialized;
 
 	private bool _showCreateUserModal;
 	private bool _showCreateDriverModal;
@@ -66,19 +66,14 @@ public partial class Users : ComponentBase
 	private VerifiedUserFilter _verifiedFilter = VerifiedUserFilter.All;
 	private bool _showFilters = false;
 
-	private bool _showConfirmDialog = false;
-	private string _confirmTitle = string.Empty;
-	private string _confirmMessage = string.Empty;
-	private Func<Task>? _confirmAction = null;
+	private readonly ConfirmState _confirm = new();
 
 	private bool _showAssignCompanyModal = false;
 	private User? _assignCompanyTargetUser;
 	private Guid _assignCompanyId = Guid.Empty;
 	private string _assignCompanyError = string.Empty;
 
-	private bool _showSecurityLevelModal;
-	private User? _securityLevelTargetUser;
-	private DataSecurityLevel _securityLevelCurrent;
+	private User? _securityLevelTarget;
 
 	private bool _showPassportModal;
 	private User? _passportTargetUser;
@@ -147,61 +142,6 @@ public partial class Users : ComponentBase
 		});
 	}
 
-	private async Task OpenSecurityLevelModal(User user)
-	{
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				var response = await ApiClient.Get<SecurityLevelRequest>($"admin/security-levels/users/{user.Id}");
-				_securityLevelTargetUser = user;
-				_securityLevelCurrent = response.Level;
-				_showSecurityLevelModal = true;
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to load security level: {ex.Message}");
-			}
-		});
-	}
-
-	private void CloseSecurityLevelModal()
-	{
-		_showSecurityLevelModal = false;
-		_securityLevelTargetUser = null;
-	}
-
-	private async Task ConfirmSecurityLevel(DataSecurityLevel newLevel)
-	{
-		if (_securityLevelTargetUser is null)
-		{
-			return;
-		}
-
-		var userId = _securityLevelTargetUser.Id;
-		var oldLevel = _securityLevelCurrent;
-		CloseSecurityLevelModal();
-
-		if (oldLevel == newLevel)
-		{
-			return;
-		}
-
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				await ApiClient.Put($"admin/security-levels/users/{userId}", new SecurityLevelRequest(newLevel));
-				await LoadData(false);
-				ToastService.ShowSuccess("Security level updated successfully");
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to update security level: {ex.Message}");
-			}
-		});
-	}
-
 	private void OpenAssignCompanyModal(User user)
 	{
 		_assignCompanyTargetUser = user;
@@ -230,166 +170,91 @@ public partial class Users : ComponentBase
 		var companyId = _assignCompanyId;
 		CloseAssignCompanyModal();
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Admin/user/{userInfoId}/company/{companyId}");
-				ToastService.ShowSuccess("User assigned to company successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to assign company: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Admin/user/{userInfoId}/company/{companyId}");
+			ToastService.ShowSuccess("User assigned to company successfully");
+			await LoadData(false);
+		}, "Failed to assign company: ");
 	}
 
 	private void RequestUnassignCompany(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirmTitle = "Unassign Company";
-		_confirmMessage = $"Unassign '{name}' from their current company? Their CompanyId will be cleared.";
-		_confirmAction = async () => await UnassignCompanyConfirmed(user.UserInfo.Id);
-		_showConfirmDialog = true;
+		_confirm.Ask("Unassign Company", $"Unassign '{name}' from their current company? Their CompanyId will be cleared.", async () => await UnassignCompanyConfirmed(user.UserInfo.Id));
 	}
 
 	private async Task UnassignCompanyConfirmed(Guid userInfoId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Delete($"Admin/user/{userInfoId}/company");
-				ToastService.ShowSuccess("User unassigned from company successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to unassign company: {ex.Message}");
-			}
-		});
-	}
-
-	private void CloseConfirmDialog()
-	{
-		_showConfirmDialog = false;
-		_confirmTitle = string.Empty;
-		_confirmMessage = string.Empty;
-		_confirmAction = null;
-	}
-
-	private async Task HandleConfirm()
-	{
-		_showConfirmDialog = false;
-		if (_confirmAction is not null)
-		{
-			await _confirmAction.Invoke();
-		}
-		CloseConfirmDialog();
+			await ApiClient.Delete($"Admin/user/{userInfoId}/company");
+			ToastService.ShowSuccess("User unassigned from company successfully");
+			await LoadData(false);
+		}, "Failed to unassign company: ");
 	}
 
 	private void RequestDeleteUserInfo(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirmTitle = "Soft Delete User";
-		_confirmMessage = $"Soft-delete user '{name}' (login: {user.Login})? This cascades to the driver record (if any) and all their vehicles. This action cannot be easily undone.";
-		_confirmAction = async () => await DeleteUserInfoConfirmed(user.UserInfo.Id);
-		_showConfirmDialog = true;
+		_confirm.Ask("Soft Delete User", $"Soft-delete user '{name}' (login: {user.Login})? This cascades to the driver record (if any) and all their vehicles. This action cannot be easily undone.", async () => await DeleteUserInfoConfirmed(user.UserInfo.Id));
 	}
 
 	private void RequestResetPassword(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirmTitle = "Reset Password";
-		_confirmMessage = $"Reset password for '{name}' (login: {user.Login})? A new password will be generated and sent to the user via SMS. The old password will stop working immediately.";
-		_confirmAction = async () => await ResetPasswordConfirmed(user.Id);
-		_showConfirmDialog = true;
+		_confirm.Ask("Reset Password", $"Reset password for '{name}' (login: {user.Login})? A new password will be generated and sent to the user via SMS. The old password will stop working immediately.", async () => await ResetPasswordConfirmed(user.Id));
 	}
 
 	private async Task ResetPasswordConfirmed(Guid userId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"users/{userId}/password-reset");
-				ToastService.ShowSuccess("Password reset — the new password was sent to the user via SMS");
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to reset password: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"users/{userId}/password-reset");
+			ToastService.ShowSuccess("Password reset — the new password was sent to the user via SMS");
+		}, "Failed to reset password: ");
 	}
 
 	private async Task DeleteUserInfoConfirmed(Guid userInfoId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Delete($"Admin/user/{userInfoId}");
-				ToastService.ShowSuccess("User soft-deleted successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete user: {ex.Message}");
-			}
-		});
+			await ApiClient.Delete($"Admin/user/{userInfoId}");
+			ToastService.ShowSuccess("User soft-deleted successfully");
+			await LoadData(false);
+		}, "Failed to delete user: ");
 	}
 
 	private void RequestDeleteDriver(User user, Driver driver)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirmTitle = "Soft Delete Driver";
-		_confirmMessage = $"Soft-delete the driver record for '{name}'? This cascades to all their vehicles. The user account itself will remain.";
-		_confirmAction = async () => await DeleteDriverConfirmed(driver.Id);
-		_showConfirmDialog = true;
+		_confirm.Ask("Soft Delete Driver", $"Soft-delete the driver record for '{name}'? This cascades to all their vehicles. The user account itself will remain.", async () => await DeleteDriverConfirmed(driver.Id));
 	}
 
 	private async Task DeleteDriverConfirmed(Guid driverId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Delete($"Admin/driver/{driverId}");
-				ToastService.ShowSuccess("Driver soft-deleted successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete driver: {ex.Message}");
-			}
-		});
+			await ApiClient.Delete($"Admin/driver/{driverId}");
+			ToastService.ShowSuccess("Driver soft-deleted successfully");
+			await LoadData(false);
+		}, "Failed to delete driver: ");
 	}
 
 	private void RequestCreateDriver(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirmTitle = "Create Driver";
-		_confirmMessage = $"Create a driver record for '{name}' (login: {user.Login})?";
-		_confirmAction = async () => await CreateDriverForUserConfirmed(user.UserInfo.Id);
-		_showConfirmDialog = true;
+		_confirm.Ask("Create Driver", $"Create a driver record for '{name}' (login: {user.Login})?", async () => await CreateDriverForUserConfirmed(user.UserInfo.Id));
 	}
 
 	private async Task CreateDriverForUserConfirmed(Guid userInfoId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Admin/user/{userInfoId}/driver", new PhotoDto(string.Empty));
-				ToastService.ShowSuccess("Driver created successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to create driver: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Admin/user/{userInfoId}/driver", new PhotoDto(string.Empty));
+			ToastService.ShowSuccess("Driver created successfully");
+			await LoadData(false);
+		}, "Failed to create driver: ");
 	}
 
 	private async Task AddFilterRole(ChangeEventArgs e)
@@ -555,15 +420,9 @@ public partial class Users : ComponentBase
 
 	protected override async Task OnInitializedAsync()
 	{
-		if (_isInitialized)
-		{
-			return;
-		}
-
-		_isInitialized = true;
 		await LoadData(true);
 
-		var savedFilters = await LocalStorage.GetItemAsync<UsersFilterState>("users_filters");
+		var savedFilters = await LocalStorage.GetItemOrDefaultAsync<UsersFilterState?>("users_filters", null);
 		if (savedFilters is not null)
 		{
 			_userKindFilter = savedFilters.UserKindFilter;
@@ -578,10 +437,8 @@ public partial class Users : ComponentBase
 
 	private async Task LoadData(bool useCash)
 	{
-		_users = await CashService.GetData<User>(useCash);
-		_companies = await CashService.GetData<Company>(useCash);
-		_drivers = await CashService.GetData<Driver>(useCash);
-		_driverSlots = await CashService.GetSlots(useCash);
+		(_users, _companies, _drivers) = await CashService.GetUsersCompaniesDrivers(useCash);
+		_driverSlots = await CashService.GetSlots(_drivers, _users, _companies, useCash);
 		BuildLookups();
 	}
 
@@ -633,29 +490,14 @@ public partial class Users : ComponentBase
 
 	private bool IsExpanded(Guid userId) => _expandedUsers.Contains(userId);
 
-	private void ToggleExpanded(Guid userId)
-	{
-		if (!_expandedUsers.Add(userId))
-		{
-			_expandedUsers.Remove(userId);
-		}
-	}
+	private void ToggleExpanded(Guid userId) => _expandedUsers.Toggle(userId);
 
-	private static string FormatSlot(DriverSlot slot)
-	{
-		var date = slot.WorkingDay.ToString("yyyy-MM-dd");
-		var start = slot.StartTime.ToString("HH:mm");
-		var end = slot.EndTime.ToString("HH:mm");
-		return $"{date} {start} - {end}";
-	}
+	private static string FormatSlot(DriverSlot slot) => FormatSlot(slot.WorkingDay, slot.StartTime, slot.EndTime);
 
-	private static string FormatSlot(CreateDriverSlot slot)
-	{
-		var date = slot.WorkingDay.ToString("yyyy-MM-dd");
-		var start = slot.StartTime.ToString("HH:mm");
-		var end = slot.EndTime.ToString("HH:mm");
-		return $"{date} {start} - {end}";
-	}
+	private static string FormatSlot(CreateDriverSlot slot) => FormatSlot(slot.WorkingDay, slot.StartTime, slot.EndTime);
+
+	private static string FormatSlot(DateOnly day, TimeOnly start, TimeOnly end) =>
+		$"{day:yyyy-MM-dd} {start:HH:mm} - {end:HH:mm}";
 
 	private void OpenCreateUserModal()
 	{
@@ -791,20 +633,13 @@ public partial class Users : ComponentBase
 			_userMobilePhone,
 			[.. _selectedRoles]);
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post("Users", createUser);
-				ToastService.ShowSuccess("User created successfully");
-				await LoadData(false);
-				CloseCreateUserModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to create user: {ex.Message}");
-			}
-		});
+			await ApiClient.Post("Users", createUser);
+			ToastService.ShowSuccess("User created successfully");
+			await LoadData(false);
+			CloseCreateUserModal();
+		}, "Failed to create user: ");
 	}
 
 	private async Task CreateDriver()
@@ -823,20 +658,13 @@ public partial class Users : ComponentBase
 			_driverMobilePhone,
 			_selectedDriverCompanyId);
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post("Drivers", createDriver);
-				ToastService.ShowSuccess("Driver created successfully");
-				await LoadData(false);
-				CloseCreateDriverModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to create driver: {ex.Message}");
-			}
-		});
+			await ApiClient.Post("Drivers", createDriver);
+			ToastService.ShowSuccess("Driver created successfully");
+			await LoadData(false);
+			CloseCreateDriverModal();
+		}, "Failed to create driver: ");
 	}
 
 	private async Task CreateDriverSlot()
@@ -854,20 +682,13 @@ public partial class Users : ComponentBase
 			return;
 		}
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", _newSlots);
-				ToastService.ShowSuccess("Driver slot created successfully");
-				await LoadData(false);
-				CloseDriverSlotModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to create driver slot: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", _newSlots);
+			ToastService.ShowSuccess("Driver slot created successfully");
+			await LoadData(false);
+			CloseDriverSlotModal();
+		}, "Failed to create driver slot: ");
 
 		_newSlots.Clear();
 	}
@@ -907,37 +728,23 @@ public partial class Users : ComponentBase
 	private async Task ToggleUserActive(User user)
 	{
 		var targetState = !user.UserInfo.IsActive;
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Users/{user.Id}/active?isActive={targetState.ToString().ToLowerInvariant()}");
-				ToastService.ShowSuccess($"User {(targetState ? "activated" : "deactivated")} successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to update user status: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Users/{user.Id}/active?isActive={targetState.ToString().ToLowerInvariant()}");
+			ToastService.ShowSuccess($"User {(targetState ? "activated" : "deactivated")} successfully");
+			await LoadData(false);
+		}, "Failed to update user status: ");
 	}
 
 	private async Task ToggleUserVerified(User user)
 	{
 		var targetState = !user.UserVerified;
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Users/{user.Id}/verified?isVerified={targetState.ToString().ToLowerInvariant()}");
-				ToastService.ShowSuccess($"User {(targetState ? "verified" : "unverified")} successfully");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to update user verification: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Users/{user.Id}/verified?isVerified={targetState.ToString().ToLowerInvariant()}");
+			ToastService.ShowSuccess($"User {(targetState ? "verified" : "unverified")} successfully");
+			await LoadData(false);
+		}, "Failed to update user verification: ");
 	}
 
 	private async Task UpdateRoles()
@@ -955,23 +762,16 @@ public partial class Users : ComponentBase
 
 		var roles = _roleEditSelection.Distinct().ToArray();
 		var rolesQuery = string.Join("&roles=", roles.Select(role => role.ToString()));
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Users/{_rolesTargetUser.Id}/roles?roles={rolesQuery}");
-				ToastService.ShowSuccess("User roles updated successfully");
-				await LoadData(false);
-				CloseRolesModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to update roles: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Users/{_rolesTargetUser.Id}/roles?roles={rolesQuery}");
+			ToastService.ShowSuccess("User roles updated successfully");
+			await LoadData(false);
+			CloseRolesModal();
+		}, "Failed to update roles: ");
 	}
 
-	private async void SetInitialSlotTimes(IEnumerable<DriverSlot> slots)
+	private void SetInitialSlotTimes(IEnumerable<DriverSlot> slots)
 	{
 		var now = DateOnly.FromDateTime(DateTime.Now);
 		if (slots.Any())

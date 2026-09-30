@@ -28,9 +28,8 @@ public partial class MaterialModal : ComponentBase
 	// - Editing root material: cannot set parent
 	private bool CanSetParent => !IsEditMode || EditingMaterial?.ParentId != null;
 
-	private List<MaterialType> AvailableMaterials => AllMaterials
-		.Where(m => m.ParentId == null) // Only root materials can be parents
-		.ToList();
+	// Only root materials can be parents.
+	private List<MaterialType> AvailableMaterials => [.. AllMaterials.Where(m => m.ParentId == null)];
 
 	protected override void OnParametersSet()
 	{

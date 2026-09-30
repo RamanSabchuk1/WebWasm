@@ -17,7 +17,6 @@ public partial class LoadingPlaceModal : ComponentBase
 	private decimal _cost = 0;
 	private int _volume = 0;
 	private string _errorMessage = string.Empty;
-	private LocationMapPicker? _locationPicker;
 
 	protected override void OnParametersSet()
 	{

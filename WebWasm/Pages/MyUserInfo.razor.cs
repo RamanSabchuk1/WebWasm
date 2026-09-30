@@ -1,16 +1,14 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Text.Json;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingService, CashService cashService, ToastService toastService)
+public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingService, CashService cashService, ToastService toastService,
+	IJSRuntime jsRuntime, NavigationManager navigationManager)
 {
-	[Inject] public IJSRuntime JSRuntime { get; set; } = default!;
-	[Inject] public NavigationManager NavigationManager { get; set; } = default!;
-
 	private UserInfo? _userInfo;
 	private SetUserNames _updateUser = new(string.Empty, string.Empty, string.Empty);
 	private List<PushNotificationItem> _notifications = [];
@@ -73,7 +71,7 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 	{
 		try
 		{
-			_notifications = await JSRuntime.InvokeAsync<List<PushNotificationItem>>("serviceWorkerInterop.getNotifications");
+			_notifications = await jsRuntime.InvokeAsync<List<PushNotificationItem>>("serviceWorkerInterop.getNotifications");
 		}
 		catch (Exception ex)
 		{
@@ -92,7 +90,7 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 
 				if ((action == "OPEN_ORDER_DETAILS" || action == "OPEN_DELIVERY_DETAILS") && !string.IsNullOrEmpty(orderId))
 				{
-					NavigationManager.NavigateTo($"orders/{orderId}");
+					navigationManager.NavigateTo($"orders/{orderId}");
 				}
 			}
 		}
@@ -112,20 +110,13 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 
 	private async Task HandleSave()
 	{
-		await loadingService.ExecuteWithLoading(async () =>
+		await loadingService.Run(toastService, async () =>
 		{
-			try
-			{
-				await apiClient.Put("Users/user-info", _updateUser);
-				await LoadData(false);
-				_isEditingNames = false;
-				toastService.ShowSuccess("User successfully updated!");
-			}
-			catch (Exception ex)
-			{
-				toastService.ShowError($"Failed to Update user: {ex.Message}");
-			}
-		});
+			await apiClient.Put("Users/user-info", _updateUser);
+			await LoadData(false);
+			_isEditingNames = false;
+			toastService.ShowSuccess("User successfully updated!");
+		}, "Failed to Update user: ");
 	}
 }
 

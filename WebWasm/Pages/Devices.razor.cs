@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -13,7 +14,6 @@ public partial class Devices : ComponentBase
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
 
 	private List<DeviceTokenWithUser> _devicesWithUsers = [];
-	private DevicesTable? _devicesTableRef;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -36,20 +36,13 @@ public partial class Devices : ComponentBase
 
 	private async Task HandleUnbind((string, Guid) @event)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var (deviceTokenId, userInfoId) = @event;
-				await ApiClient.Delete($"DeviceTokens/{deviceTokenId}?userInfoId={userInfoId}");
-				ToastService.ShowSuccess("Device unbound successfully!");
-				await LoadDevices(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to unbind device: {ex.Message}");
-			}
-		});
+			var (deviceTokenId, userInfoId) = @event;
+			await ApiClient.Delete($"DeviceTokens/{deviceTokenId}?userInfoId={userInfoId}");
+			ToastService.ShowSuccess("Device unbound successfully!");
+			await LoadDevices(false);
+		}, "Failed to unbind device: ");
 	}
 
 	// Batch-endpoint'а нет (owner, 2026-08-27): N последовательных single DELETE — приемлемо для admin-объёмов.
@@ -86,12 +79,5 @@ public partial class Devices : ComponentBase
 
 public record DeviceTokenWithUser(DeviceToken DeviceToken, User? User)
 {
-	public string GetUserName()
-	{
-		return User is null
-			? "Anonymous"
-			: string.IsNullOrEmpty(User.UserInfo.FirstName)
-				? User.Login
-				: $"{User.UserInfo.FirstName} {User.UserInfo.LastName}";
-	}
+	public string GetUserName() => User.ShortName;
 }

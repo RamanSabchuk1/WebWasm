@@ -38,27 +38,20 @@ public partial class Vehicles
 
 	private async Task CreateVehicle((Guid, CreateVehicle) data)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
+			var (companyId, createVehicle) = data;
+			if (companyId == Guid.Empty)
 			{
-				var (companyId, createVehicle) = data;
-				if (companyId == Guid.Empty)
-				{
-					ToastService.ShowError("Cannot retreve a company ID");
-					return;
-				}
+				ToastService.ShowError("Cannot retreve a company ID");
+				return;
+			}
 
-				await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
-				ToastService.ShowSuccess("Vehicle created successfully");
-				CloseCreateModal();
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to create vehicle: {ex.Message}");
-			}
-		});
+			await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
+			ToastService.ShowSuccess("Vehicle created successfully");
+			CloseCreateModal();
+			await LoadData(false);
+		}, "Failed to create vehicle: ");
 	}
 
 	private void ShowDeleteConfirmation(Vehicle vehicle)
@@ -75,20 +68,13 @@ public partial class Vehicles
 			return;
 		}
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Delete($"Companies/vehicle?vehicleId={_vehicleToDelete.Id}");
-				ToastService.ShowSuccess("Vehicle deleted successfully");
-				CancelDelete();
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete vehicle: {ex.Message}");
-			}
-		});
+			await ApiClient.Delete($"Companies/vehicle?vehicleId={_vehicleToDelete.Id}");
+			ToastService.ShowSuccess("Vehicle deleted successfully");
+			CancelDelete();
+			await LoadData(false);
+		}, "Failed to delete vehicle: ");
 	}
 
 	private void CancelDelete()
@@ -98,11 +84,8 @@ public partial class Vehicles
 		_deleteConfirmMessage = string.Empty;
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	protected override async Task OnInitializedAsync()
 	{
-		if (firstRender)
-		{
-			await LoadData(true);
-		}
+		await LoadData(true);
 	}
 }

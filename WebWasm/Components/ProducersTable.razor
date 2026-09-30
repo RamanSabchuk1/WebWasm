@@ -11,10 +11,11 @@
 			   class="search-input" />
 	</div>
 
-	@if (_hasItems)
+	@{ var filteredRows = FilteredProducers; }
+	@if (filteredRows.Count > 0)
 	{
 		<div class="data-grid-scroll">
-			<QuickGrid Items="@FilteredProducers" Pagination="@_pagination" class="data-grid">
+			<QuickGrid ItemsProvider="@GridItems.From(filteredRows)" Pagination="@_pagination" class="data-grid">
 				<TemplateColumn Title="Producer" Sortable="false">
 					<div class="producer-cell">
 						<button class="btn-expand" @onclick="() => ToggleProducerExpand(context.Id)">

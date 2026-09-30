@@ -1,6 +1,6 @@
 @using WebWasm.Models
 
-<ModalShell IsOpen="IsOpen" OnClose="CloseModal" OnSubmit="HandleSubmit">
+<ModalShell IsOpen="IsOpen && _loaded" OnClose="CloseModal" OnSubmit="HandleSubmit">
 	<div class="modal-header">
 		<h2>Security Level</h2>
 		<button class="btn-close" @onclick="CloseModal">×</button>
@@ -24,23 +24,16 @@
 			<p class="level-description">@GetDescription(_selectedLevel)</p>
 		</div>
 
-		@if (_selectedLevel != CurrentLevel)
+		@if (_selectedLevel != _currentLevel)
 		{
 			<div class="form-section form-section-warn">
-				<p>Current level is <strong>@CurrentLevel</strong>. Saving will change it to <strong>@_selectedLevel</strong>.</p>
-			</div>
-		}
-
-		@if (!string.IsNullOrEmpty(_errorMessage))
-		{
-			<div class="error-message">
-				⚠ @_errorMessage
+				<p>Current level is <strong>@_currentLevel</strong>. Saving will change it to <strong>@_selectedLevel</strong>.</p>
 			</div>
 		}
 	</div>
 
 	<div class="modal-footer">
 		<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
-		<button class="btn-primary" @onclick="HandleSubmit" disabled="@(_selectedLevel == CurrentLevel)">Save</button>
+		<button class="btn-primary" @onclick="HandleSubmit" disabled="@(_selectedLevel == _currentLevel)">Save</button>
 	</div>
 </ModalShell>

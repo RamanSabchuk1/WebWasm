@@ -14,7 +14,7 @@
 	@if (_hasItems)
 	{
 		<div class="data-grid-scroll">
-			<QuickGrid Items="@FilteredRegions.AsQueryable()" Pagination="@_pagination" class="data-grid">
+			<QuickGrid ItemsProvider="@GridItems.From(FilteredRegions)" Pagination="@_pagination" class="data-grid">
 				<TemplateColumn Title="Name" Sortable="false">
 					<HeaderTemplate>
 						<button class="@SortHelper.GetHeaderClass(_sortState, "name")" @onclick='() => CycleSort("name")'>

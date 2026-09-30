@@ -114,12 +114,10 @@ public partial class LevelEditor : ComponentBase
 		_showDrawer = false;
 	}
 
-	private async Task HandleDrawerConfirm(ICollection<Location> drawnPoints)
+	private void HandleDrawerConfirm(ICollection<Location> drawnPoints)
 	{
 		_points = [.. drawnPoints];
 		_showDrawer = false;
-		StateHasChanged();
-		await Task.CompletedTask;
 	}
 
 	private async Task HandleSubmit()

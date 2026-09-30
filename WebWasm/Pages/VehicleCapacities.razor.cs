@@ -46,18 +46,11 @@ public partial class VehicleCapacities : ComponentBase
 
 	private async Task LoadCapacities()
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var capacities = await ApiClient.Get<VehicleCapacity[]>("admin/vehicle-capacities");
-				_capacities = [.. capacities.OrderBy(x => x.WeightKg)];
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to load vehicle capacities: {ex.Message}");
-			}
-		});
+			var capacities = await ApiClient.Get<VehicleCapacity[]>("admin/vehicle-capacities");
+			_capacities = [.. capacities.OrderBy(x => x.WeightKg)];
+		}, "Failed to load vehicle capacities: ");
 	}
 
 	private void OpenCreateDialog()

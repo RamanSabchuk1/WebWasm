@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using WebWasm.Helpers;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
@@ -7,12 +8,6 @@ public partial class VehicleModal
 {
 	[Parameter]
 	public required (Company, Driver)[] DriversWithCompany { get; set; }
-
-	[Parameter]
-	public bool IsEditMode { get; set; } = false;
-
-	[Parameter]
-	public Vehicle? InitialVehicle { get; set; }
 
 	[Parameter]
 	public required EventCallback<(Guid, CreateVehicle)> OnSubmit { get; set; }
@@ -25,7 +20,6 @@ public partial class VehicleModal
 	private uint _vehicleWeight;
 	private uint _loadCapacity;
 	private string _photo = string.Empty;
-	private Guid _selectedCompanyId;
 	private Guid _selectedDriverId;
 	private IReadOnlyList<VehicleCapacityOption> _capacities = [];
 	private string _capacitiesError = string.Empty;
@@ -46,20 +40,7 @@ public partial class VehicleModal
 
 	protected override void OnParametersSet()
 	{
-		if (IsEditMode && InitialVehicle is not null)
-		{
-			_model = InitialVehicle.Model;
-			_registrationNumber = InitialVehicle.RegistrationNumber;
-			_vehicleWeight = InitialVehicle.VehicleWeight;
-			_loadCapacity = InitialVehicle.LoadCapacity;
-			_photo = InitialVehicle.Photo ?? string.Empty;
-			_selectedDriverId = InitialVehicle.DriverId;
-			_selectedCompanyId = GetCompanyId(InitialVehicle.DriverId);
-		}
-		else
-		{
-			Reset();
-		}
+		Reset();
 	}
 
 	private bool IsFormValid()
@@ -79,7 +60,7 @@ public partial class VehicleModal
 		}
 
 		var createVehicle = new CreateVehicle(_model, _registrationNumber, _vehicleWeight, _loadCapacity, _photo, _selectedDriverId);
-		await OnSubmit.InvokeAsync((GetCompanyId(_selectedDriverId), createVehicle));
+		await OnSubmit.InvokeAsync((DriversWithCompany.CompanyOf(_selectedDriverId)?.Id ?? Guid.Empty, createVehicle));
 		Reset();
 	}
 
@@ -90,20 +71,6 @@ public partial class VehicleModal
 		_vehicleWeight = 0;
 		_loadCapacity = 0;
 		_photo = string.Empty;
-		_selectedCompanyId = Guid.Empty;
 		_selectedDriverId = Guid.Empty;
-	}
-
-	private Guid GetCompanyId(Guid driverId)
-	{
-		foreach (var (company, driver) in DriversWithCompany)
-		{
-			if (driver.Id == driverId)
-			{
-				return company.Id;
-			}
-		}
-
-		return Guid.Empty;
 	}
 }

@@ -1,5 +1,3 @@
-@inject LocalStorageAuthStateProvider AuthProvider
-
 @if (!IsMobile)
 {
 	<!-- Desktop Sidebar Navigation -->
@@ -120,7 +118,7 @@ else
 		</button>
 	</div>
 
-	@if (!collapseNavMenu)
+	@if (!_collapseNavMenu)
 	{
 		<div class="mobile-menu-overlay" @onclick="ToggleNavMenu">
 			<div class="mobile-menu-panel" @onclick:stopPropagation>
@@ -168,24 +166,5 @@ else
 				</button>
 			</div>
 		</div>
-	}
-}
-
-@code {
-	[Parameter]
-	public bool IsMobile { get; set; } = false;
-
-	private bool collapseNavMenu = true;
-
-	private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-	private void ToggleNavMenu()
-	{
-		collapseNavMenu = !collapseNavMenu;
-	}
-
-	private async Task Logout()
-	{
-		await AuthProvider.MarkUserAsLoggedOut();
 	}
 }

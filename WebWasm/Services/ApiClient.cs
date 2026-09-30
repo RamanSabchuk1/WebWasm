@@ -1,15 +1,12 @@
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using WebWasm.Components;
 using WebWasm.Helpers;
 
 namespace WebWasm.Services;
 
-[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "All types are registered in AppJsonSerializerContext")]
-[UnconditionalSuppressMessage("AOT", "IL3050", Justification = "All types are registered in AppJsonSerializerContext")]
 public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthStateProvider authStateProvider)
 {
 	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
@@ -36,13 +33,13 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		var response = await client.SendAsync(request);
 
 		await CheckResponseHeader(response, endpoint);
-		return await response.Content.ReadFromJsonAsync<TResponse>(_jsonOptions) ?? throw new Exception($"Failed to get {endpoint}.");
+		return await ReadJson<TResponse>(response, endpoint);
 	}
 
 	public async ValueTask<TResponse> Post<TRequest, TResponse>(string endpoint, TRequest data)
 	{
 		var response = await PostInternal(endpoint, data);
-		return await response.Content.ReadFromJsonAsync<TResponse>(_jsonOptions) ?? throw new Exception($"Failed to get {endpoint}.");
+		return await ReadJson<TResponse>(response, endpoint);
 	}
 
 	public async ValueTask Post<TRequest>(string endpoint, TRequest data)
@@ -77,7 +74,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		var response = await client.SendAsync(request);
 
 		await CheckResponseHeader(response, endpoint);
-		return await response.Content.ReadFromJsonAsync<TResponse>(_jsonOptions) ?? throw new Exception($"Failed to get {endpoint}.");
+		return await ReadJson<TResponse>(response, endpoint);
 	}
 
 	public async ValueTask Put<TRequest>(string endpoint, TRequest data)
@@ -86,7 +83,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 		var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
 		{
-			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
+			Content = JsonBody(data)
 		};
 
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
@@ -102,7 +99,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 		var request = new HttpRequestMessage(HttpMethod.Patch, endpoint)
 		{
-			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
+			Content = JsonBody(data)
 		};
 
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
@@ -130,7 +127,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 		var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
 		{
-			Content = JsonContent.Create(data, mediaType: null, options: _jsonOptions)
+			Content = JsonBody(data)
 		};
 
 		request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
@@ -152,15 +149,10 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		var client = httpClientFactory.CreateClient();
 		client.BaseAddress = new Uri(BaseAddress);
 
-		var authState = await authStateProvider.GetAuthenticationStateAsync();
-		var token = await authStateProvider.GetRawJwt();
-		if (authState.User.Identity?.IsAuthenticated == true && token != string.Empty)
+		var token = await authStateProvider.GetValidJwt();
+		if (token != string.Empty)
 		{
 			client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(Bearer, token);
-		}
-		else if (token != string.Empty)
-		{
-			await authStateProvider.MarkUserAsLoggedOut();
 		}
 
 		return client;
@@ -195,9 +187,8 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 		}
 	}
 
-	private static StringContent CreateJsonContent<T>(T data)
-	{
-		var json = JsonSerializer.Serialize(data, _jsonOptions);
-		return new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-	}
+	private static JsonContent JsonBody<T>(T data) => JsonContent.Create(data, _jsonOptions.TypeInfo<T>());
+
+	private static async ValueTask<T> ReadJson<T>(HttpResponseMessage response, string endpoint) =>
+		await response.Content.ReadFromJsonAsync(_jsonOptions.TypeInfo<T>()) ?? throw new Exception($"Failed to get {endpoint}.");
 }

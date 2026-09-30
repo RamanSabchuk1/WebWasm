@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net11.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>preview</LangVersion>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<!-- Reference implementation: JwtReader must read claims exactly like the package the app used before -->
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+		<!-- Reference implementation: StorageFormat must stay compatible with values saved by Blazored -->
+		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<!-- Pure logic from the app is linked as source: the app itself is browser-wasm and cannot be referenced -->
+	<ItemGroup>
+		<Compile Include="..\WebWasm\Helpers\JwtReader.cs" Link="Linked\JwtReader.cs" />
+		<Compile Include="..\WebWasm\Helpers\StorageFormat.cs" Link="Linked\StorageFormat.cs" />
+		<Compile Include="..\WebWasm\Services\LoadingService.cs" Link="Linked\LoadingService.cs" />
+		<Compile Include="..\WebWasm\Services\EncryptionService.cs" Link="Linked\EncryptionService.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
+
+</Project>

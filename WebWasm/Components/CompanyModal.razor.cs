@@ -8,7 +8,7 @@ public partial class CompanyModal : ComponentBase
 	[Parameter] public Company? EditingCompany { get; set; }
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public EventCallback OnClose { get; set; }
-	[Parameter] public EventCallback<(CreateCompany? Create, UpdateCompany? Update, Guid CompanyId)> OnSubmit { get; set; }
+	[Parameter] public EventCallback<CompanySubmit> OnSubmit { get; set; }
 	private bool IsEditMode => EditingCompany is not null;
 
 	private string _name = string.Empty;
@@ -22,7 +22,6 @@ public partial class CompanyModal : ComponentBase
 	private double _rebate;
 	private Location? _location;
 	private string _errorMessage = string.Empty;
-	private LocationMapPicker? _locationPicker;
 
 	protected override void OnParametersSet()
 	{
@@ -92,30 +91,11 @@ public partial class CompanyModal : ComponentBase
 			return;
 		}
 
-		var bankAccount = new BankAccount(_bankNumber, _bic);
+		CompanySubmit submit = EditingCompany is { } editing
+			? new CompanyUpdate(editing.Id, new UpdateCompany(_location, _photo, _name, _address, _corporateEmail, _rebate))
+			: new CreateCompany(_location, new BankAccount(_bankNumber, _bic), _photo, _name, _address, _corporateEmail, _unp, _legalType, _rebate);
 
-		var createCompany = IsEditMode ? null : new CreateCompany(
-			_location,
-			bankAccount,
-			_photo,
-			_name,
-			_address,
-			_corporateEmail,
-			_unp,
-			_legalType,
-			_rebate
-		);
-
-		var updateCompany = !IsEditMode ? null : new UpdateCompany(
-			_location,
-			_photo,
-			_name,
-			_address,
-			_corporateEmail,
-			_rebate
-		);
-
-		await OnSubmit.InvokeAsync((createCompany, updateCompany, EditingCompany?.Id ?? default));
+		await OnSubmit.InvokeAsync(submit);
 		ResetForm();
 	}
 

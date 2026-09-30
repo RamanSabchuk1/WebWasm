@@ -14,12 +14,8 @@ public partial class Companies : ComponentBase
 
 	private List<Company> _companies = [];
 	private Company? _editingCompany = null;
-	private CompaniesTable? _companiesTableRef;
 	private bool _isCompanyModalOpen = false;
-	private bool _showConfirmDialog = false;
-	private string _confirmTitle = string.Empty;
-	private string _confirmMessage = string.Empty;
-	private Func<Task>? _confirmAction = null;
+	private readonly ConfirmState _confirm = new();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -32,64 +28,7 @@ public partial class Companies : ComponentBase
 		_isCompanyModalOpen = true;
 	}
 
-	private bool _showSecurityLevelModal;
-	private Company? _securityLevelTargetCompany;
-	private DataSecurityLevel _securityLevelCurrent;
-
-	private async Task HandleEditSecurityLevel(Company company)
-	{
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				var response = await ApiClient.Get<SecurityLevelRequest>($"admin/security-levels/companies/{company.Id}");
-				_securityLevelTargetCompany = company;
-				_securityLevelCurrent = response.Level;
-				_showSecurityLevelModal = true;
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to load security level: {ex.Message}");
-			}
-		});
-	}
-
-	private void CloseSecurityLevelModal()
-	{
-		_showSecurityLevelModal = false;
-		_securityLevelTargetCompany = null;
-	}
-
-	private async Task ConfirmSecurityLevel(DataSecurityLevel newLevel)
-	{
-		if (_securityLevelTargetCompany is null)
-		{
-			return;
-		}
-
-		var companyId = _securityLevelTargetCompany.Id;
-		var oldLevel = _securityLevelCurrent;
-		CloseSecurityLevelModal();
-
-		if (oldLevel == newLevel)
-		{
-			return;
-		}
-
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
-			{
-				await ApiClient.Put($"admin/security-levels/companies/{companyId}", new SecurityLevelRequest(newLevel));
-				await LoadCompanies(false);
-				ToastService.ShowSuccess("Security level updated successfully");
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to update security level: {ex.Message}");
-			}
-		});
-	}
+	private Company? _securityLevelTarget;
 
 	private async Task LoadCompanies(bool useCash)
 	{
@@ -108,63 +47,40 @@ public partial class Companies : ComponentBase
 		_editingCompany = null;
 	}
 
-	private async Task HandleCompanySubmit((CreateCompany?, UpdateCompany?, Guid) submit)
+	private async Task HandleCompanySubmit(CompanySubmit submit)
 	{
-		var (createCompany, updateCompany, companyId) = submit;
-		if (createCompany is null && updateCompany is null)
+		await LoadingService.Run(ToastService, async () =>
 		{
-			ToastService.ShowWarning("There is no Company");
-			return;
-		}
-
-		await LoadingService.ExecuteWithLoading(async () =>
-		{
-			try
+			switch (submit)
 			{
-				if (createCompany is null)
-				{
-					await ApiClient.Put($"Companies/{companyId}", updateCompany);
-					ToastService.ShowSuccess("Company updated successfully!");
-				}
-				else
-				{
-					await ApiClient.Post("Companies", createCompany);
+				case CreateCompany create:
+					await ApiClient.Post("Companies", create);
 					ToastService.ShowSuccess("Company created successfully!");
-				}
+					break;
+				case CompanyUpdate(var companyId, var update):
+					await ApiClient.Put($"Companies/{companyId}", update);
+					ToastService.ShowSuccess("Company updated successfully!");
+					break;
+			}
 
-				await LoadCompanies(false);
-				CloseCompanyModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to call API with company: {ex.Message}");
-			}
-		});
+			await LoadCompanies(false);
+			CloseCompanyModal();
+		}, "Failed to call API with company: ");
 	}
 
 	private void HandleDeleteCompany(Company company)
 	{
-		_confirmTitle = "Soft Delete Company";
-		_confirmMessage = $"Are you sure you want to soft-delete company '{company.Name}'? This will also cascade soft-delete all related Producers, Vehicles, Drivers and Users belonging to this company. This action cannot be easily undone.";
-		_confirmAction = async () => await DeleteCompanyConfirmed(company.Id);
-		_showConfirmDialog = true;
+		_confirm.Ask("Soft Delete Company", $"Are you sure you want to soft-delete company '{company.Name}'? This will also cascade soft-delete all related Producers, Vehicles, Drivers and Users belonging to this company. This action cannot be easily undone.", async () => await DeleteCompanyConfirmed(company.Id));
 	}
 
 	private async Task DeleteCompanyConfirmed(Guid companyId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Delete($"Admin/company/{companyId}");
-				ToastService.ShowSuccess("Company soft-deleted successfully!");
-				await LoadCompanies(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete company: {ex.Message}");
-			}
-		});
+			await ApiClient.Delete($"Admin/company/{companyId}");
+			ToastService.ShowSuccess("Company soft-deleted successfully!");
+			await LoadCompanies(false);
+		}, "Failed to delete company: ");
 	}
 
 	private void HandleToggleActive((Guid CompanyId, bool IsActive) data)
@@ -176,44 +92,16 @@ public partial class Companies : ComponentBase
 		}
 
 		var action = data.IsActive ? "activate" : "deactivate";
-		_confirmTitle = $"Confirm {action.ToUpper()} Company";
-		_confirmMessage = $"Are you sure you want to {action} company '{company.Name}'?";
-		_confirmAction = async () => await ToggleActiveConfirmed(data.CompanyId, data.IsActive);
-		_showConfirmDialog = true;
+		_confirm.Ask($"Confirm {action.ToUpper()} Company", $"Are you sure you want to {action} company '{company.Name}'?", async () => await ToggleActiveConfirmed(data.CompanyId, data.IsActive));
 	}
 
 	private async Task ToggleActiveConfirmed(Guid companyId, bool isActive)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Companies/{companyId}/active?isActive={isActive.ToString().ToLower()}");
-				ToastService.ShowSuccess($"Company {(isActive ? "activated" : "deactivated")} successfully!");
-				await LoadCompanies(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to update company status: {ex.Message}");
-			}
-		});
-	}
-
-	private void CloseConfirmDialog()
-	{
-		_showConfirmDialog = false;
-		_confirmTitle = string.Empty;
-		_confirmMessage = string.Empty;
-		_confirmAction = null;
-	}
-
-	private async Task HandleConfirm()
-	{
-		_showConfirmDialog = false;
-		if (_confirmAction is not null)
-		{
-			await _confirmAction.Invoke();
-		}
-		CloseConfirmDialog();
+			await ApiClient.Post($"Companies/{companyId}/active?isActive={isActive.ToString().ToLower()}");
+			ToastService.ShowSuccess($"Company {(isActive ? "activated" : "deactivated")} successfully!");
+			await LoadCompanies(false);
+		}, "Failed to update company status: ");
 	}
 }

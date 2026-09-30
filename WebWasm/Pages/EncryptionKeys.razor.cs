@@ -23,18 +23,11 @@ public partial class EncryptionKeys : ComponentBase
 
 	private async Task LoadKeys()
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var keys = await ApiClient.Get<EncryptionKeyInfo[]>("Admin/secure-data/encryption-keys");
-				_keys = [.. keys.OrderBy(k => k.Purpose).ThenByDescending(k => k.Version)];
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to load encryption keys: {ex.Message}");
-			}
-		});
+			var keys = await ApiClient.Get<EncryptionKeyInfo[]>("Admin/secure-data/encryption-keys");
+			_keys = [.. keys.OrderBy(k => k.Purpose).ThenByDescending(k => k.Version)];
+		}, "Failed to load encryption keys: ");
 	}
 
 	private bool HasActiveKey(EncryptionPurpose purpose) => _keys.Any(k => k.Purpose == purpose && k.IsActive);

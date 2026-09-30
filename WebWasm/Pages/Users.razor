@@ -240,7 +240,7 @@
 						var company = GetCompany(user, driver);
 						var hasCompany = company is not null;
 						var clearance = user.SecurityClearanceLevel;
-						<tr>
+						<tr @key="user.Id">
 							<td>
 								<div class="user-cell">
 									<span>@user.Login</span>
@@ -298,7 +298,7 @@
 									<button class="btn-action" @onclick="() => OpenRolesModal(user)">
 										⚙️ Edit Roles
 									</button>
-									<button class="btn-action" @onclick="async () => await OpenSecurityLevelModal(user)" title="View or change data security level for this user">
+									<button class="btn-action" @onclick="() => _securityLevelTarget = user" title="View or change data security level for this user">
 										🔐 Security
 									</button>
 									<button class="btn-action" @onclick="() => OpenPassportModal(user)" title="Set passport data (SuperAdmin only)">
@@ -680,11 +680,11 @@
 			</div>
 </ModalShell>
 
-<SecurityLevelDialog IsOpen="_showSecurityLevelModal"
-					 EntityLabel="@($"User: {(_securityLevelTargetUser is null ? string.Empty : GetDisplayName(_securityLevelTargetUser.UserInfo))}")"
-					 CurrentLevel="_securityLevelCurrent"
-					 OnClose="CloseSecurityLevelModal"
-					 OnSubmit="ConfirmSecurityLevel" />
+<SecurityLevelDialog IsOpen="_securityLevelTarget is not null"
+					 EntityLabel="@($"User: {(_securityLevelTarget is null ? string.Empty : GetDisplayName(_securityLevelTarget.UserInfo))}")"
+					 Endpoint="@($"admin/security-levels/users/{_securityLevelTarget?.Id}")"
+					 OnClose="() => _securityLevelTarget = null"
+					 OnSaved="() => LoadData(false)" />
 
 <ModalShell IsOpen="_showPassportModal" OnClose="ClosePassportModal" OnSubmit="SubmitPassport">
 			<div class="modal-header">
@@ -719,11 +719,11 @@
 			</div>
 </ModalShell>
 
-<ConfirmDialog IsOpen="@_showConfirmDialog"
-			   Title="@_confirmTitle"
-			   Message="@_confirmMessage"
+<ConfirmDialog IsOpen="_confirm.IsOpen"
+			   Title="@_confirm.Title"
+			   Message="@_confirm.Message"
 			   ConfirmText="Confirm"
 			   CancelText="Cancel"
 			   IsDangerous="true"
-			   OnConfirm="@HandleConfirm"
-			   OnCancel="@CloseConfirmDialog" />
+			   OnConfirm="_confirm.Confirm"
+			   OnCancel="_confirm.Cancel" />

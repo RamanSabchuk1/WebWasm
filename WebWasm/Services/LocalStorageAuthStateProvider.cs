@@ -1,15 +1,23 @@
-using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Authorization;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Components.Authorization;
+using WebWasm.Helpers;
 
 namespace WebWasm.Services;
 
-public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, EncryptionService encryptionService) : AuthenticationStateProvider
+public class LocalStorageAuthStateProvider(LocalStorageService localStorage, EncryptionService encryptionService) : AuthenticationStateProvider
 {
 	private const string TokenStorageKey = "encryptedAuthToken";
 
-	public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+	public override Task<AuthenticationState> GetAuthenticationStateAsync() => ReadState();
+
+	/// <summary>Token for API calls: empty when there is none or it is not a valid JWT (then the user is logged out).</summary>
+	public async ValueTask<string> GetValidJwt()
+	{
+		var state = await ReadState();
+		return state.User.Identity?.IsAuthenticated == true ? await GetRawJwt() : string.Empty;
+	}
+
+	private async Task<AuthenticationState> ReadState()
 	{
 		var encryptedToken = await localStorage.GetItemAsync<string>(TokenStorageKey);
 
@@ -23,18 +31,15 @@ public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, En
 		var identity = new ClaimsIdentity();
 		if (!string.IsNullOrWhiteSpace(decryptedToken))
 		{
-			try
-			{
-				var handler = new JwtSecurityTokenHandler();
-				var jwt = handler.ReadJwtToken(decryptedToken);
-				identity = new ClaimsIdentity(jwt.Claims, "jwt");
-			}
-			catch
+			var claims = JwtReader.ReadClaims(decryptedToken);
+			if (claims is null)
 			{
 				// If token is invalid, treat as unauthenticated
 				await MarkUserAsLoggedOut();
 				return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 			}
+
+			identity = new ClaimsIdentity(claims, "jwt");
 		}
 
 		var user = new ClaimsPrincipal(identity);
@@ -46,8 +51,7 @@ public class LocalStorageAuthStateProvider(ILocalStorageService localStorage, En
 		var encryptedToken = encryptionService.Encrypt(rawJwt);
 		await localStorage.SetItemAsync(TokenStorageKey, encryptedToken);
 
-		var authState = GetAuthenticationStateAsync();
-		NotifyAuthenticationStateChanged(authState);
+		NotifyAuthenticationStateChanged(ReadState());
 	}
 
 	public async ValueTask MarkUserAsLoggedOut()

@@ -1,13 +1,11 @@
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
-using System.Diagnostics.CodeAnalysis;
 using WebWasm.Helpers;
 using WebWasm.Models;
+using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "AsQueryable is used for in-memory QuickGrid binding only")]
 public partial class CompaniesTable : ComponentBase
 {
 	private const string SearchKey = "search_companies";
@@ -18,13 +16,12 @@ public partial class CompaniesTable : ComponentBase
 	[Parameter] public EventCallback<Company> OnEditCompany { get; set; }
 	[Parameter] public EventCallback<Company> OnDeleteCompany { get; set; }
 	[Parameter] public EventCallback<Company> OnEditSecurityLevel { get; set; }
-	[Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+	[Inject] private LocalStorageService LocalStorage { get; set; } = default!;
 
 	private string _searchText = string.Empty;
 	private SortState _sortState = new();
 	private CompanyType? _companyTypeFilter;
 	private bool _showFilters;
-	private bool _hasItems => FilteredCompanies.Any();
 	private readonly HashSet<Guid> _expandedCompanies = [];
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
@@ -35,7 +32,7 @@ public partial class CompaniesTable : ComponentBase
 			["created"] = c => c.Created,
 		};
 
-	private IQueryable<Company> FilteredCompanies
+	private Company[] FilteredCompanies
 	{
 		get
 		{
@@ -59,53 +56,41 @@ public partial class CompaniesTable : ComponentBase
 					(typeFilter == CompanyType.Buyer && c.CompanyType == CompanyType.None));
 			}
 
-			return SortHelper.Apply(filtered, _sortState, _sortSelectors).AsQueryable();
+			return [.. SortHelper.Apply(filtered, _sortState, _sortSelectors)];
 		}
 	}
 
 	private bool IsExpanded(Guid id) => _expandedCompanies.Contains(id);
 
-	private void ToggleExpand(Guid id)
-	{
-		if (!_expandedCompanies.Remove(id))
-		{
-			_expandedCompanies.Add(id);
-		}
-	}
+	private void ToggleExpand(Guid id) => _expandedCompanies.Toggle(id);
 
 	protected override async Task OnInitializedAsync()
 	{
-		try { _searchText = await LocalStorage.GetItemAsync<string>(SearchKey) ?? string.Empty; }
-		catch { _searchText = string.Empty; }
+		_searchText = await LocalStorage.GetItemOrDefaultAsync(SearchKey, string.Empty);
 
-		try { _sortState = await LocalStorage.GetItemAsync<SortState>(SortKey) ?? new SortState(); }
-		catch { _sortState = new SortState(); }
+		_sortState = await LocalStorage.GetItemOrDefaultAsync(SortKey, new SortState());
 
-		try
-		{
-			var typeFilter = await LocalStorage.GetItemAsync<string>(TypeFilterKey);
-			_companyTypeFilter = Enum.TryParse<CompanyType>(typeFilter, out var parsed) && parsed != CompanyType.None
-				? parsed
-				: null;
-		}
-		catch { _companyTypeFilter = null; }
+		var typeFilter = await LocalStorage.GetItemOrDefaultAsync(TypeFilterKey, string.Empty);
+		_companyTypeFilter = Enum.TryParse<CompanyType>(typeFilter, out var parsed) && parsed != CompanyType.None
+			? parsed
+			: null;
 	}
 
 	private async Task SaveSearch()
 	{
-		try { await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty); } catch { }
+		await LocalStorage.SetItemAsync(SearchKey, _searchText ?? string.Empty);
 	}
 
 	private async Task CycleSort(string columnKey)
 	{
 		_sortState = SortHelper.Cycle(_sortState, columnKey);
-		try { await LocalStorage.SetItemAsync(SortKey, _sortState); } catch { }
+		await LocalStorage.SetItemAsync(SortKey, _sortState);
 	}
 
 	private async Task SetTypeFilter(CompanyType? type)
 	{
 		_companyTypeFilter = type;
-		try { await LocalStorage.SetItemAsync(TypeFilterKey, _companyTypeFilter?.ToString() ?? string.Empty); } catch { }
+		await LocalStorage.SetItemAsync(TypeFilterKey, _companyTypeFilter?.ToString() ?? string.Empty);
 	}
 
 	private static IEnumerable<CompanyType> GetTypeFlags(CompanyType type)

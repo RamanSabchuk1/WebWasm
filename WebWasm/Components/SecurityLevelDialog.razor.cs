@@ -1,41 +1,83 @@
 using Microsoft.AspNetCore.Components;
 using WebWasm.Models;
+using WebWasm.Services;
 
 namespace WebWasm.Components;
 
+/// <summary>
+/// Views and changes the data security level of one entity. Loads the current level from <see cref="Endpoint"/>
+/// when opened and saves it back there; the page only says whose level it is and reloads on <see cref="OnSaved"/>.
+/// </summary>
 public partial class SecurityLevelDialog : ComponentBase
 {
 	private static readonly DataSecurityLevel[] _levels = Enum.GetValues<DataSecurityLevel>();
 
+	[Inject] private ApiClient ApiClient { get; set; } = default!;
+	[Inject] private LoadingService LoadingService { get; set; } = default!;
+	[Inject] private ToastService ToastService { get; set; } = default!;
+
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public string EntityLabel { get; set; } = string.Empty;
-	[Parameter] public DataSecurityLevel CurrentLevel { get; set; }
+	/// <summary>API path of the entity's level, e.g. <c>admin/security-levels/users/{id}</c>.</summary>
+	[Parameter] public string Endpoint { get; set; } = string.Empty;
 	[Parameter] public EventCallback OnClose { get; set; }
-	[Parameter] public EventCallback<DataSecurityLevel> OnSubmit { get; set; }
+	[Parameter] public EventCallback OnSaved { get; set; }
 
+	private DataSecurityLevel _currentLevel;
 	private DataSecurityLevel _selectedLevel;
-	private string _errorMessage = string.Empty;
-	private bool _selectionInitialized;
+	private bool _loaded;
+	private bool _wasOpen;
 
-	protected override void OnParametersSet()
+	protected override async Task OnParametersSetAsync()
 	{
-		if (!IsOpen)
+		if (IsOpen == _wasOpen)
 		{
-			_selectionInitialized = false;
-			_errorMessage = string.Empty;
 			return;
 		}
 
-		if (!_selectionInitialized)
+		_wasOpen = IsOpen;
+		_loaded = false;
+		if (!IsOpen)
 		{
-			_selectedLevel = CurrentLevel;
-			_selectionInitialized = true;
+			return;
+		}
+
+		await LoadingService.Run(ToastService, async () =>
+		{
+			var response = await ApiClient.Get<SecurityLevelRequest>(Endpoint);
+			_currentLevel = _selectedLevel = response.Level;
+			_loaded = true;
+		}, "Failed to load security level: ");
+
+		if (!_loaded)
+		{
+			await OnClose.InvokeAsync();
 		}
 	}
 
 	private async Task HandleSubmit()
 	{
-		await OnSubmit.InvokeAsync(_selectedLevel);
+		if (!_loaded)
+		{
+			return;
+		}
+
+		var endpoint = Endpoint;
+		var newLevel = _selectedLevel;
+		var changed = newLevel != _currentLevel;
+		await OnClose.InvokeAsync();
+
+		if (!changed)
+		{
+			return;
+		}
+
+		await LoadingService.Run(ToastService, async () =>
+		{
+			await ApiClient.Put(endpoint, new SecurityLevelRequest(newLevel));
+			await OnSaved.InvokeAsync();
+			ToastService.ShowSuccess("Security level updated successfully");
+		}, "Failed to update security level: ");
 	}
 
 	private async Task CloseModal()

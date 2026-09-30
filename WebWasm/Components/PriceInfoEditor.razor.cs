@@ -6,7 +6,6 @@ namespace WebWasm.Components;
 public partial class PriceInfoEditor : ComponentBase
 {
 	[Parameter] public Dictionary<uint, PriceInfo>? ExistingPrices { get; set; }
-	[Parameter] public EventCallback<Dictionary<uint, PriceInfo>> OnPricesChanged { get; set; }
 
 	private readonly List<PriceEntryModel> _entries = [];
 	private string _globalError = string.Empty;

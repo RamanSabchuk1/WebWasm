@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using WebWasm.Components;
 using WebWasm.Models;
 using WebWasm.Services;
@@ -15,21 +16,23 @@ public static class SerializationHelper
 		WriteIndented = false,
 		TypeInfoResolver = AppJsonSerializerContext.Default
 	};
+
+	/// <summary>
+	/// Source-generated metadata of <typeparamref name="T"/> (trim-safe JSON). Throws NotSupportedException
+	/// if the type is missing in <see cref="AppJsonSerializerContext"/>.
+	/// </summary>
+	public static JsonTypeInfo<T> TypeInfo<T>(this JsonSerializerOptions options) =>
+		(JsonTypeInfo<T>)options.GetTypeInfo(typeof(T));
 }
 
 [JsonSourceGenerationOptions(
 	PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
 	WriteIndented = false,
 	UseStringEnumConverter = true)]
-[JsonSerializable(typeof(object))]
 [JsonSerializable(typeof(int))]
-[JsonSerializable(typeof(double))]
-[JsonSerializable(typeof(Guid))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(DateOnly))]
-[JsonSerializable(typeof(DateOnly?))]
 [JsonSerializable(typeof(DateTime))]
-[JsonSerializable(typeof(DateTime?))]
 [JsonSerializable(typeof(Company))]
 [JsonSerializable(typeof(Company[]))]
 [JsonSerializable(typeof(DeviceToken))]
@@ -43,7 +46,6 @@ public static class SerializationHelper
 [JsonSerializable(typeof(User))]
 [JsonSerializable(typeof(User[]))]
 [JsonSerializable(typeof(UserInfo))]
-[JsonSerializable(typeof(UserInfo[]))]
 [JsonSerializable(typeof(Order))]
 [JsonSerializable(typeof(Order[]))]
 [JsonSerializable(typeof(CreditCardInfo))]
@@ -54,8 +56,6 @@ public static class SerializationHelper
 [JsonSerializable(typeof(Region[]))]
 [JsonSerializable(typeof(Suggestion))]
 [JsonSerializable(typeof(Suggestion[]))]
-[JsonSerializable(typeof(Role))]
-[JsonSerializable(typeof(Role[]))]
 [JsonSerializable(typeof(Vehicle))]
 [JsonSerializable(typeof(Vehicle[]))]
 [JsonSerializable(typeof(Driver))]
@@ -76,7 +76,6 @@ public static class SerializationHelper
 [JsonSerializable(typeof(PhotoDto))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(Level))]
-[JsonSerializable(typeof(Level[]))]
 [JsonSerializable(typeof(CreateUser))]
 [JsonSerializable(typeof(CreateCompany))]
 [JsonSerializable(typeof(CreateProducer))]
@@ -84,16 +83,11 @@ public static class SerializationHelper
 [JsonSerializable(typeof(CreateRegion))]
 [JsonSerializable(typeof(CreateDriver))]
 [JsonSerializable(typeof(CreateDriverSlot))]
-[JsonSerializable(typeof(CreateDriverSlot[]))]
 [JsonSerializable(typeof(List<CreateDriverSlot>))]
 [JsonSerializable(typeof(MutateLoadingPlace))]
 [JsonSerializable(typeof(UpdateProducer))]
 [JsonSerializable(typeof(UpdateRegion))]
 [JsonSerializable(typeof(SetUserNames))]
-[JsonSerializable(typeof(OrderCostRequest))]
-[JsonSerializable(typeof(OrderCostRequest[]))]
-[JsonSerializable(typeof(OrderCostResponse))]
-[JsonSerializable(typeof(OrderCostResponse[]))]
 [JsonSerializable(typeof(Location))]
 [JsonSerializable(typeof(BankAccount))]
 [JsonSerializable(typeof(PriceInfo))]
@@ -101,12 +95,10 @@ public static class SerializationHelper
 [JsonSerializable(typeof(LoadingPlace))]
 [JsonSerializable(typeof(Delivery))]
 [JsonSerializable(typeof(Transaction))]
-[JsonSerializable(typeof(Transaction[]))]
 [JsonSerializable(typeof(CompanyInfo))]
 [JsonSerializable(typeof(UpdateCompany))]
 [JsonSerializable(typeof(LevelInfo))]
 [JsonSerializable(typeof(DeliveryInfo))]
-[JsonSerializable(typeof(CashedInfo))]
 [JsonSerializable(typeof(DeviceTokenInfo))]
 [JsonSerializable(typeof(ProducerWorkingTime))]
 [JsonSerializable(typeof(Login.LoginModel))]

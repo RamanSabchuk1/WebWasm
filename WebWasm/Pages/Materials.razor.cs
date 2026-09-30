@@ -15,7 +15,6 @@ public partial class Materials : ComponentBase
 	private List<MaterialType> _materials = [];
 	private bool _isModalOpen = false;
 	private MaterialType? _editingMaterial = null;
-	private MaterialsTable? _materialsTableRef;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -47,30 +46,23 @@ public partial class Materials : ComponentBase
 
 	private async Task HandleSubmit(MaterialTypeInfo materialInfo)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
+			if (_editingMaterial is not null)
 			{
-				if (_editingMaterial is not null)
-				{
-					await ApiClient.Put($"MaterialTypes/{_editingMaterial.Id}", materialInfo);
-					ToastService.ShowSuccess("Material updated successfully!");
-				}
-				else
-				{
-					// Create new material
-					await ApiClient.Post("MaterialTypes", materialInfo);
-					ToastService.ShowSuccess("Material created successfully!");
-				}
+				await ApiClient.Put($"MaterialTypes/{_editingMaterial.Id}", materialInfo);
+				ToastService.ShowSuccess("Material updated successfully!");
+			}
+			else
+			{
+				// Create new material
+				await ApiClient.Post("MaterialTypes", materialInfo);
+				ToastService.ShowSuccess("Material created successfully!");
+			}
 
-				await LoadMaterials(false);
-				CloseModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to save material: {ex.Message}");
-			}
-		});
+			await LoadMaterials(false);
+			CloseModal();
+		}, "Failed to save material: ");
 	}
 
 	private async Task HandleDelete(Guid materialId)
@@ -83,18 +75,11 @@ public partial class Materials : ComponentBase
 			return;
 		}
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Delete($"MaterialTypes/{materialId}");
-				ToastService.ShowSuccess("Material deleted successfully!");
-				await LoadMaterials(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete material: {ex.Message}");
-			}
-		});
+			await ApiClient.Delete($"MaterialTypes/{materialId}");
+			ToastService.ShowSuccess("Material deleted successfully!");
+			await LoadMaterials(false);
+		}, "Failed to delete material: ");
 	}
 }

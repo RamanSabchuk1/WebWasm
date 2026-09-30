@@ -25,9 +25,6 @@ public partial class ProducerModal : ComponentBase
 				_name = EditingProducer.Name;
 				_companyId = EditingProducer.Company?.Id;
 				_workingTimeEntries = [.. EditingProducer.ProducerWorkingTime.Select(wt => new ProducerWorkingTimeEntry(wt))];
-				Console.WriteLine(_name);
-				Console.WriteLine(_companyId);
-				Console.WriteLine($"{_workingTimeEntries[0].StartWorkingHours} {_workingTimeEntries[0].StartLoadingHours} {_workingTimeEntries[0].EndLoadingHours} {_workingTimeEntries[0].EndWorkingHours}");
 			}
 			else
 			{

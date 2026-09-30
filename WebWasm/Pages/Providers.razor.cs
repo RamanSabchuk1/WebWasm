@@ -15,7 +15,6 @@ public partial class Providers : ComponentBase
 	private List<Producer> _producers = [];
 	private List<Company> _companies = [];
 	private List<MaterialType> _materialTypes = [];
-	private ProducersTable? _producersTableRef;
 
 	// Producer Modal
 	private bool _isProducerModalOpen = false;
@@ -27,10 +26,7 @@ public partial class Providers : ComponentBase
 	private Guid _currentProducerId = Guid.Empty;
 
 	// Confirm Dialog
-	private bool _showConfirmDialog = false;
-	private string _confirmTitle = string.Empty;
-	private string _confirmMessage = string.Empty;
-	private Func<Task>? _confirmAction = null;
+	private readonly ConfirmState _confirm = new();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -65,35 +61,28 @@ public partial class Providers : ComponentBase
 
 	private async Task HandleProducerSubmit((Guid? CompanyId, string Name, ICollection<ProducerWorkingTime> WorkingTimes) data)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
+			if (_editingProducer is not null)
 			{
-				if (_editingProducer is not null)
-				{
-					// Update producer
-					var companyId = _editingProducer.Company?.Id ?? Guid.Empty;
-					var updateProducer = new UpdateProducer(data.WorkingTimes);
-					await ApiClient.Put($"Producers/{_editingProducer.Id}?companyId={companyId}", updateProducer);
-					ToastService.ShowSuccess("Producer updated successfully!");
-				}
-				else
-				{
-					// Create producer
-					var companyId = data.CompanyId ?? Guid.Empty;
-					var createProducer = new CreateProducer(data.WorkingTimes, data.Name);
-					await ApiClient.Post($"Producers?companyId={companyId}", createProducer);
-					ToastService.ShowSuccess("Producer created successfully!");
-				}
+				// Update producer
+				var companyId = _editingProducer.Company?.Id ?? Guid.Empty;
+				var updateProducer = new UpdateProducer(data.WorkingTimes);
+				await ApiClient.Put($"Producers/{_editingProducer.Id}?companyId={companyId}", updateProducer);
+				ToastService.ShowSuccess("Producer updated successfully!");
+			}
+			else
+			{
+				// Create producer
+				var companyId = data.CompanyId ?? Guid.Empty;
+				var createProducer = new CreateProducer(data.WorkingTimes, data.Name);
+				await ApiClient.Post($"Producers?companyId={companyId}", createProducer);
+				ToastService.ShowSuccess("Producer created successfully!");
+			}
 
-				await LoadData(false);
-				CloseProducerModal();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to save producer: {ex.Message}");
-			}
-		});
+			await LoadData(false);
+			CloseProducerModal();
+		}, "Failed to save producer: ");
 	}
 
 	private void HandleDeleteProducer(Guid producerId)
@@ -105,31 +94,21 @@ public partial class Providers : ComponentBase
 		}
 
 		var loadingPlacesCount = producer.LoadingPlaces.Count;
-		_confirmTitle = "Confirm Delete Producer";
-		_confirmMessage = loadingPlacesCount > 0
+		_confirm.Ask("Confirm Delete Producer", loadingPlacesCount > 0
 			? $"Are you sure you want to delete producer '{producer.Name}'? This will also delete all {loadingPlacesCount} loading place(s). This action cannot be undone."
-			: $"Are you sure you want to delete producer '{producer.Name}'? This action cannot be undone.";
-		_confirmAction = async () => await DeleteProducerConfirmed(producerId);
-		_showConfirmDialog = true;
+			: $"Are you sure you want to delete producer '{producer.Name}'? This action cannot be undone.", async () => await DeleteProducerConfirmed(producerId));
 	}
 
 	private async Task DeleteProducerConfirmed(Guid producerId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var producer = _producers.FirstOrDefault(p => p.Id == producerId);
-				var companyId = producer?.Company?.Id ?? Guid.Empty;
-				await ApiClient.Delete($"Producers/{producerId}?companyId={companyId}");
-				ToastService.ShowSuccess("Producer deleted successfully!");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete producer: {ex.Message}");
-			}
-		});
+			var producer = _producers.FirstOrDefault(p => p.Id == producerId);
+			var companyId = producer?.Company?.Id ?? Guid.Empty;
+			await ApiClient.Delete($"Producers/{producerId}?companyId={companyId}");
+			ToastService.ShowSuccess("Producer deleted successfully!");
+			await LoadData(false);
+		}, "Failed to delete producer: ");
 	}
 
 	// LoadingPlace Actions
@@ -156,40 +135,33 @@ public partial class Providers : ComponentBase
 
 	private async Task HandleLoadingPlaceSubmit(MutateLoadingPlace loadingPlaceData)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var producer = _producers.FirstOrDefault(p => p.Id == _currentProducerId);
-				var companyId = producer?.Company?.Id ?? Guid.Empty;
+			var producer = _producers.FirstOrDefault(p => p.Id == _currentProducerId);
+			var companyId = producer?.Company?.Id ?? Guid.Empty;
 
-				if (_editingLoadingPlace is not null)
-				{
-					// Update loading place
-					await ApiClient.Put(
-						$"Producers/{_currentProducerId}/loading-place/{_editingLoadingPlace.Id}?companyId={companyId}",
-						loadingPlaceData
-					);
-					ToastService.ShowSuccess("Loading place updated successfully!");
-				}
-				else
-				{
-					// Create loading place
-					await ApiClient.Post(
-						$"Producers/{_currentProducerId}/loading-place?companyId={companyId}",
-						loadingPlaceData
-					);
-					ToastService.ShowSuccess("Loading place created successfully!");
-				}
-
-				await LoadData(false);
-				CloseLoadingPlaceModal();
-			}
-			catch (Exception ex)
+			if (_editingLoadingPlace is not null)
 			{
-				ToastService.ShowError($"Failed to save loading place: {ex.Message}");
+				// Update loading place
+				await ApiClient.Put(
+					$"Producers/{_currentProducerId}/loading-place/{_editingLoadingPlace.Id}?companyId={companyId}",
+					loadingPlaceData
+				);
+				ToastService.ShowSuccess("Loading place updated successfully!");
 			}
-		});
+			else
+			{
+				// Create loading place
+				await ApiClient.Post(
+					$"Producers/{_currentProducerId}/loading-place?companyId={companyId}",
+					loadingPlaceData
+				);
+				ToastService.ShowSuccess("Loading place created successfully!");
+			}
+
+			await LoadData(false);
+			CloseLoadingPlaceModal();
+		}, "Failed to save loading place: ");
 	}
 
 	private void HandleDeleteLoadingPlace((Guid ProducerId, Guid LoadingPlaceId) data)
@@ -202,47 +174,18 @@ public partial class Providers : ComponentBase
 			return;
 		}
 
-		_confirmTitle = "Confirm Delete Loading Place";
-		_confirmMessage = $"Are you sure you want to delete loading place '{loadingPlace.Name}'? This action cannot be undone.";
-		_confirmAction = async () => await DeleteLoadingPlaceConfirmed(data.ProducerId, data.LoadingPlaceId);
-		_showConfirmDialog = true;
+		_confirm.Ask("Confirm Delete Loading Place", $"Are you sure you want to delete loading place '{loadingPlace.Name}'? This action cannot be undone.", async () => await DeleteLoadingPlaceConfirmed(data.ProducerId, data.LoadingPlaceId));
 	}
 
 	private async Task DeleteLoadingPlaceConfirmed(Guid producerId, Guid loadingPlaceId)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				var producer = _producers.FirstOrDefault(p => p.Id == producerId);
-				var companyId = producer?.Company?.Id ?? Guid.Empty;
-				await ApiClient.Delete($"Producers/{producerId}/loading-place/{loadingPlaceId}?companyId={companyId}");
-				ToastService.ShowSuccess("Loading place deleted successfully!");
-				await LoadData(false);
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to delete loading place: {ex.Message}");
-			}
-		});
-	}
-
-	// Confirm Dialog
-	private void CloseConfirmDialog()
-	{
-		_showConfirmDialog = false;
-		_confirmTitle = string.Empty;
-		_confirmMessage = string.Empty;
-		_confirmAction = null;
-	}
-
-	private async Task HandleConfirm()
-	{
-		_showConfirmDialog = false;
-		if (_confirmAction is not null)
-		{
-			await _confirmAction.Invoke();
-		}
-		CloseConfirmDialog();
+			var producer = _producers.FirstOrDefault(p => p.Id == producerId);
+			var companyId = producer?.Company?.Id ?? Guid.Empty;
+			await ApiClient.Delete($"Producers/{producerId}/loading-place/{loadingPlaceId}?companyId={companyId}");
+			ToastService.ShowSuccess("Loading place deleted successfully!");
+			await LoadData(false);
+		}, "Failed to delete loading place: ");
 	}
 }
