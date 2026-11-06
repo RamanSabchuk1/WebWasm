@@ -23,28 +23,31 @@ public partial class CompanyModal : ComponentBase
 	private Location? _location;
 	private string _errorMessage = string.Empty;
 
+	private bool _wasOpen;
+
 	protected override void OnParametersSet()
 	{
-		if (IsOpen)
+		// Форма заполняется только при открытии: перерисовка родителя (например после ошибки сохранения) не стирает ввод.
+		if (IsOpen && !_wasOpen)
 		{
+			ResetForm();
 			if (EditingCompany is not null)
 			{
+				var info = EditingCompany.CompanyInfo;
 				_name = EditingCompany.Name;
-				_address = EditingCompany.CompanyInfo!.Address;
-				_corporateEmail = EditingCompany.CompanyInfo!.CorporateEmail;
-				_unp = EditingCompany.CompanyInfo!.UNP;
-				_legalType = EditingCompany.CompanyInfo!.LegalType;
-				_bankNumber = EditingCompany.CompanyInfo!.BankAccount.BankNumber;
-				_bic = EditingCompany.CompanyInfo!.BankAccount.BIC;
-				_photo = EditingCompany.CompanyInfo!.Photo;
+				_address = info?.Address ?? string.Empty;
+				_corporateEmail = info?.CorporateEmail ?? string.Empty;
+				_unp = info?.UNP ?? string.Empty;
+				_legalType = info?.LegalType ?? string.Empty;
+				_bankNumber = info?.BankAccount.BankNumber ?? string.Empty;
+				_bic = info?.BankAccount.BIC ?? string.Empty;
+				_photo = info?.Photo ?? string.Empty;
 				_rebate = EditingCompany.Rebate;
 				_location = EditingCompany.Location;
 			}
-			else
-			{
-				ResetForm();
-			}
 		}
+
+		_wasOpen = IsOpen;
 	}
 
 	private void ResetForm()
@@ -96,7 +99,6 @@ public partial class CompanyModal : ComponentBase
 			: new CreateCompany(_location, new BankAccount(_bankNumber, _bic), _photo, _name, _address, _corporateEmail, _unp, _legalType, _rebate);
 
 		await OnSubmit.InvokeAsync(submit);
-		ResetForm();
 	}
 
 	private async Task CloseModal()

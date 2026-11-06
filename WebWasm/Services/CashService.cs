@@ -73,6 +73,9 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 		return result;
 	}
 
+	/// <summary>Сбрасывает кэш типа: следующий GetData сходит на backend (дешевле, чем сразу перегружать список).</summary>
+	public void Invalidate<T>() => _cachedData.TryRemove(typeof(T).Name, out _);
+
 	public async ValueTask<UserInfo?> GetUserInfo(bool useCash = true)
 	{
 		var key = nameof(UserInfo);

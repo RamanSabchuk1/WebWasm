@@ -17,6 +17,13 @@ public partial class PricingSettings : ComponentBase
 	[Inject] private ToastService ToastService { get; set; } = default!;
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
 
+	private enum Tab
+	{
+		Settings,
+		Simulator,
+	}
+
+	private Tab _tab = Tab.Settings;
 	private string _scope = "Global";
 	private Guid? _scopeId;
 	private Guid? _companyId;
@@ -27,10 +34,32 @@ public partial class PricingSettings : ComponentBase
 	private List<PricingSettingItem> _items = [];
 
 	private bool _showEditDialog;
-	private string? _editKey;
-	private decimal? _editDefault;
+	private PricingSettingItem? _editItem;
 	private decimal _editValue;
 	private string? _editError;
+
+	private static readonly Dictionary<string, string> RoleNames = new()
+	{
+		["Buyer"] = "покупатель → комиссия",
+		["Supplier"] = "поставщик → материал",
+		["Carrier"] = "перевозчик → доставка",
+	};
+
+	/// <summary>На кого действует override ключа на уровне компании; null — backend не прислал роли (старая версия).</summary>
+	private static string? CompanyEffect(PricingSettingItem item) => item.CompanyRoles switch
+	{
+		null => null,
+		[] => "на компании не действует",
+		var roles => string.Join(", ", roles.Select(r => RoleNames.GetValueOrDefault(r, r))),
+	};
+
+	private static string Range(PricingSettingItem item) => (item.Min, item.Max) switch
+	{
+		(null, null) => "—",
+		({ } min, null) => $"≥ {min:0.####}",
+		(null, { } max) => $"≤ {max:0.####}",
+		({ } min, { } max) => $"{min:0.####} … {max:0.####}",
+	};
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -94,8 +123,7 @@ public partial class PricingSettings : ComponentBase
 
 	private void OpenEditDialog(PricingSettingItem item)
 	{
-		_editKey = item.Key;
-		_editDefault = item.Default;
+		_editItem = item;
 		_editValue = item.OverrideValue ?? item.EffectiveValue ?? item.Default ?? 0;
 		_editError = null;
 		_showEditDialog = true;
@@ -105,9 +133,15 @@ public partial class PricingSettings : ComponentBase
 
 	private async Task SubmitEdit()
 	{
-		var key = _editKey;
-		if (key is null)
+		if (_editItem is not { } item)
 		{
+			return;
+		}
+
+		var key = item.Key;
+		if ((item.Min is { } min && _editValue < min) || (item.Max is { } max && _editValue > max))
+		{
+			_editError = $"Допустимый диапазон: {Range(item)}";
 			return;
 		}
 

@@ -2,21 +2,38 @@ using WebWasm.Models;
 
 namespace WebWasm.Helpers;
 
+/// <summary>
+/// Параметры слот-времени — те же, что backend берёт на AcceptOrder (глобальный резолв настроек ценообразования):
+/// slotMinutes = duration × RoundTripFactor × (1 + TrafficBuffer) + LoadingMinutes, начало слота — за
+/// PreparaionTimeSlotBuffer минут до заказа. Дефолты совпадают с реестром ключей backend.
+/// </summary>
+public sealed record SlotTimeParams(double RoundTripFactor, double TrafficBuffer, double LoadingMinutes, double PreparationBuffer)
+{
+	public static readonly SlotTimeParams Default = new(2, 0.30, 45, 30);
+
+	/// <summary>Эффективные значения из GET admin/pricing-settings?scope=Global; нет ключа — дефолт.</summary>
+	public static SlotTimeParams From(IEnumerable<PricingSettingItem> settings)
+	{
+		var values = settings.ToDictionary(x => x.Key, x => x.EffectiveValue ?? x.Default);
+		double Value(string key, double fallback) => values.GetValueOrDefault(key) is { } v ? (double)v : fallback;
+
+		return new SlotTimeParams(
+			Value("RoundTripFactor", Default.RoundTripFactor),
+			Value("TrafficBuffer", Default.TrafficBuffer),
+			Value("LoadingMinutes", Default.LoadingMinutes),
+			Value("PreparaionTimeSlotBuffer", Default.PreparationBuffer));
+	}
+}
+
 public static class SlotHelper
 {
-	private const int PrepBuffer = 30;
-	private const int ShiftCap = 60;
-	private const int ShiftBase = 15;
-
 	extension(DriverSlot[] slots)
 	{
-		public bool HasSlot(double duration, DateTime deliveryTime)
+		public bool HasSlot(double duration, DateTime deliveryTime, SlotTimeParams slotTimeParams)
 		{
 			var orderDate = DateOnly.FromDateTime(deliveryTime);
-			var time = TimeOnly.FromDateTime(deliveryTime);
-			DriverSlot[] part = [.. slots.Where(x => x.WorkingDay == orderDate)];
-			var (start, end) = deliveryTime.GetStartAndEnd(duration);
-			return part.Any(slot => slot.IsSlotMatch(start, end));
+			var (start, end) = deliveryTime.GetStartAndEnd(duration, slotTimeParams);
+			return slots.Any(slot => slot.WorkingDay == orderDate && slot.IsSlotMatch(start, end));
 		}
 	}
 
@@ -30,40 +47,27 @@ public static class SlotHelper
 
 	extension(DateTime orderTime)
 	{
-		public (TimeOnly, TimeOnly) GetStartAndEnd(double duration)
+		public (TimeOnly, TimeOnly) GetStartAndEnd(double duration, SlotTimeParams p)
 		{
-			var startDateTime = orderTime.AddMinutes(-PrepBuffer);
-			var endDateTime = orderTime.AddMinutes(duration.CalculateOrderDuration());
+			var startDateTime = orderTime.AddMinutes(-p.PreparationBuffer);
+			var endDateTime = orderTime.AddMinutes((duration * p.RoundTripFactor * (1 + p.TrafficBuffer)) + p.LoadingMinutes);
 
-			var start = TimeOnly.FromDateTime(startDateTime.RoundToNearest15Minutes());
-			var end = TimeOnly.FromDateTime(endDateTime.RoundToNearest15Minutes());
+			var start = TimeOnly.FromDateTime(startDateTime.RoundToNearest5Minutes());
+			var end = TimeOnly.FromDateTime(endDateTime.RoundToNearest5Minutes());
 
 			return (start, end);
 		}
 
-		public DateTime RoundToNearest15Minutes()
+		public DateTime RoundToNearest5Minutes()
 		{
 			var minutes = orderTime.Minute;
-			var remainder = minutes % 15;
+			var remainder = minutes % 5;
 
-			var roundedMinutes = remainder < 8
+			var roundedMinutes = remainder < 3
 				? minutes - remainder
-				: minutes + (15 - remainder);
+				: minutes + (5 - remainder);
 
 			return new DateTime(orderTime.Year, orderTime.Month, orderTime.Day, orderTime.Hour, 0, 0).AddMinutes(roundedMinutes);
-		}
-	}
-
-	extension(double minutes)
-	{
-		public double CalculateOrderDuration()
-		{
-			return minutes + minutes.CalculateDurationShift();
-		}
-
-		public double CalculateDurationShift()
-		{
-			return Math.Min(ShiftCap, minutes) + ShiftBase;
 		}
 	}
 }

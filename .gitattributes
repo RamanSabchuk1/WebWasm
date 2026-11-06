@@ -1,0 +1,8 @@
+# Auto dtect text files
+* text=auto
+
+# Force save with CR LF on any ОС
+*.cs text eol=crlf
+*.json text eol=crlf
+*.csproj text eol=crlf
+*.sln text eol=crlf

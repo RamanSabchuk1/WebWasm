@@ -4,7 +4,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Home(CashService cashService, ApiClient api, LocalStorageService localStorage)
+public partial class Home(CashService cashService, ApiClient api, LocalStorageService localStorage, ToastService toastService)
 {
 	private const string TurnoverFilterStorageKey = "home_turnover_filter";
 
@@ -37,16 +37,30 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 
 	private async ValueTask LoadData()
 	{
-		var activities = cashService.GetData<ActivityRecord>().AsTask();
-		var ordersToday = api.Get<int>("Counts/orders-today").AsTask();
-		var users = api.Get<int>("Counts/users").AsTask();
-		var companies = api.Get<int>("Counts/companies").AsTask();
+		// Каждый счётчик грузится сам по себе: сбой одного — тост и 0, остальные показываются.
+		var activities = Safe(cashService.GetData<ActivityRecord>().AsTask(), [], "recent activity");
+		var ordersToday = Safe(api.Get<int>("Counts/orders-today").AsTask(), 0, "orders today");
+		var users = Safe(api.Get<int>("Counts/users").AsTask(), 0, "users count");
+		var companies = Safe(api.Get<int>("Counts/companies").AsTask(), 0, "companies count");
 		await Task.WhenAll(activities, ordersToday, users, companies, LoadTurnover());
 
 		_activityRecords = activities.Result;
 		_ordersTodayCount = ordersToday.Result;
 		_usersCount = users.Result;
 		_companiesCount = companies.Result;
+	}
+
+	private async Task<T> Safe<T>(Task<T> load, T fallback, string what)
+	{
+		try
+		{
+			return await load;
+		}
+		catch (Exception ex)
+		{
+			toastService.ShowError($"Failed to load {what}: {ex.Message}");
+			return fallback;
+		}
 	}
 
 	private async Task LoadTurnover()
@@ -66,7 +80,7 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 			query = "?" + string.Join("&", parts);
 		}
 
-		_turnover = await api.Get<TurnoverInfo>($"Counts/turnover{query}");
+		_turnover = await Safe(api.Get<TurnoverInfo>($"Counts/turnover{query}").AsTask(), new TurnoverInfo(0, 0), "turnover");
 	}
 
 	private async Task ApplyTurnoverPreset(string preset)
@@ -150,6 +164,6 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 
 	private string GetRevenue() => $"{_turnover.Turnover:F2} BYN";
 	private string GetProfit() => $"{_turnover.Profit:F2} BYN";
-	private static string GetDate(ActivityRecord record) => record.Date.ToString("MM.dd - HH:mm");
+	private static string GetDate(ActivityRecord record) => record.Date.ToLocalTime().ToString("MM.dd - HH:mm");
 }
 

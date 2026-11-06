@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using WebWasm.Components;
 using WebWasm.Models;
-using WebWasm.Services;
 
 namespace WebWasm.Helpers;
 
@@ -124,6 +123,9 @@ public static class SerializationHelper
 [JsonSerializable(typeof(PricingSettingItem))]
 [JsonSerializable(typeof(PricingSettingItem[]))]
 [JsonSerializable(typeof(SetPricingSettingRequest))]
+[JsonSerializable(typeof(PricingSimulationInput))]
+[JsonSerializable(typeof(PricingSimulationResult))]
+[JsonSerializable(typeof(PricingSimulationOptions))]
 [JsonSerializable(typeof(SetOrderCalculationRequest))]
 [JsonSerializable(typeof(SetPreferredDeliveryTimeRequest))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;

@@ -689,8 +689,7 @@ public partial class Users : ComponentBase
 			await LoadData(false);
 			CloseDriverSlotModal();
 		}, "Failed to create driver slot: ");
-
-		_newSlots.Clear();
+		// При ошибке список не чистим: в нём и старые слоты водителя, а backend заменяет ими все слоты целиком.
 	}
 
 	private void AddNewSlot()

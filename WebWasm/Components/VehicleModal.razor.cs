@@ -38,11 +38,6 @@ public partial class VehicleModal
 		}
 	}
 
-	protected override void OnParametersSet()
-	{
-		Reset();
-	}
-
 	private bool IsFormValid()
 	{
 		return !string.IsNullOrWhiteSpace(_model) &&
@@ -60,17 +55,7 @@ public partial class VehicleModal
 		}
 
 		var createVehicle = new CreateVehicle(_model, _registrationNumber, _vehicleWeight, _loadCapacity, _photo, _selectedDriverId);
+		// Модалка создаётся заново при каждом открытии, сбрасывать форму не нужно: при ошибке ввод остаётся.
 		await OnSubmit.InvokeAsync((DriversWithCompany.CompanyOf(_selectedDriverId)?.Id ?? Guid.Empty, createVehicle));
-		Reset();
-	}
-
-	private void Reset()
-	{
-		_model = string.Empty;
-		_registrationNumber = string.Empty;
-		_vehicleWeight = 0;
-		_loadCapacity = 0;
-		_photo = string.Empty;
-		_selectedDriverId = Guid.Empty;
 	}
 }

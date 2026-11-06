@@ -1,0 +1,525 @@
+@using WebWasm.Helpers
+@using WebWasm.Models
+@using static WebWasm.Helpers.PriceChartMath
+
+<div class="sim-section">
+	<h3>Участники заказа</h3>
+	<div class="sim-grid">
+		<label class="field">
+			<span>Точка погрузки <em>обязательно</em></span>
+			<select value="@(_loadingPlaceId?.ToString() ?? "")" @onchange="OnLoadingPlaceChanged">
+				<option value="">— выберите точку погрузки —</option>
+				@foreach (var group in (_options?.LoadingPlaces ?? []).GroupBy(x => x.CompanyName))
+				{
+					<optgroup label="@group.Key">
+						@foreach (var place in group)
+						{
+							<option value="@place.Id">@place.ProducerName · @place.Name (@(place.MaterialName ?? "материал не задан"), @Money(place.CostPerTon) за т)</option>
+						}
+					</optgroup>
+				}
+			</select>
+		</label>
+		<label class="field">
+			<span>Перевозчик <em>не обязательно</em></span>
+			<select value="@(_carrierId?.ToString() ?? "")" @onchange="OnCarrierChanged">
+				<option value="">— не выбран: как при создании заказа —</option>
+				@foreach (var company in Carriers)
+				{
+					<option value="@company.Id">@company.Name</option>
+				}
+			</select>
+		</label>
+		<label class="field">
+			<span>Покупатель <em>не обязательно</em></span>
+			<select value="@(_buyerId?.ToString() ?? "")" @onchange="OnBuyerChanged">
+				<option value="">— не выбран: компания без своих настроек —</option>
+				@foreach (var company in Buyers)
+				{
+					<option value="@company.Id">@company.Name</option>
+				}
+			</select>
+		</label>
+		<label class="field">
+			<span>Регион</span>
+			<select value="@(_regionId?.ToString() ?? "")" @onchange="OnRegionChanged">
+				<option value="">— выберите регион —</option>
+				@foreach (var region in _options?.Regions ?? [])
+				{
+					<option value="@region.Id">@region.Name</option>
+				}
+			</select>
+		</label>
+	</div>
+	@if (_loadingPlaceId is null)
+	{
+		<p class="hint">Выберите точку погрузки: без неё цена заказа не считается (так же, как в приложении).</p>
+	}
+	else if (_regionId is null)
+	{
+		<p class="hint">Выберите регион: из него берутся таблицы цен и размеры города и пригорода.</p>
+	}
+</div>
+
+@if (_result is { } result)
+{
+	<div class="sim-section">
+		<div class="section-head">
+			<h3>Во что зарезолвились настройки</h3>
+			@if (OverrideCount > 0)
+			{
+				<button class="btn-link" @onclick="ClearOverrides">убрать все правки (@OverrideCount)</button>
+			}
+		</div>
+		<p class="hint">
+			Цвет ячейки — откуда взято значение. Одинаковые соседние ячейки склеены. Клик по ячейке — подставить другое значение в памяти:
+			график пересчитается, в базе ничего не изменится. Сохранить подобранное значение — на вкладке «Настройки».
+		</p>
+		<div class="src-legend">
+			<span class="src-chip src-default">дефолт</span>
+			<span class="src-chip src-global">Global</span>
+			<span class="src-chip src-material-0">материал</span>
+			<span class="src-chip src-material-1">родительский материал</span>
+			<span class="src-chip src-supplier">поставщик</span>
+			<span class="src-chip src-carrier">перевозчик</span>
+			<span class="src-chip src-buyer">покупатель</span>
+			<span class="src-chip src-override">правка в памяти</span>
+		</div>
+
+		<div class="res-groups">
+			@foreach (var group in Groups)
+			{
+				var rows = RowsOf(group);
+				if (rows.Length == 0)
+				{
+					continue;
+				}
+
+				<div class="res-group">
+					<div class="res-group-head">
+						<h4>@group.Title</h4>
+						<span class="hint">@group.Hint</span>
+					</div>
+					<div class="res-grid" style="--cols:@group.Columns.Length">
+						@if (group.Columns.Length > 1)
+						{
+							<div class="res-colhead res-keyhead"></div>
+							@foreach (var column in group.Columns)
+							{
+								<div class="res-colhead">
+									<strong>@column.Stage</strong>
+									@if (ColumnNote(column.Id) is { } note)
+									{
+										<div>@note</div>
+									}
+								</div>
+							}
+						}
+						@foreach (var setting in rows)
+						{
+							var cells = CellsOf(setting, group);
+							<div class="res-key" title="@setting.Description"><code>@setting.Key</code></div>
+							@foreach (var (start, length) in Runs(cells, SameCell))
+							{
+								var cell = cells[start];
+								var stage = string.Join(" и ", group.Columns.Skip(start).Take(length).Select(c => c.Stage).Where(x => x.Length > 0));
+								@if (cell is null)
+								{
+									<div class="res-cell res-empty" style="grid-column: span @length" title="Формула этого этапа ключ не читает"><span>—</span></div>
+								}
+								else
+								{
+									<div class="res-cell @SourceClass(cell)" style="grid-column: span @length" data-label="@stage" title="@cell.Note" @onclick="() => OpenEdit(setting, Merged(cells, start, length))">
+										<div class="res-line">
+											<span class="res-value">@Value(cell.Value)</span>
+											<span class="res-source">@cell.Source.Name</span>
+										</div>
+										@if (ChangedFromSaved(cell))
+										{
+											<div class="res-saved">было @Value(cell.SavedValue) · @cell.SavedSource.Name</div>
+										}
+										@if (cell.Note is not null)
+										{
+											<div class="res-note">@cell.Note</div>
+										}
+									</div>
+								}
+							}
+						}
+					</div>
+				</div>
+			}
+		</div>
+
+		@if (_overrides.Count > 0)
+		{
+			<div class="override-list">
+				<span class="filter-title">Правки в памяти:</span>
+				@foreach (var view in _overrides)
+				{
+					<span class="override-chip">
+						<code>@view.Override.Key</code> = @view.Override.Value.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture) на «@view.ScopeName»
+						<button class="chip-x" title="Убрать правку" @onclick="() => RemoveOverride(view)">×</button>
+					</span>
+				}
+			</div>
+		}
+
+		<div class="res-group">
+			<div class="res-group-head">
+				<h4>Регион: цены за одну доставку</h4>
+				<span class="hint">Почасовая часть цены берёт таблицу города, километровая — таблицу пригорода. Серым — дефолт тоннажа: веса нет в таблице региона. Клик по цене — подставить другие min и max в памяти, сохранить — в настройках региона.</span>
+				@if (_regionPrices.Count > 0)
+				{
+					<button class="btn-link" @onclick="ClearRegionPrices">вернуть цены региона (@_regionPrices.Count)</button>
+				}
+			</div>
+			<table class="region-table">
+				<thead>
+					<tr><th>Тоннаж</th><th>Город (по времени)</th><th>Пригород (по км)</th></tr>
+				</thead>
+				<tbody>
+					@foreach (var row in result.RegionPrices)
+					{
+						<tr>
+							<th>@Tons(row.WeightKg)</th>
+							@foreach (var (level, price) in new[] { (City, row.City), (Neighborhood, row.Neighborhood) })
+							{
+								@if (price is null)
+								{
+									<td class="validation-error price-edit" @onclick="() => OpenRegionPrice(row.WeightKg, level, null)">нет цены ✏️</td>
+								}
+								else
+								{
+									<td class="price-edit @(price.IsOverride ? "src-override" : price.FromDefault ? "price-default" : "")"
+										title="@(price.IsOverride ? "правка в памяти" : price.FromDefault ? "дефолт тоннажа" : "таблица региона")"
+										@onclick="() => OpenRegionPrice(row.WeightKg, level, price)">@Money(price.Min) – @Money(price.Max)</td>
+								}
+							}
+						</tr>
+					}
+				</tbody>
+			</table>
+			<p class="hint">
+				Город: до @Num(result.Ranges.MinMinutes) мин в пути — минимальная цена, от @Num(result.Ranges.MaxMinutes) мин — максимальная
+				(диагональ города, делённая на скорость в городе @Num(result.Ranges.SpeedCityKmh) км/ч).
+				Пригород: до @Num(result.Ranges.MinKm) км — минимальная, от @Num(result.Ranges.MaxKm) км — максимальная (диагональ пригорода).
+				Между порогами цена растёт линейно.
+			</p>
+		</div>
+	</div>
+}
+
+@if (_loadingPlaceId is not null && _regionId is not null)
+{
+	<div class="sim-section">
+		<div class="section-head">
+			<h3>Визуализация</h3>
+			@if (_busy)
+			{
+				<span class="busy">считаю…</span>
+			}
+		</div>
+
+		<div class="param-chips">
+			<button class="param-chip @(ParamChanged(ParamKind.MaterialCost) ? "changed" : "")" @onclick="() => OpenParam(ParamKind.MaterialCost)">
+				Материал: @Money(_result?.MaterialCostPerTon ?? LoadingPlace?.CostPerTon ?? 0) за т ✏️
+			</button>
+			<button class="param-chip @(ParamChanged(ParamKind.SupplierRebate) ? "changed" : "")" @onclick="() => OpenParam(ParamKind.SupplierRebate)">
+				Rebate поставщика: @Num(_result?.SupplierRebatePercent ?? 0) % ✏️
+			</button>
+			@if (_carrierId is not null)
+			{
+				<button class="param-chip @(ParamChanged(ParamKind.CarrierRebate) ? "changed" : "")" @onclick="() => OpenParam(ParamKind.CarrierRebate)">
+					Rebate перевозчика: @Num(_result?.CarrierRebatePercent ?? 0) % ✏️
+				</button>
+			}
+		</div>
+
+		@if (_result is { } r)
+		{
+			var ranges = r.Ranges;
+			var slot = SlotWindow();
+			<div class="sliders">
+				<div class="slider">
+					<div class="slider-head">
+						<span>Вес заказа</span>
+						<strong>@Num(_weightTons) т</strong>
+					</div>
+					<div class="range-wrap">
+						<input type="range" min="@Inv(ranges.MinTons)" max="@Inv(ranges.MaxTons)" step="1" value="@Inv(_weightTons)" @oninput="OnWeightInput" />
+					</div>
+					<div class="slider-hint">
+						Вес задаёт только число доставок: каждая линия везёт его целыми машинами своего тоннажа с округлением вверх (17 т на 10-тонниках — 2 доставки по 10 т).
+						Для каждой линии ниже: y, коэффициент применения VolumePriceProgression к этому заказу (на сколько процентов действует значение),
+						и на сколько процентов текущее значение (@_progressionDraft.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)) меняет доставку и комиссию покупателя-компании.
+						<span class="truck-list">
+							@foreach (var s in r.Series.Where(s => s.WeightKg > 0 && s.BuyerHasCompany))
+							{
+								<span>@Tons(s.WeightKg) × @s.Deliveries = @Num(s.Tons) т: @VolumeEffect(s.Deliveries, s.VolumeFactor, s.VolumeMultiplier)</span>
+							}
+						</span>
+					</div>
+				</div>
+
+				<div class="slider">
+					<div class="slider-head">
+						<div class="mini-switch">
+							<button class="@(IsDuration ? "active" : "")" @onclick="() => SetPathMode(Duration)">Время в пути</button>
+							<button class="@(IsDuration ? "" : "active")" @onclick="() => SetPathMode(Distance)">Длина маршрута</button>
+						</div>
+						<strong>@(IsDuration ? $"{Num(_minutes)} мин" : $"{Num(_km)} км")</strong>
+					</div>
+					<div class="range-wrap">
+						@if (IsDuration)
+						{
+							<input type="range" min="0" max="@Inv(ranges.MinutesLimit)" step="1" value="@Inv(_minutes)" @oninput="OnPathInput" />
+							<span class="mark" style="left:@MarkLeft(ranges.MinMinutes, 0, ranges.MinutesLimit)" title="до этого — минимальная цена города"></span>
+							<span class="mark" style="left:@MarkLeft(ranges.MaxMinutes, 0, ranges.MinutesLimit)" title="от этого — максимальная цена города"></span>
+						}
+						else
+						{
+							<input type="range" min="0" max="@Inv(ranges.KmLimit)" step="1" value="@Inv(_km)" @oninput="OnPathInput" />
+							<span class="mark" style="left:@MarkLeft(ranges.MinKm, 0, ranges.KmLimit)" title="до этого — минимальная цена пригорода"></span>
+							<span class="mark" style="left:@MarkLeft(ranges.MaxKm, 0, ranges.KmLimit)" title="от этого — максимальная цена пригорода"></span>
+						}
+					</div>
+					<div class="slider-hint">
+						@if (IsDuration)
+						{
+							<text>Отметки: @Num(ranges.MinMinutes) и @Num(ranges.MaxMinutes) мин — пороги цены города.</text>
+						}
+						else
+						{
+							<text>Отметки: @Num(ranges.MinKm) и @Num(ranges.MaxKm) км — пороги цены пригорода.</text>
+						}
+						Вторая величина одна на весь график: время = км / (@Num(ranges.Circuity) × @Num(ranges.SpeedKmh) км/ч). @Num(ranges.Circuity) — во сколько раз путь по дорогам
+						в среднем длиннее прямой (исследования дорожных сетей), скорость — AvgTruckSpeedKmh. В настоящем заказе оба числа даёт навигатор.
+					</div>
+					@if (slot is { } win)
+					{
+						<div class="slot-line" title="Как SlotHelper вырежет окно из слота водителя. На цену не влияет.">
+							Окно в слоте водителя при @Num(win.Minutes) мин в пути: подготовка @Num(r.Slot.PreparationMinutes)
+							+ рейс @Num(win.Minutes) × @Num(r.Slot.RoundTripFactor) × (1 + @Num(r.Slot.TrafficBuffer)) = @Num(win.Trip)
+							+ загрузка @Num(r.Slot.LoadingMinutes) → <strong>@win.Window мин</strong> (края округляются к ближайшим 5 мин).
+							Остаток слота короче @r.Slot.MinSlotMinutes мин выбрасывается.
+						</div>
+					}
+				</div>
+
+				<div class="slider">
+					<div class="slider-head">
+						<span>VolumePriceProgression</span>
+						<strong>@_progressionDraft.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)@(_progression is null ? " (сохранённое)" : "")</strong>
+					</div>
+					<input type="range" min="-1" max="1" step="0.05" value="@Inv(_progressionDraft)" @oninput="OnProgressionInput" @onchange="OnProgressionChange" />
+					<div class="slider-hint">
+						@if (Math.Round(_progressionDraft, 2) == 0)
+						{
+							<text>Сейчас 0: выключено, цены не меняются ни у одной линии.</text>
+						}
+						Насколько дешевле (−) или дороже (+) становятся доставка и комиссия в заказе из двух и более доставок: от −1 до 1, то есть не больше чем на 100 %.
+						Сила зависит от y, коэффициента применения: y = 0 — значение действует полностью, y = 1 — никак.
+						Изменение = значение × (1 − y): при y = 0.3 и −0.3 доставка и комиссия дешевле на 21 %.
+						y = 1 − e^(−z2 × w × x), z2 = 0.018 / w^0.75, w — средняя грузоподъёмность машин, x — тоннаж со второй доставки.
+						Чем тяжелее заказ, тем y ближе к 1: от ~250 т значение уже ничего не меняет. Заказ из одной доставки не меняется.
+						Меняются цена доставки без НДС и Fee и база комиссии, НДС, Fee и эквайринг начисляются сверху. Пересчёт — когда ползунок отпустили.
+						@if (_progression is not null)
+						{
+							<button class="btn-link" @onclick="ResetProgression">вернуть сохранённое</button>
+						}
+					</div>
+				</div>
+			</div>
+
+			<PriceChart Result="r" HasCarrier="_carrierId is not null" @bind-CarrierView="_carrierView" PointSelected="OnPointSelected" />
+
+			<div class="custom-order">
+				<h4>Заказ из разных грузовиков</h4>
+				<p class="hint">Добавьте доставки нужных весов: заказ станет на графике золотой линией со звёздами. Разбивка ниже — для точки, выбранной кликом по графику.</p>
+				<div class="custom-controls">
+					@foreach (var weight in _options?.Weights ?? [])
+					{
+						<button class="chip" disabled="@(_custom.Count >= MaxCustomDeliveries)" @onclick="() => AddDelivery(weight)">+ @Tons(weight)</button>
+					}
+					@if (_custom.Count > 0)
+					{
+						<button class="btn-link" @onclick="ClearDeliveries">очистить</button>
+					}
+				</div>
+				@if (_custom.Count > 0)
+				{
+					<div class="custom-list">
+						@for (var i = 0; i < _custom.Count; i++)
+						{
+							var index = i;
+							<span class="override-chip">@Tons(_custom[index]) <button class="chip-x" @onclick="() => RemoveDelivery(index)">×</button></span>
+						}
+					</div>
+					<div class="res-table-wrap">
+						<table class="custom-table">
+							<thead>
+								<tr>
+									<th>Покупатель</th><th>Доля города</th><th>Итог</th><th>Материал</th><th>Доставки</th>
+									@if (_carrierId is not null)
+									{
+										<th>Получит перевозчик</th>
+									}
+									<th>Комиссия</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var order in r.Series.Where(s => s.WeightKg == 0))
+								{
+									<tr>
+										<td data-label="Покупатель">@(order.BuyerHasCompany ? "с компанией" : "без компании")</td>
+										@if (order.Error is not null || order.Points.Length == 0)
+										{
+											<td colspan="6" class="validation-error">Нет цены: вес не задан ни в таблицах региона, ни в дефолтах тоннажа.</td>
+										}
+										else
+										{
+											var p = order.Points[SelectedIndex(order)];
+											<td data-label="Доля города">@Percent(p.TMode) · @Num(p.Km) км · @Num(p.Minutes) мин</td>
+											<td data-label="Итог"><strong>@Money(p.Total)</strong></td>
+											<td data-label="Материал">@Money(p.Material)</td>
+											<td data-label="Доставки">@Money(p.Delivery) <small>(@string.Join(" + ", (p.DeliveryPrices ?? []).Select(Money)))</small></td>
+											@if (_carrierId is not null)
+											{
+												<td data-label="Получит перевозчик">@(p.CarrierDelivery is { } cd ? Money(cd) : "—") <small>(@string.Join(" + ", (p.CarrierDeliveryPrices ?? []).Select(Money)))</small></td>
+											}
+											<td data-label="Комиссия">@Money(_carrierView && p.CarrierCommission is { } cc ? cc : p.Commission)</td>
+										}
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			</div>
+		}
+		else if (_error is not null)
+		{
+			<p class="validation-error">@_error</p>
+		}
+	</div>
+}
+
+<ModalShell IsOpen="@(_editCell is not null)" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEdit" OnSubmit="ApplyEdit">
+	@if (_editSetting is { } setting && _editCell is { } cell)
+	{
+		<div class="confirm-header">
+			<h2>@setting.Key</h2>
+			<button class="btn-close" @onclick="CloseEdit">×</button>
+		</div>
+		<div class="confirm-body">
+			<p class="hint">@setting.Description</p>
+			@if (cell.Note is not null)
+			{
+				<p class="hint">@cell.Note</p>
+			}
+			<div class="form-group">
+				<label>Где подставить (как если бы сохранили на этом уровне)</label>
+				<select value="@_editTarget" @onchange="OnEditTargetChanged">
+					@for (var i = 0; i < cell.EditTargets.Length; i++)
+					{
+						<option value="@i">@cell.EditTargets[i].Name</option>
+					}
+				</select>
+			</div>
+			<div class="form-group">
+				<label>Значение (сейчас @Value(cell.Value), сохранено @Value(cell.SavedValue) · @cell.SavedSource.Name; диапазон @Value(setting.Min) … @Value(setting.Max))</label>
+				<input type="number" step="0.0001" min="@setting.Min" max="@setting.Max" @bind="_editValue" />
+			</div>
+			<p class="hint">Правка на Global или материале меняет все ячейки, которые берут значение оттуда.</p>
+			@if (!string.IsNullOrEmpty(_editError))
+			{
+				<p class="validation-error">@_editError</p>
+			}
+		</div>
+		<div class="confirm-footer">
+			@if (_overrides.Any(x => x.Override.Key == setting.Key))
+			{
+				<button class="btn-secondary" @onclick="RemoveKeyOverrides">Убрать правки ключа</button>
+			}
+			<button class="btn-secondary" @onclick="CloseEdit">Отмена</button>
+			<button class="btn-primary" @onclick="ApplyEdit">Подставить</button>
+		</div>
+	}
+</ModalShell>
+
+<ModalShell IsOpen="@(_regionEdit is not null)" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseRegionPrice" OnSubmit="() => ApplyRegionPrice(false)">
+	@if (_regionEdit is { } edit)
+	{
+		<div class="confirm-header">
+			<h2>@Tons(edit.WeightKg), @(edit.Level == City ? "город (по времени)" : "пригород (по км)")</h2>
+			<button class="btn-close" @onclick="CloseRegionPrice">×</button>
+		</div>
+		<div class="confirm-body">
+			<div class="form-group">
+				<label>Минимальная цена доставки (до нижнего порога)</label>
+				<input type="number" step="1" min="0" @bind="_regionMin" />
+			</div>
+			<div class="form-group">
+				<label>Максимальная цена доставки (от верхнего порога)</label>
+				<input type="number" step="1" min="0" @bind="_regionMax" />
+			</div>
+			<p class="hint">Значение в памяти: график пересчитается, в базе ничего не изменится.</p>
+			@if (_regionError is not null)
+			{
+				<p class="validation-error">@_regionError</p>
+			}
+		</div>
+		<div class="confirm-footer">
+			@if (_regionPrices.Any(x => x.Level == edit.Level && x.WeightKg == edit.WeightKg))
+			{
+				<button class="btn-secondary" @onclick="() => ApplyRegionPrice(true)">Вернуть сохранённое</button>
+			}
+			<button class="btn-secondary" @onclick="CloseRegionPrice">Отмена</button>
+			<button class="btn-primary" @onclick="() => ApplyRegionPrice(false)">Подставить</button>
+		</div>
+	}
+</ModalShell>
+
+<ModalShell IsOpen="@(_param is not null)" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseParam" OnSubmit="() => ApplyParam(false)">
+	<div class="confirm-header">
+		<h2>@ParamTitle</h2>
+		<button class="btn-close" @onclick="CloseParam">×</button>
+	</div>
+	<div class="confirm-body">
+		<div class="form-group">
+			<label>Значение в памяти (в базе не меняется)</label>
+			@if (_param is ParamKind.MaterialCost)
+			{
+				<input type="number" step="0.01" min="0" @bind="_paramValue" />
+			}
+			else
+			{
+				<input type="number" step="0.5" min="-100" max="100" @bind="_paramValue" />
+			}
+		</div>
+		@if (_param is ParamKind.SupplierRebate)
+		{
+			<p class="hint">
+				Плюс — скидка поставщика: материал дешевеет на неё целиком. Доля RebateCapturePercent (сейчас @Value(RebateCapture)) этой скидки
+				уходит в комиссию платформы, остальное удешевляет заказ. Минус — наценка на материал, RebateCapturePercent не участвует.
+				Пример: материал 100, rebate 50, захват 0.5 — материал 50, комиссия +25, заказ дешевле на 25.
+			</p>
+		}
+		else if (_param is ParamKind.CarrierRebate)
+		{
+			<p class="hint">
+				Плюс — эта доля цены доставки остаётся платформе, минус — платформа доплачивает перевозчику. Итог покупателя не меняется:
+				смотрите вид «Материал · доставка · комиссия» с галочкой «после принятия перевозчиком», он включится сам.
+			</p>
+		}
+		@if (_paramError is not null)
+		{
+			<p class="validation-error">@_paramError</p>
+		}
+	</div>
+	<div class="confirm-footer">
+		<button class="btn-secondary" @onclick="() => ApplyParam(true)">Вернуть сохранённое</button>
+		<button class="btn-primary" @onclick="() => ApplyParam(false)">Подставить</button>
+	</div>
+</ModalShell>

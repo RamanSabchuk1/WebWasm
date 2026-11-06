@@ -1,0 +1,522 @@
+/* Калькулятор цен. Цвета источников значений — один набор для легенды и ячеек. */
+
+.sim-section {
+	margin-bottom: 1.75rem;
+}
+
+	.sim-section h3 {
+		margin: 0 0 0.75rem;
+		font-size: 1.1rem;
+	}
+
+.custom-order h4 {
+	margin: 1.25rem 0 0.25rem;
+	font-size: 1rem;
+}
+
+.section-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.sim-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 0.75rem 1rem;
+	align-items: end;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	font-size: 0.85rem;
+}
+
+	.field em {
+		font-style: normal;
+		color: var(--text-secondary, #7A7A7A);
+		font-size: 0.75rem;
+	}
+
+	.field select {
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--border-color, #E5D5C0);
+		border-radius: 8px;
+		background: var(--bg-primary, #FFFBF5);
+		color: var(--text-primary, #3D2E1F);
+		font-size: 0.95rem;
+		width: 100%;
+		min-width: 0;
+	}
+
+.hint {
+	color: var(--text-secondary, #7A7A7A);
+	font-size: 0.8rem;
+	margin: 0.4rem 0 0.75rem;
+}
+
+.busy {
+	font-size: 0.8rem;
+	color: var(--color-primary-dark, #8B7355);
+}
+
+.btn-link {
+	border: none;
+	background: none;
+	color: var(--color-primary-dark, #8B7355);
+	text-decoration: underline;
+	cursor: pointer;
+	font-size: 0.85rem;
+	padding: 0;
+}
+
+/* --- источники значений --- */
+
+.src-default { background: #EEECE8; }
+.src-global { background: #DCE9F7; }
+.src-material-0 { background: #CDEBD3; }
+.src-material-1 { background: #E1F2CF; }
+.src-material-2 { background: #EEF6E3; }
+.src-supplier { background: #FBE1C4; }
+.src-carrier { background: #E5DAF5; }
+.src-buyer { background: #CFEDE9; }
+
+.src-override {
+	background: #FFF1A8;
+	outline: 2px dashed #C9A227;
+	outline-offset: -2px;
+}
+
+.src-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin-bottom: 0.75rem;
+}
+
+.src-chip {
+	font-size: 0.75rem;
+	padding: 0.2rem 0.55rem;
+	border-radius: 999px;
+}
+
+/* --- таблица резолюции: группы по составляющей цены, сетка со склейкой одинаковых ячеек --- */
+
+.res-groups {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+	gap: 0.75rem 1rem;
+	margin-top: 0.75rem;
+}
+
+.res-group {
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 10px;
+	padding: 0.5rem 0.6rem 0.6rem;
+	background: #fff;
+	margin-top: 0.75rem;
+}
+
+.res-groups .res-group {
+	margin-top: 0;
+}
+
+.res-group-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.2rem 0.6rem;
+	margin-bottom: 0.4rem;
+}
+
+	.res-group-head h4 {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
+	.res-group-head .hint {
+		margin: 0;
+	}
+
+.res-grid {
+	display: grid;
+	grid-template-columns: minmax(9rem, max-content) repeat(var(--cols), minmax(0, 1fr));
+	gap: 3px;
+	font-size: 0.82rem;
+}
+
+.res-colhead {
+	font-size: 0.72rem;
+	color: var(--text-secondary, #7A7A7A);
+	padding: 0 0.3rem;
+	align-self: end;
+}
+
+.res-key {
+	font-weight: 400;
+	padding: 0.3rem 0.4rem 0.3rem 0;
+	cursor: help;
+	align-self: center;
+	overflow-wrap: anywhere;
+}
+
+	.res-key code {
+		font-size: 0.78rem;
+	}
+
+.res-cell {
+	position: relative;
+	padding: 0.3rem 0.45rem;
+	border-radius: 6px;
+	cursor: pointer;
+	min-width: 0;
+}
+
+	.res-cell:hover {
+		filter: brightness(0.96);
+	}
+
+.res-empty {
+	color: #B9B2A8;
+	text-align: center;
+	cursor: default;
+	background: repeating-linear-gradient(135deg, #FAF7F2, #FAF7F2 6px, #F3EEE6 6px, #F3EEE6 12px);
+}
+
+.res-line {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.1rem 0.45rem;
+	padding-right: 4.5rem;
+}
+
+.res-value {
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.res-source {
+	font-size: 0.72rem;
+	color: #5A5A5A;
+}
+
+/* Старое значение в углу ячейки — чтобы не ходить на соседнюю вкладку за ним. */
+.res-saved {
+	position: absolute;
+	top: 2px;
+	right: 4px;
+	font-size: 0.65rem;
+	color: #7A5C00;
+	background: rgba(255, 255, 255, 0.75);
+	border-radius: 4px;
+	padding: 0 3px;
+	max-width: 55%;
+	text-align: right;
+}
+
+.res-note {
+	font-size: 0.68rem;
+	color: #6A6A6A;
+	margin-top: 0.1rem;
+	line-height: 1.25;
+}
+
+.region-table {
+	border-collapse: separate;
+	border-spacing: 3px;
+	font-size: 0.82rem;
+}
+
+	.region-table th, .region-table td {
+		text-align: left;
+		padding: 0.25rem 0.6rem;
+		background: var(--bg-primary, #FFFBF5);
+		border-radius: 4px;
+	}
+
+	.region-table td.price-default {
+		background: #EEEAE4;
+		color: #6A6A6A;
+	}
+
+	.region-table td.price-edit {
+		cursor: pointer;
+	}
+
+		.region-table td.price-edit:hover {
+			filter: brightness(0.96);
+		}
+
+.res-table-wrap {
+	overflow-x: auto;
+}
+
+.custom-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 3px;
+	font-size: 0.82rem;
+}
+
+.mini-switch {
+	display: inline-flex;
+	border: 1px solid var(--border-color, #E5D5C0);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+	.mini-switch button {
+		border: none;
+		background: #fff;
+		padding: 0.2rem 0.55rem;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+
+		.mini-switch button.active {
+			background: var(--color-primary, #8B7355);
+			color: #fff;
+		}
+
+.truck-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.1rem 0.8rem;
+	margin-top: 0.2rem;
+}
+
+.slot-line {
+	font-size: 0.72rem;
+	margin-top: 0.4rem;
+	padding: 0.3rem 0.45rem;
+	background: #F3EEE6;
+	border-radius: 6px;
+}
+
+.override-list, .custom-list, .custom-controls, .param-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	align-items: center;
+	margin-top: 0.6rem;
+}
+
+.filter-title {
+	font-size: 0.8rem;
+	color: var(--text-secondary, #7A7A7A);
+}
+
+.override-chip, .chip, .param-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	border: 1px solid var(--border-color, #E5D5C0);
+	background: #fff;
+	border-radius: 999px;
+	padding: 0.25rem 0.65rem;
+	font-size: 0.8rem;
+}
+
+.chip, .param-chip {
+	cursor: pointer;
+}
+
+	.chip:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+.param-chip.changed {
+	background: #FFF1A8;
+	border-color: #C9A227;
+}
+
+.chip-x {
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-size: 1rem;
+	line-height: 1;
+	padding: 0;
+	color: #8A8A8A;
+}
+
+/* --- ползунки --- */
+
+.sliders {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 1rem 1.5rem;
+	margin: 1rem 0 1.25rem;
+}
+
+.slider-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.5rem;
+	font-size: 0.85rem;
+}
+
+.slider input[type="range"] {
+	width: 100%;
+}
+
+.range-wrap {
+	position: relative;
+}
+
+/* Отметки порогов формулы под ползунком: ниже первой — минимальная цена, выше второй — максимальная. */
+.mark {
+	position: absolute;
+	bottom: -4px;
+	width: 2px;
+	height: 8px;
+	background: var(--color-primary-dark, #8B7355);
+	transform: translateX(-1px);
+	pointer-events: none;
+}
+
+.slider-hint {
+	font-size: 0.72rem;
+	color: var(--text-secondary, #7A7A7A);
+	margin-top: 0.3rem;
+}
+
+/* --- таблица своего заказа --- */
+
+.custom-table th, .custom-table td {
+	text-align: left;
+	padding: 0.3rem 0.45rem;
+	background: var(--bg-primary, #FFFBF5);
+	border-radius: 4px;
+}
+
+.validation-error {
+	color: #B3261E;
+}
+
+/* --- модалки (по ConfirmDialog.razor.css) --- */
+
+.confirm-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1.25rem 1.5rem;
+	border-bottom: 1px solid var(--border-color, #E5D5C0);
+}
+
+	.confirm-header h2 {
+		margin: 0;
+		font-size: 1.15rem;
+	}
+
+.btn-close {
+	background: none;
+	border: none;
+	font-size: 2rem;
+	line-height: 1;
+	color: var(--text-secondary, #7A7A7A);
+	cursor: pointer;
+}
+
+.confirm-body {
+	padding: 1.25rem 1.5rem;
+}
+
+.confirm-footer {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.6rem;
+	padding: 1rem 1.5rem;
+	border-top: 1px solid var(--border-color, #E5D5C0);
+}
+
+.btn-secondary {
+	padding: 0.65rem 1.1rem;
+	border-radius: 8px;
+	cursor: pointer;
+	background: var(--bg-surface, #FAF7F2);
+	color: var(--text-primary, #3D2E1F);
+	border: 1px solid var(--border-color, #E5D5C0);
+}
+
+.form-group {
+	margin-bottom: 0.9rem;
+}
+
+	.form-group label {
+		display: block;
+		font-size: 0.85rem;
+		margin-bottom: 0.35rem;
+	}
+
+	.form-group input, .form-group select {
+		width: 100%;
+		padding: 0.55rem 0.7rem;
+		border: 1px solid var(--border-color, #E5D5C0);
+		border-radius: 8px;
+		font-size: 1rem;
+		box-sizing: border-box;
+	}
+
+
+/* --- телефон: сетка и таблица своего заказа превращаются в карточки --- */
+
+@media (max-width: 700px) {
+	.res-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.res-colhead {
+		display: none;
+	}
+
+	.res-cell {
+		grid-column: auto !important;
+	}
+
+		.res-cell[data-label]:not([data-label=""])::before {
+			content: attr(data-label);
+			display: block;
+			font-size: 0.68rem;
+			color: #6A6A6A;
+		}
+
+	.res-empty {
+		display: none;
+	}
+
+	.res-key {
+		padding-top: 0.5rem;
+	}
+
+	.custom-table, .custom-table tbody, .custom-table tr, .custom-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.custom-table thead {
+		display: none;
+	}
+
+	.custom-table tr {
+		margin-bottom: 0.75rem;
+		border: 1px solid var(--border-color, #E5D5C0);
+		border-radius: 8px;
+		padding: 0.35rem;
+	}
+
+	.custom-table td::before {
+		content: attr(data-label);
+		display: block;
+		font-size: 0.68rem;
+		color: #6A6A6A;
+	}
+}

@@ -719,3 +719,30 @@ select.form-control option:disabled {
 		display: none !important;
 	}
 }
+
+/* Превью правки цены: итог и разбивка, которые сохранятся. */
+.price-preview {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8rem;
+	margin-top: 0.5rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.price-preview th,
+.price-preview td {
+	padding: 0.25rem 0.35rem;
+	text-align: right;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+	white-space: nowrap;
+}
+
+.price-preview th:first-child,
+.price-preview td:first-child {
+	text-align: left;
+}
+
+.price-preview-total td {
+	font-weight: 600;
+	border-bottom: none;
+}

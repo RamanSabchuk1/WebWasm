@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.JSInterop;
 using WebWasm.Helpers;
-using WebWasm.Models;
 using WebWasm.Pages;
 using WebWasm.Services;
 

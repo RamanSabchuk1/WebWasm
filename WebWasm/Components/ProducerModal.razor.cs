@@ -16,21 +16,23 @@ public partial class ProducerModal : ComponentBase
 	private List<ProducerWorkingTimeEntry> _workingTimeEntries = [];
 	private string _errorMessage = string.Empty;
 
+	private bool _wasOpen;
+
 	protected override void OnParametersSet()
 	{
-		if (IsOpen)
+		// Форма заполняется только при открытии: перерисовка родителя (например после ошибки сохранения) не стирает ввод.
+		if (IsOpen && !_wasOpen)
 		{
+			ResetForm();
 			if (EditingProducer is not null)
 			{
 				_name = EditingProducer.Name;
 				_companyId = EditingProducer.Company?.Id;
 				_workingTimeEntries = [.. EditingProducer.ProducerWorkingTime.Select(wt => new ProducerWorkingTimeEntry(wt))];
 			}
-			else
-			{
-				ResetForm();
-			}
 		}
+
+		_wasOpen = IsOpen;
 	}
 
 	private void ResetForm()
@@ -70,7 +72,6 @@ public partial class ProducerModal : ComponentBase
 		var workingTimes = _workingTimeEntries.Select(e => e.ToProducerWorkingTime()).ToList();
 
 		await OnSubmit.InvokeAsync((_companyId, _name, workingTimes));
-		ResetForm();
 	}
 
 	private async Task CloseModal()

@@ -9,13 +9,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
 		<PackageReference Include="xunit" Version="2.9.3" />
 		<!-- Reference implementation: JwtReader must read claims exactly like the package the app used before -->
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
 		<!-- Reference implementation: StorageFormat must stay compatible with values saved by Blazored -->
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+		<PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -27,6 +27,11 @@
 		<Compile Include="..\WebWasm\Helpers\StorageFormat.cs" Link="Linked\StorageFormat.cs" />
 		<Compile Include="..\WebWasm\Services\LoadingService.cs" Link="Linked\LoadingService.cs" />
 		<Compile Include="..\WebWasm\Services\EncryptionService.cs" Link="Linked\EncryptionService.cs" />
+		<Compile Include="..\WebWasm\Helpers\SlotHelper.cs" Link="Linked\SlotHelper.cs" />
+		<Compile Include="..\WebWasm\Models\BaseModels.cs" Link="Linked\BaseModels.cs" />
+		<Compile Include="..\WebWasm\Models\PricingSettingModels.cs" Link="Linked\PricingSettingModels.cs" />
+		<Compile Include="..\WebWasm\Models\SecurityModels.cs" Link="Linked\SecurityModels.cs" />
+		<Compile Include="..\WebWasm\Helpers\PriceChartMath.cs" Link="Linked\PriceChartMath.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

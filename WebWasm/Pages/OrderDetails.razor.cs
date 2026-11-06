@@ -18,6 +18,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private DriverSlot[] _driverSlots = [];
 	private Vehicle[] _vehicles = [];
 	private Level[] _levels = [];
+	private SlotTimeParams _slotTimeParams = SlotTimeParams.Default;
 	private static readonly OrderStatus[] _allStatuses = Enum.GetValues<OrderStatus>();
 	private (Company, Driver)[] _driversWithCompany = [];
 	private readonly Dictionary<double, Guid> _selectedDriverIds = [];
@@ -43,6 +44,8 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private int _deliveryCount;
 	private bool _hasAcceptedDelivery;
 	private string? _priceEditError;
+	// Превью с сервера: та же функция, что при сохранении, поэтому SA видит те цифры, которые запишутся.
+	private CalculationInfo? _pricePreview;
 
 	private bool _showTimeEdit;
 	private DateTime _editPreferredDeliveryTime;
@@ -63,10 +66,35 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		// Предупреждаем, если доставка уже у водителя: правка меняет его вознаграждение.
 		_hasAcceptedDelivery = _order?.Deliveries?.Any(d => d.Driver is not null) == true;
 		_priceEditError = null;
+		_pricePreview = _calculationInfo;
 		_showPriceEdit = true;
 	}
 
 	private void ClosePriceEdit() => _showPriceEdit = false;
+
+	private SetOrderCalculationRequest PriceEditRequest() =>
+		// Не гоняем на backend неизменённую сумму доставок: иначе каждое открытие модалки писало бы
+		// в аудит «правку доставки» и перезаписывало цены из-за округления при распределении.
+		new(_editMaterialCost, _editCommission, _editDeliveryCost == _originalDeliveryCost ? null : _editDeliveryCost);
+
+	private async Task RefreshPricePreview()
+	{
+		if (_editMaterialCost < 0m || _editCommission < 0m || _editDeliveryCost < 0m)
+		{
+			_priceEditError = "Values cannot be negative.";
+			return;
+		}
+
+		try
+		{
+			_pricePreview = await apiClient.Post<SetOrderCalculationRequest, CalculationInfo>($"admin/orders/{Id}/calculation/preview", PriceEditRequest());
+			_priceEditError = null;
+		}
+		catch (Exception ex)
+		{
+			_priceEditError = ex.Message;
+		}
+	}
 
 	private async Task SubmitPriceEdit()
 	{
@@ -88,17 +116,14 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			return;
 		}
 
-		// Не гоняем на backend неизменённую сумму: иначе каждое открытие модалки писало бы
-		// в аудит «правку доставки» и перезаписывало цены из-за округления при распределении.
-		var deliveryCost = _editDeliveryCost == _originalDeliveryCost ? null : _editDeliveryCost;
-
 		await loadingService.ExecuteWithLoading(async () =>
 		{
 			try
 			{
-				await apiClient.Put($"admin/orders/{Id}/calculation", new SetOrderCalculationRequest(_editMaterialCost, _editCommission, deliveryCost));
+				await apiClient.Put($"admin/orders/{Id}/calculation", PriceEditRequest());
 				toastService.ShowSuccess("Order price updated (audit logged).");
 				_showPriceEdit = false;
+				cashService.Invalidate<Order>();
 				// Кэш CalculationInfo (TTL 7 мин) — принудительно свежая выборка после правки.
 				_allCalculationInfo = await cashService.GetData<CalculationInfo>(useCash: false);
 				await LoadOrder();
@@ -133,8 +158,9 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 				await apiClient.Put($"admin/orders/{Id}/preferred-delivery-time", new SetPreferredDeliveryTimeRequest(_editPreferredDeliveryTime));
 				toastService.ShowSuccess("Preferred delivery time updated.");
 				_showTimeEdit = false;
-				// Слоты водителей изменились на backend (restore+reserve) — обновляем все данные страницы.
-				await FetchData();
+				// Слоты водителей изменились на backend (restore+reserve): их кэш устарел.
+				cashService.Invalidate<Order>();
+				await RefreshSlots();
 				await LoadOrder();
 			}
 			catch (Exception ex)
@@ -182,7 +208,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		var regions = cashService.GetData<Region>().AsTask();
 		var driversWithCompany = cashService.GetDriverWithCompany().AsTask();
 		var vehicles = cashService.GetData<Vehicle>().AsTask();
-		await Task.WhenAll(calculationInfo, regions, driversWithCompany, vehicles);
+		var slotTimeParams = LoadSlotTimeParams();
+		await Task.WhenAll(calculationInfo, regions, driversWithCompany, vehicles, slotTimeParams);
+
+		_slotTimeParams = slotTimeParams.Result;
 
 		_allCalculationInfo = calculationInfo.Result;
 		_levels = [.. regions.Result.SelectMany(r => r.Levels)];
@@ -190,6 +219,29 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_driverSlots = await cashService.GetSlots();
 		var user = await cashService.GetData<User>();
 		_vehicles = vehicles.Result.MapDriversToVehicles(_driversWithCompany, user);
+	}
+
+	/// <summary>
+	/// Слот водителя считается по тем же глобальным настройкам, что backend применяет на AcceptOrder.
+	/// Настройки не загрузились — дефолты и тост: страница заказа важнее точности подсказки о слоте.
+	/// </summary>
+	private async Task<SlotTimeParams> LoadSlotTimeParams()
+	{
+		try
+		{
+			return SlotTimeParams.From(await apiClient.Get<PricingSettingItem[]>("admin/pricing-settings?scope=Global"));
+		}
+		catch (Exception ex)
+		{
+			toastService.ShowError($"Slot settings not loaded, defaults used: {ex.Message}");
+			return SlotTimeParams.Default;
+		}
+	}
+
+	private async Task RefreshSlots()
+	{
+		var (users, companies, drivers) = await cashService.GetUsersCompaniesDrivers();
+		_driverSlots = await cashService.GetSlots(drivers, users, companies, useCash: false);
 	}
 
 	private void RequestResetPayments()
@@ -203,6 +255,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		{
 			await apiClient.Post($"Orders/{Id}/payments/reset");
 			toastService.ShowSuccess("Payments reset successfully");
+			cashService.Invalidate<Order>();
 			await LoadOrder(); // Refresh
 		}, "Error resetting payments: ");
 	}
@@ -234,6 +287,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			await apiClient.Post($"Orders/{Id}/accept?companyId={companyId}&weight={weight}&driverId={driverId}");
 			toastService.ShowSuccess("Delivery accepted successfully");
 			_selectedDriverIds.Remove(weight);
+			// Принятие вырезает окно из слотов водителя и меняет цену заказа (цена перевозчика).
+			cashService.Invalidate<Order>();
+			_allCalculationInfo = await cashService.GetData<CalculationInfo>(useCash: false);
+			await RefreshSlots();
 			await LoadOrder();
 		}, "Error accepting delivery: ");
 	}
@@ -249,6 +306,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		{
 			await apiClient.Post($"Orders/{Id}/status?status={_newStatus}&state={Uri.EscapeDataString(_newState)}");
 			toastService.ShowSuccess("Status updated successfully");
+			cashService.Invalidate<Order>();
 			await LoadOrder();
 		}, "Error updating status: ");
 	}
@@ -263,7 +321,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		return _order.Status switch
 		{
 			OrderStatus.Draft => "Заказ почемуто в мусорном статусе 🗑️",
-			OrderStatus.WaitingApprove => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ПРИНЯТ похоже это мусор" : _order.Created < DateTime.Now.AddHours(2) ? "Заказ всё еще не принимают 🧲" : "Новый заказ создан ✒️",
+			OrderStatus.WaitingApprove => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ПРИНЯТ похоже это мусор" : _order.Created < DateTime.Now.AddHours(-2) ? "Заказ всё еще не принимают 🧲" : "Новый заказ создан ✒️",
 			OrderStatus.PaymentPending => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ОПЛАЧЕН похоже это мусор" : "Заказ всё еще не оплачен 💸",
 			OrderStatus.Active => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? " Сегодня выполнение заказа 📦" : " Active order 📝",
 			OrderStatus.Weighted => "Заказ взвешен ⚖️ осталось довезти и завершить 🚛",
@@ -306,7 +364,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 
 		return [.. _driversWithCompany
 			.Where(driverWithCompany => acceptableDrivers.Contains(driverWithCompany.Item2.Id))
-			.Select(driverWithCompany => (driverWithCompany.Item1, driverWithCompany.Item2, slotsByDriver[driverWithCompany.Item2.Id].ToArray().HasSlot(duration, deliveryTime)))];
+			.Select(driverWithCompany => (driverWithCompany.Item1, driverWithCompany.Item2, slotsByDriver[driverWithCompany.Item2.Id].ToArray().HasSlot(duration, deliveryTime, _slotTimeParams)))];
 	}
 
 	// Компания водителя для печатных деталей (связь живёт в _driversWithCompany, а не в UserInfo)

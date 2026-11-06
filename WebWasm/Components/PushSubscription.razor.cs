@@ -83,7 +83,6 @@ public partial class PushSubscription : ComponentBase
 				return;
 			}
 
-			_fcmToken = token;
 			var info = new DeviceTokenInfo(token, "WebWasm PWA", new Dictionary<string, string>
 			{
 				{ "platform", "web" },
@@ -91,6 +90,8 @@ public partial class PushSubscription : ComponentBase
 			});
 
 			await ApiClient.Post("DeviceTokens", info);
+			// «Включены» — только когда backend принял токен.
+			_fcmToken = token;
 		}
 		catch (Exception ex)
 		{

@@ -19,16 +19,16 @@
 	<div class="confirm-body">
 		<div class="form-group">
 			<label>Material Cost (BYN)</label>
-			<input type="number" min="0" step="0.01" @bind="_editMaterialCost" />
+			<input type="number" min="0" step="0.01" @bind="_editMaterialCost" @bind:after="RefreshPricePreview" />
 		</div>
 		<div class="form-group">
 			<label>Commission (BYN)</label>
-			<input type="number" min="0" step="0.01" @bind="_editCommission" />
+			<input type="number" min="0" step="0.01" @bind="_editCommission" @bind:after="RefreshPricePreview" />
 		</div>
 		@* S5: суммарная стоимость доставок — бэкенд распределит её пропорционально по доставкам *@
 		<div class="form-group">
 			<label>Deliveries Total (BYN, с НДС)</label>
-			<input type="number" min="0" step="0.01" @bind="_editDeliveryCost" disabled="@(_deliveryCount == 0)" />
+			<input type="number" min="0" step="0.01" @bind="_editDeliveryCost" @bind:after="RefreshPricePreview" disabled="@(_deliveryCount == 0)" />
 			@if (_deliveryCount == 0)
 			{
 				<p class="field-hint">У заказа нет доставок — стоимость доставки менять нельзя.</p>
@@ -38,7 +38,22 @@
 				<p class="field-hint">Сумма распределится между @_deliveryCount доставками пропорционально текущим ценам.</p>
 			}
 		</div>
-		<p class="page-subtitle">Total Cost пересчитается на сервере (material + доставки + commission). Каждая правка пишется в audit-лог.</p>
+		<p class="page-subtitle">Все суммы — итоги с НДС и Fee. Netto и НДС пересчитаются на сервере по формуле заказа; ниже — ровно то, что сохранится. Каждая правка пишется в audit-лог.</p>
+		@if (_pricePreview is { } preview)
+		{
+			<table class="price-preview">
+				<thead><tr><th></th><th>Итог</th><th>Netto</th><th>НДС</th><th>Fee</th></tr></thead>
+				<tbody>
+					<tr><td>Material</td><td>@Money(preview.MaterialCost)</td><td>@Money(preview.MaterialNetto)</td><td>@Money(preview.MaterialVatAmount)</td><td>@Money(preview.MaterialFeeAmount)</td></tr>
+					@foreach (var d in preview.DeliveryInfo)
+					{
+						<tr><td>Delivery @((d.Weight / 1000m).ToString("0.##")) t</td><td>@Money(d.TotalPrice)</td><td>@Money(d.Cost)</td><td>@Money(d.VatAmount)</td><td>@Money(d.FeeAmount)</td></tr>
+					}
+					<tr><td>Commission</td><td>@Money(preview.Commission)</td><td>—</td><td>@Money(preview.CommissionVatAmount)</td><td>@Money(preview.CommissionFeeAmount)</td></tr>
+					<tr class="price-preview-total"><td>Total</td><td>@Money(preview.TotalCost)</td><td></td><td>@Money((preview.MaterialVatAmount ?? 0) + preview.DeliveryInfo.Sum(x => x.VatAmount) + (preview.CommissionVatAmount ?? 0))</td><td></td></tr>
+				</tbody>
+			</table>
+		}
 		@if (_hasAcceptedDelivery)
 		{
 			<p class="validation-warning">⚠️ По заказу уже есть принятые доставки: правка стоимости доставки изменит вознаграждение перевозчика.</p>
