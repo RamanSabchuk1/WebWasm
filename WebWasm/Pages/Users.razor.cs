@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Components;
 using WebWasm.Helpers;
+using WebWasm.Localization;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Users : ComponentBase
+public partial class Users
 {
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
@@ -67,6 +68,9 @@ public partial class Users : ComponentBase
 	private bool _showFilters = false;
 
 	private readonly ConfirmState _confirm = new();
+	// Confirm button of the dialog: null = «Удалить» (red); otherwise the action verb on the main button.
+	private string? _confirmText;
+	private bool _confirmDangerous = true;
 
 	private bool _showAssignCompanyModal = false;
 	private User? _assignCompanyTargetUser;
@@ -82,6 +86,24 @@ public partial class Users : ComponentBase
 	private string _passportIssuedBy = string.Empty;
 	private DateOnly _passportIssuedDate = default;
 	private string _passportErrorMessage = string.Empty;
+
+	private string PassportTitle => _passportTargetUser is null
+		? T.Users.PassportData
+		: T.Users.PassportTitle(GetDisplayName(_passportTargetUser.UserInfo));
+
+	private void AskDelete(string title, string message, Func<Task> action)
+	{
+		_confirmText = null;
+		_confirmDangerous = true;
+		_confirm.Ask(title, message, action);
+	}
+
+	private void AskAction(string title, string message, string confirmText, Func<Task> action)
+	{
+		_confirmText = confirmText;
+		_confirmDangerous = false;
+		_confirm.Ask(title, message, action);
+	}
 
 	private void OpenPassportModal(User user)
 	{
@@ -119,7 +141,7 @@ public partial class Users : ComponentBase
 
 		if (number is null && identificationNumber is null && issuedBy is null && issuedDate is null)
 		{
-			_passportErrorMessage = "Please fill in at least one field.";
+			_passportErrorMessage = T.Users.FillOneField;
 			return;
 		}
 
@@ -131,13 +153,13 @@ public partial class Users : ComponentBase
 			try
 			{
 				await ApiClient.Post($"users/{userInfoId}/passport", request);
-				ToastService.ShowSuccess("Passport data set successfully");
+				ToastService.ShowSuccess(T.Users.PassportSaved);
 				ClosePassportModal();
 				await LoadData(false);
 			}
 			catch (Exception ex)
 			{
-				_passportErrorMessage = $"Failed to set passport data: {ex.Message}";
+				_passportErrorMessage = T.Users.PassportFailed(ex.Message);
 			}
 		});
 	}
@@ -162,7 +184,7 @@ public partial class Users : ComponentBase
 	{
 		if (_assignCompanyTargetUser is null || _assignCompanyId == Guid.Empty)
 		{
-			_assignCompanyError = "Please select a company.";
+			_assignCompanyError = T.Users.SelectCompanyError;
 			return;
 		}
 
@@ -173,15 +195,15 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Admin/user/{userInfoId}/company/{companyId}");
-			ToastService.ShowSuccess("User assigned to company successfully");
+			ToastService.ShowSuccess(T.Users.Assigned);
 			await LoadData(false);
-		}, "Failed to assign company: ");
+		}, T.Users.AssignFailed);
 	}
 
 	private void RequestUnassignCompany(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirm.Ask("Unassign Company", $"Unassign '{name}' from their current company? Their CompanyId will be cleared.", async () => await UnassignCompanyConfirmed(user.UserInfo.Id));
+		AskAction(T.Users.UnassignTitle, T.Users.UnassignMessage(name), T.Users.Unassign, async () => await UnassignCompanyConfirmed(user.UserInfo.Id));
 	}
 
 	private async Task UnassignCompanyConfirmed(Guid userInfoId)
@@ -189,21 +211,21 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Admin/user/{userInfoId}/company");
-			ToastService.ShowSuccess("User unassigned from company successfully");
+			ToastService.ShowSuccess(T.Users.Unassigned);
 			await LoadData(false);
-		}, "Failed to unassign company: ");
+		}, T.Users.UnassignFailed);
 	}
 
 	private void RequestDeleteUserInfo(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirm.Ask("Soft Delete User", $"Soft-delete user '{name}' (login: {user.Login})? This cascades to the driver record (if any) and all their vehicles. This action cannot be easily undone.", async () => await DeleteUserInfoConfirmed(user.UserInfo.Id));
+		AskDelete(T.Users.DeleteUserTitle, T.Users.DeleteUserMessage(name, user.Login), async () => await DeleteUserInfoConfirmed(user.UserInfo.Id));
 	}
 
 	private void RequestResetPassword(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirm.Ask("Reset Password", $"Reset password for '{name}' (login: {user.Login})? A new password will be generated and sent to the user via SMS. The old password will stop working immediately.", async () => await ResetPasswordConfirmed(user.Id));
+		AskAction(T.Users.ResetPasswordTitle, T.Users.ResetPasswordMessage(name, user.Login), T.Users.ResetPassword, async () => await ResetPasswordConfirmed(user.Id));
 	}
 
 	private async Task ResetPasswordConfirmed(Guid userId)
@@ -211,8 +233,8 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"users/{userId}/password-reset");
-			ToastService.ShowSuccess("Password reset — the new password was sent to the user via SMS");
-		}, "Failed to reset password: ");
+			ToastService.ShowSuccess(T.Users.PasswordReset);
+		}, T.Users.ResetPasswordFailed);
 	}
 
 	private async Task DeleteUserInfoConfirmed(Guid userInfoId)
@@ -220,15 +242,15 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Admin/user/{userInfoId}");
-			ToastService.ShowSuccess("User soft-deleted successfully");
+			ToastService.ShowSuccess(T.Users.UserDeleted);
 			await LoadData(false);
-		}, "Failed to delete user: ");
+		}, T.Users.DeleteUserFailed);
 	}
 
 	private void RequestDeleteDriver(User user, Driver driver)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirm.Ask("Soft Delete Driver", $"Soft-delete the driver record for '{name}'? This cascades to all their vehicles. The user account itself will remain.", async () => await DeleteDriverConfirmed(driver.Id));
+		AskDelete(T.Users.DeleteDriverTitle, T.Users.DeleteDriverMessage(name), async () => await DeleteDriverConfirmed(driver.Id));
 	}
 
 	private async Task DeleteDriverConfirmed(Guid driverId)
@@ -236,15 +258,15 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Admin/driver/{driverId}");
-			ToastService.ShowSuccess("Driver soft-deleted successfully");
+			ToastService.ShowSuccess(T.Users.DriverDeleted);
 			await LoadData(false);
-		}, "Failed to delete driver: ");
+		}, T.Users.DeleteDriverFailed);
 	}
 
 	private void RequestCreateDriver(User user)
 	{
 		var name = GetDisplayName(user.UserInfo);
-		_confirm.Ask("Create Driver", $"Create a driver record for '{name}' (login: {user.Login})?", async () => await CreateDriverForUserConfirmed(user.UserInfo.Id));
+		AskAction(T.Users.CreateDriverTitle, T.Users.CreateDriverMessage(name, user.Login), T.Common.Create, async () => await CreateDriverForUserConfirmed(user.UserInfo.Id));
 	}
 
 	private async Task CreateDriverForUserConfirmed(Guid userInfoId)
@@ -252,9 +274,9 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Admin/user/{userInfoId}/driver", new PhotoDto(string.Empty));
-			ToastService.ShowSuccess("Driver created successfully");
+			ToastService.ShowSuccess(T.Users.DriverCreated);
 			await LoadData(false);
-		}, "Failed to create driver: ");
+		}, T.Users.CreateDriverFailed);
 	}
 
 	private async Task AddFilterRole(ChangeEventArgs e)
@@ -416,6 +438,9 @@ public partial class Users : ComponentBase
 		}
 	}
 
+	private IEnumerable<User> PageOf(User[] users) =>
+		users.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage).Take(_pagination.ItemsPerPage);
+
 	private static readonly RoleType[] _roleOptions = Enum.GetValues<RoleType>();
 
 	protected override async Task OnInitializedAsync()
@@ -462,6 +487,8 @@ public partial class Users : ComponentBase
 	private int SuperAdminUsers => _users?.Count(user => user.Roles.Contains(RoleType.SuperAdmin)) ?? 0;
 	private int DriverCount => _drivers.Length;
 
+	private string FormatCount(int count) => T.FormatNumber((decimal)count, 0);
+
 	private Driver? GetDriver(User user)
 		=> _driverByUserInfoId.TryGetValue(user.UserInfo.Id, out var driver) ? driver : null;
 
@@ -471,33 +498,33 @@ public partial class Users : ComponentBase
 	private List<DriverSlot> GetDriverSlots(Guid driverId)
 		=> _slotsByDriverId.TryGetValue(driverId, out var slots) ? slots : [];
 
-	private static string GetDisplayName(UserInfo? userInfo)
+	private string GetDisplayName(UserInfo? userInfo)
 	{
 		if (userInfo is null)
 		{
-			return "Unknown";
+			return T.Users.Unknown;
 		}
 
 		var parts = new[] { userInfo.FirstName, userInfo.MiddleName, userInfo.LastName }
 			.Where(part => !string.IsNullOrWhiteSpace(part));
 		var name = string.Join(" ", parts);
-		return string.IsNullOrWhiteSpace(name) ? "Unknown" : name;
+		return string.IsNullOrWhiteSpace(name) ? T.Users.Unknown : name;
 	}
 	// Значение паспортного поля из secure-словаря UserInfo.Passport (ключи backend: passport.*).
-	// Отсутствующий ключ → пустая строка. Значение (в т.ч. issuedDate) выводится КАК ЕСТЬ, без переформатирования.
+	// Отсутствующий ключ → прочерк. Значение (в т.ч. issuedDate) выводится КАК ЕСТЬ, без переформатирования.
 	private static string GetPassportValue(IReadOnlyDictionary<string, string> passport, string key)
-		=> passport.TryGetValue(key, out var value) ? value : string.Empty;
+		=> passport.TryGetValue(key, out var value) ? value : Texts.Dash;
 
 	private bool IsExpanded(Guid userId) => _expandedUsers.Contains(userId);
 
 	private void ToggleExpanded(Guid userId) => _expandedUsers.Toggle(userId);
 
-	private static string FormatSlot(DriverSlot slot) => FormatSlot(slot.WorkingDay, slot.StartTime, slot.EndTime);
+	private string FormatSlot(DriverSlot slot) => FormatSlot(slot.WorkingDay, slot.StartTime, slot.EndTime);
 
-	private static string FormatSlot(CreateDriverSlot slot) => FormatSlot(slot.WorkingDay, slot.StartTime, slot.EndTime);
+	private string FormatSlot(CreateDriverSlot slot) => FormatSlot(slot.WorkingDay, slot.StartTime, slot.EndTime);
 
-	private static string FormatSlot(DateOnly day, TimeOnly start, TimeOnly end) =>
-		$"{day:yyyy-MM-dd} {start:HH:mm} - {end:HH:mm}";
+	private string FormatSlot(DateOnly day, TimeOnly start, TimeOnly end) =>
+		$"{T.FormatDate(day)} {Texts.FormatTime(start)}–{Texts.FormatTime(end)}";
 
 	private void OpenCreateUserModal()
 	{
@@ -615,13 +642,13 @@ public partial class Users : ComponentBase
 	{
 		if (_selectedCompanyId is null)
 		{
-			_userErrorMessage = "Please select a company.";
+			_userErrorMessage = T.Users.SelectCompanyError;
 			return;
 		}
 
 		if (_selectedRoles.Count == 0)
 		{
-			_userErrorMessage = "Select at least one role.";
+			_userErrorMessage = T.Users.SelectRoleError;
 			return;
 		}
 
@@ -636,17 +663,17 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post("Users", createUser);
-			ToastService.ShowSuccess("User created successfully");
+			ToastService.ShowSuccess(T.Users.UserCreated);
 			await LoadData(false);
 			CloseCreateUserModal();
-		}, "Failed to create user: ");
+		}, T.Users.CreateUserFailed);
 	}
 
 	private async Task CreateDriver()
 	{
 		if (string.IsNullOrWhiteSpace(_driverFirstName) || string.IsNullOrWhiteSpace(_driverLastName))
 		{
-			_driverErrorMessage = "First and last name are required.";
+			_driverErrorMessage = T.Users.NameRequired;
 			return;
 		}
 
@@ -661,34 +688,34 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post("Drivers", createDriver);
-			ToastService.ShowSuccess("Driver created successfully");
+			ToastService.ShowSuccess(T.Users.DriverCreated);
 			await LoadData(false);
 			CloseCreateDriverModal();
-		}, "Failed to create driver: ");
+		}, T.Users.CreateDriverFailed);
 	}
 
 	private async Task CreateDriverSlot()
 	{
 		if (_slotDriverId is null || _slotCompanyId is null)
 		{
-			_slotErrorMessage = "Driver and company are required.";
+			_slotErrorMessage = T.Users.DriverAndCompanyRequired;
 			return;
 		}
 
 		AddNewSlot();
 		if (_newSlots.Count == 0)
 		{
-			_slotErrorMessage = "There are now new slots.";
+			_slotErrorMessage = T.Users.NoNewSlots;
 			return;
 		}
 
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Drivers/slots?id={_slotDriverId}&companyId={_slotCompanyId}", _newSlots);
-			ToastService.ShowSuccess("Driver slot created successfully");
+			ToastService.ShowSuccess(T.Users.SlotsSaved);
 			await LoadData(false);
 			CloseDriverSlotModal();
-		}, "Failed to create driver slot: ");
+		}, T.Users.SlotsFailed);
 		// При ошибке список не чистим: в нём и старые слоты водителя, а backend заменяет ими все слоты целиком.
 	}
 
@@ -696,20 +723,20 @@ public partial class Users : ComponentBase
 	{
 		if (_slotDriverId is null || _slotCompanyId is null)
 		{
-			_slotErrorMessage = "Driver and company are required.";
+			_slotErrorMessage = T.Users.DriverAndCompanyRequired;
 			return;
 		}
 
 		if (_slotEndTime <= _slotStartTime)
 		{
-			_slotErrorMessage = "End time must be after start time.";
+			_slotErrorMessage = T.Users.EndAfterStart;
 			return;
 		}
 
 		var now = DateOnly.FromDateTime(DateTime.Now);
 		if (_slotDate < now)
 		{
-			_slotErrorMessage = "Working day cannot be in the past.";
+			_slotErrorMessage = T.Users.DayInPast;
 			return;
 		}
 
@@ -730,9 +757,9 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Users/{user.Id}/active?isActive={targetState.ToString().ToLowerInvariant()}");
-			ToastService.ShowSuccess($"User {(targetState ? "activated" : "deactivated")} successfully");
+			ToastService.ShowSuccess(targetState ? T.Users.Activated : T.Users.Deactivated);
 			await LoadData(false);
-		}, "Failed to update user status: ");
+		}, T.Users.StatusFailed);
 	}
 
 	private async Task ToggleUserVerified(User user)
@@ -741,9 +768,9 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Users/{user.Id}/verified?isVerified={targetState.ToString().ToLowerInvariant()}");
-			ToastService.ShowSuccess($"User {(targetState ? "verified" : "unverified")} successfully");
+			ToastService.ShowSuccess(targetState ? T.Users.VerifiedToast : T.Users.UnverifiedToast);
 			await LoadData(false);
-		}, "Failed to update user verification: ");
+		}, T.Users.VerificationFailed);
 	}
 
 	private async Task UpdateRoles()
@@ -755,7 +782,7 @@ public partial class Users : ComponentBase
 
 		if (_roleEditSelection.Count == 0)
 		{
-			_rolesErrorMessage = "Select at least one role.";
+			_rolesErrorMessage = T.Users.SelectRoleError;
 			return;
 		}
 
@@ -764,10 +791,10 @@ public partial class Users : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Users/{_rolesTargetUser.Id}/roles?roles={rolesQuery}");
-			ToastService.ShowSuccess("User roles updated successfully");
+			ToastService.ShowSuccess(T.Users.RolesSaved);
 			await LoadData(false);
 			CloseRolesModal();
-		}, "Failed to update roles: ");
+		}, T.Users.RolesFailed);
 	}
 
 	private void SetInitialSlotTimes(IEnumerable<DriverSlot> slots)

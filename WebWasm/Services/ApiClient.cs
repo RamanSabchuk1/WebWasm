@@ -6,13 +6,14 @@ using WebWasm.Helpers;
 
 namespace WebWasm.Services;
 
-public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthStateProvider authStateProvider)
+public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthStateProvider authStateProvider, Preferences preferences)
 {
 	private static readonly JsonSerializerOptions _jsonOptions = SerializationHelper.SerializerOptions();
 	public const string Authorization = nameof(Authorization);
 	private const string Bearer = nameof(Bearer);
-	private const string BaseAddress = "https://kliffort.com/api/dev/";
-	//private const string BaseAddress = "https://localhost:7231/";
+
+	/// <summary>Named client with the API address of the current environment (appsettings.json, registered in Program).</summary>
+	public const string HttpClientName = "api";
 
 	private const string Auth = nameof(Auth);
 
@@ -145,8 +146,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 	private async ValueTask<HttpClient> GetHttpClient()
 	{
-		var client = httpClientFactory.CreateClient();
-		client.BaseAddress = new Uri(BaseAddress);
+		var client = httpClientFactory.CreateClient(HttpClientName);
 
 		var token = await authStateProvider.GetValidJwt();
 		if (token != string.Empty)
@@ -164,11 +164,12 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 			if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
 			{
 				await authStateProvider.MarkUserAsLoggedOut();
-				throw new UnauthorizedAccessException($"Request to {endpoint} was unauthorized.");
+				throw new UnauthorizedAccessException(preferences.Texts.Common.SessionExpired);
 			}
 
 			var content = await response.Content.ReadAsStringAsync();
-			throw new Exception($"Request to {endpoint} failed with status code {response.StatusCode}: {content}");
+			Console.WriteLine($"{endpoint}: {(int)response.StatusCode} {content}");
+			throw new HttpRequestException(preferences.Texts.Common.ServerError((int)response.StatusCode, content), null, response.StatusCode);
 		}
 
 		if (response.Headers.TryGetValues(Authorization, out var values))
@@ -188,6 +189,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, LocalStorageAuthSta
 
 	private static JsonContent JsonBody<T>(T data) => JsonContent.Create(data, _jsonOptions.TypeInfo<T>());
 
-	private static async ValueTask<T> ReadJson<T>(HttpResponseMessage response, string endpoint) =>
-		await response.Content.ReadFromJsonAsync(_jsonOptions.TypeInfo<T>()) ?? throw new Exception($"Failed to get {endpoint}.");
+	private async ValueTask<T> ReadJson<T>(HttpResponseMessage response, string endpoint) =>
+		await response.Content.ReadFromJsonAsync(_jsonOptions.TypeInfo<T>())
+			?? throw new InvalidOperationException($"{preferences.Texts.Common.EmptyResponse} ({endpoint})");
 }

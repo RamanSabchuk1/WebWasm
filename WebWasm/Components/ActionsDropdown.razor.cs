@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 
 namespace WebWasm.Components;
 
-public partial class ActionsDropdown : ComponentBase
+public partial class ActionsDropdown
 {
 	[Inject] private IJSRuntime JS { get; set; } = default!;
 
@@ -17,17 +17,22 @@ public partial class ActionsDropdown : ComponentBase
 	private double _menuLeft;
 
 	[Parameter] public RenderFragment? ChildContent { get; set; }
-	[Parameter] public string Title { get; set; } = "Actions";
+	/// <summary>Tooltip of the trigger; default «Действия».</summary>
+	[Parameter] public string? Title { get; set; }
 	[Parameter] public double MenuHeight { get; set; } = 310;
 
 	// Hidden until measured to avoid a flash at a wrong position;
 	// without coordinates (JS failure) falls back to CSS absolute positioning near the trigger.
-	private string MenuStyle => (_measured, _measureFailed) switch
+	private string? MenuClass => (_measured, _measureFailed) switch
 	{
-		(true, _) => $"position: fixed; top: {_menuTop}px; left: {_menuLeft}px; display: flex;",
-		(false, true) => "display: flex;",
-		_ => "display: none;"
+		(true, _) => "menu-fixed",
+		(false, true) => null,
+		_ => "menu-measuring",
 	};
+
+	private string? MenuPosition => _measured
+		? FormattableString.Invariant($"--menu-top: {_menuTop}px; --menu-left: {_menuLeft}px")
+		: null;
 
 	private async Task ToggleAsync()
 	{

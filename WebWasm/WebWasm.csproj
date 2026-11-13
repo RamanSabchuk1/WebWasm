@@ -4,6 +4,7 @@
 		<TargetFramework>net11.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<Version>2.0.0</Version>
 
 		<!-- C# & Code Analysis -->
 		<LangVersion>preview</LangVersion>
@@ -29,13 +30,31 @@
 		<HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
 	</PropertyGroup>
 
+	<!--
+		Environment. The same code is deployed twice: the dev admin (this repository) and the prod admin (a copy of it).
+		CI passes -p:WasmApplicationEnvironmentName=Prod for the prod copy; anything else is dev.
+		- wwwroot/appsettings.json holds the dev values, wwwroot/appsettings.Prod.json overrides them for prod.
+		- Environments/Dev or Environments/Prod is served from the site root: manifest and icons, same file names in both.
+	-->
+	<PropertyGroup>
+		<AppAssetSet>Dev</AppAssetSet>
+		<AppAssetSet Condition="'$(WasmApplicationEnvironmentName)' == 'Prod'">Prod</AppAssetSet>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Remove="Environments\**" />
+		<!-- ContentRoot: the dev server (dotnet run) reads the file from the asset's content root, not from the Link path -->
+		<Content Include="Environments\$(AppAssetSet)\**" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)"
+				 ContentRoot="$(MSBuildProjectDirectory)\Environments\$(AppAssetSet)\" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="BlazorWasmBrotliLoader.Build" Version="1.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="11.0.0-rc.1.26425.128" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="11.0.0-rc.1.26425.128" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0-rc.1.26425.128" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Gateway" Version="11.0.0-rc.1.26425.128" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0-rc.1.26425.128" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Gateway" Version="11.0.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

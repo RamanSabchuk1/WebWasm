@@ -1,334 +1,135 @@
-/* Профиль (редизайн S5-UI): вместо массивной формы ФИО по центру — компактная
-   identity-шапка с правкой по карандашу, колокольчик сбоку, история как основной блок. */
-
-.profile-page {
-	max-width: 860px;
-	margin: 0 auto;
-	padding: 1.5rem 1rem 2.5rem;
-	display: flex;
-	flex-direction: column;
-	gap: 1.25rem;
+.profile {
+	max-width: 880px;
 }
 
-/* --- Identity --- */
+/* --- Identity: avatar, name, bell --- */
 
-.identity-card {
+.identity {
 	display: grid;
 	grid-template-columns: auto 1fr auto;
 	align-items: center;
-	gap: 1.25rem;
-	padding: 1.5rem;
-	background: var(--bg-surface, #FAF7F2);
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: var(--radius-md, 16px);
-	box-shadow: var(--shadow-soft, 0 4px 20px rgba(139, 115, 85, 0.1));
+	gap: var(--space-5);
 }
 
-.identity-avatar {
-	width: 64px;
-	height: 64px;
-	flex-shrink: 0;
+.avatar {
+	width: 56px;
+	height: 56px;
+	flex: none;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	border-radius: 50%;
-	background: linear-gradient(135deg, var(--color-primary, #C9A86C), var(--color-primary-dark, #8B7355));
-	color: #fff;
-	font-size: 1.4rem;
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	color: var(--text);
+	font-size: var(--font-lg);
 	font-weight: 600;
-	letter-spacing: 0.02em;
 }
 
+/* Without min-width a long name widens the grid and breaks the phone layout. */
 .identity-main {
-	min-width: 0; /* иначе длинное имя растягивает грид и ломает мобильную вёрстку */
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
 }
 
 .identity-name {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	margin: 0;
-	font-size: 1.35rem;
-	font-weight: 600;
-	color: var(--text-primary, #3D3D3D);
-	overflow-wrap: anywhere;
-}
-
-.identity-meta {
-	margin: 0.25rem 0 0;
-	color: var(--text-secondary, #7A7A7A);
-	font-size: 0.9rem;
-}
-
-.btn-icon-inline {
-	flex-shrink: 0;
-	border: none;
-	background: transparent;
-	cursor: pointer;
-	font-size: 0.95rem;
-	line-height: 1;
-	padding: 0.25rem;
-	border-radius: 6px;
-	opacity: 0.6;
-	transition: opacity 0.15s ease, background 0.15s ease;
-}
-
-	.btn-icon-inline:hover {
-		opacity: 1;
-		background: var(--bg-main, #F5EBE0);
-	}
-
-/* --- Форма правки ФИО (появляется по карандашу) --- */
-
-.name-fields {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-	gap: 0.75rem;
-}
-
-.field {
-	display: flex;
-	flex-direction: column;
-	gap: 0.3rem;
+	gap: var(--space-2);
 	min-width: 0;
 }
 
-	.field label {
-		font-size: 0.78rem;
-		font-weight: 500;
-		color: var(--text-secondary, #7A7A7A);
-	}
-
-.field-input {
-	width: 100%;
-	padding: 0.6rem 0.75rem;
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: 8px;
-	background: var(--bg-primary, #FFFBF5);
-	color: var(--text-primary, #3D3D3D);
-	font-size: 0.95rem;
-	box-sizing: border-box;
-	transition: border-color 0.15s ease;
-}
-
-	.field-input:focus {
-		outline: none;
-		border-color: var(--color-primary, #C9A86C);
+	.identity-name h2 {
+		overflow-wrap: anywhere;
 	}
 
 .identity-actions {
 	display: flex;
 	justify-content: flex-end;
-	gap: 0.5rem;
-	margin-top: 0.9rem;
+	gap: var(--space-2);
 }
 
-.btn-accent,
-.btn-ghost {
-	padding: 0.5rem 1.1rem;
-	border-radius: 8px;
-	font-size: 0.9rem;
-	font-weight: 500;
-	cursor: pointer;
-	transition: background 0.2s ease, border-color 0.2s ease;
+/* --- Settings: version and environment --- */
+
+.about {
+	margin-top: var(--space-4);
+	padding-top: var(--space-3);
+	border-top: 1px solid var(--border);
 }
 
-.btn-accent {
-	border: 1px solid var(--color-primary-dark, #8B7355);
-	background: var(--color-primary, #C9A86C);
-	color: #fff;
-}
+/* --- Notification history --- */
 
-	.btn-accent:hover {
-		background: var(--color-primary-dark, #8B7355);
-	}
-
-.btn-ghost {
-	border: 1px solid var(--border-color, #E5D5C0);
-	background: transparent;
-	color: var(--text-primary, #3D3D3D);
-}
-
-	.btn-ghost:hover {
-		background: var(--bg-main, #F5EBE0);
-	}
-
-/* --- История уведомлений --- */
-
-.notifications-card {
-	background: var(--bg-surface, #FAF7F2);
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: var(--radius-md, 16px);
-	box-shadow: var(--shadow-soft, 0 4px 20px rgba(139, 115, 85, 0.1));
-	overflow: hidden;
-}
-
-.notifications-header {
-	display: flex;
-	align-items: center;
-	gap: 0.6rem;
-	padding: 1rem 1.25rem;
-	border-bottom: 1px solid var(--border-color, #E5D5C0);
-}
-
-	.notifications-header h2 {
-		margin: 0;
-		font-size: 1.05rem;
-		font-weight: 600;
-		color: var(--text-primary, #3D3D3D);
-	}
-
-.notifications-count {
-	min-width: 22px;
-	padding: 0.1rem 0.45rem;
-	border-radius: 999px;
-	background: var(--color-primary, #C9A86C);
-	color: #fff;
-	font-size: 0.75rem;
-	font-weight: 600;
-	text-align: center;
-}
-
-.notification-list {
-	list-style: none;
+.notes {
 	margin: 0;
 	padding: 0;
+	list-style: none;
 }
 
-.notification-item {
+.note {
 	display: grid;
 	grid-template-columns: auto 1fr auto;
 	align-items: start;
-	gap: 0.75rem;
-	padding: 0.85rem 1.25rem;
-	border-bottom: 1px solid var(--border-color, #E5D5C0);
+	gap: var(--space-3);
+	padding: var(--space-3) 0;
+	border-bottom: 1px solid var(--border);
 }
 
-	.notification-item:last-child {
-		border-bottom: none;
+	.note:last-child {
+		border-bottom: 0;
 	}
 
-	/* Курсор-указатель только там, где переход действительно есть. */
-	.notification-item.is-clickable {
+	.note ::deep .icon {
+		margin-top: 2px;
+	}
+
+	/* Pointer only where a click really opens something. */
+	.note.is-clickable {
 		cursor: pointer;
 	}
 
-		.notification-item.is-clickable:hover {
-			background: var(--bg-main, #F5EBE0);
+		.note.is-clickable:hover {
+			background: var(--surface-2);
 		}
 
-.note-dot {
-	width: 8px;
-	height: 8px;
-	margin-top: 0.4rem;
-	border-radius: 50%;
-	background: var(--color-accent, #E8A545);
-	flex-shrink: 0;
-}
-
 .note-content {
+	display: flex;
+	flex-direction: column;
 	min-width: 0;
-}
-
-.note-title {
-	font-weight: 600;
-	font-size: 0.92rem;
-	color: var(--text-primary, #3D3D3D);
 	overflow-wrap: anywhere;
 }
 
-.note-body {
-	margin-top: 0.15rem;
-	font-size: 0.86rem;
-	color: var(--text-secondary, #7A7A7A);
-	overflow-wrap: anywhere;
-}
-
-.note-time {
-	font-size: 0.75rem;
-	color: var(--text-secondary, #7A7A7A);
-	white-space: nowrap;
-}
-
-/* --- Пустое состояние: раньше было незаметной серой строкой --- */
-
-.empty-state {
-	padding: 2.5rem 1.5rem;
-	text-align: center;
-}
-
-.empty-icon {
-	font-size: 2rem;
-	opacity: 0.45;
-}
-
-.empty-title {
-	margin: 0.6rem 0 0.25rem;
-	font-weight: 600;
-	color: var(--text-primary, #3D3D3D);
-}
-
-.empty-hint {
-	margin: 0 auto;
-	max-width: 380px;
-	font-size: 0.86rem;
-	color: var(--text-secondary, #7A7A7A);
-	line-height: 1.45;
-}
-
-/* --- mobile_fix --- */
-
-@media (max-width: 640px) {
-	.profile-page {
-		padding: 1rem 0.75rem 2rem;
-		gap: 1rem;
-	}
-
-	/* Аватар и колокольчик в одну строку, имя — под ними: при 320px три колонки не помещаются. */
-	.identity-card {
+@media (max-width: 767px) {
+	/* Avatar and bell share the first row, the name goes under them. */
+	.identity {
 		grid-template-columns: auto 1fr;
-		gap: 0.85rem 1rem;
-		padding: 1.1rem;
+		gap: var(--space-3) var(--space-4);
 	}
 
 	.identity-main {
 		grid-column: 1 / -1;
-	}
-
-	.identity-avatar {
-		width: 52px;
-		height: 52px;
-		font-size: 1.15rem;
+		grid-row: 2;
 	}
 
 	.identity-aside {
 		justify-self: end;
 	}
 
-	.identity-name {
-		font-size: 1.15rem;
-	}
-
 	.identity-actions {
 		flex-direction: column-reverse;
 	}
 
-		.identity-actions button {
+		.identity-actions .btn {
 			width: 100%;
 		}
 
-	/* Время уходит под текст — иначе длинный заголовок выдавливает его за экран. */
-	.notification-item {
+	/* The time goes under the text, otherwise a long title pushes it off the screen. */
+	.note {
 		grid-template-columns: auto 1fr;
-		padding: 0.75rem 1rem;
 	}
 
-	.note-time {
-		grid-column: 2;
-		margin-top: 0.3rem;
-	}
-
-	.notifications-header {
-		padding: 0.85rem 1rem;
-	}
+		.note time {
+			grid-column: 2;
+		}
 }

@@ -5,7 +5,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Providers : ComponentBase
+public partial class Providers
 {
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
@@ -69,7 +69,7 @@ public partial class Providers : ComponentBase
 				var companyId = _editingProducer.Company?.Id ?? Guid.Empty;
 				var updateProducer = new UpdateProducer(data.WorkingTimes);
 				await ApiClient.Put($"Producers/{_editingProducer.Id}?companyId={companyId}", updateProducer);
-				ToastService.ShowSuccess("Producer updated successfully!");
+				ToastService.ShowSuccess(T.Providers.Updated);
 			}
 			else
 			{
@@ -77,12 +77,12 @@ public partial class Providers : ComponentBase
 				var companyId = data.CompanyId ?? Guid.Empty;
 				var createProducer = new CreateProducer(data.WorkingTimes, data.Name);
 				await ApiClient.Post($"Producers?companyId={companyId}", createProducer);
-				ToastService.ShowSuccess("Producer created successfully!");
+				ToastService.ShowSuccess(T.Providers.Created);
 			}
 
 			await LoadData(false);
 			CloseProducerModal();
-		}, "Failed to save producer: ");
+		}, T.Providers.SaveFailed);
 	}
 
 	private void HandleDeleteProducer(Guid producerId)
@@ -94,9 +94,9 @@ public partial class Providers : ComponentBase
 		}
 
 		var loadingPlacesCount = producer.LoadingPlaces.Count;
-		_confirm.Ask("Confirm Delete Producer", loadingPlacesCount > 0
-			? $"Are you sure you want to delete producer '{producer.Name}'? This will also delete all {loadingPlacesCount} loading place(s). This action cannot be undone."
-			: $"Are you sure you want to delete producer '{producer.Name}'? This action cannot be undone.", async () => await DeleteProducerConfirmed(producerId));
+		_confirm.Ask(T.Providers.DeleteTitle, loadingPlacesCount > 0
+			? T.Providers.DeleteWithPlacesMessage(producer.Name, loadingPlacesCount)
+			: T.Providers.DeleteMessage(producer.Name), async () => await DeleteProducerConfirmed(producerId));
 	}
 
 	private async Task DeleteProducerConfirmed(Guid producerId)
@@ -106,9 +106,9 @@ public partial class Providers : ComponentBase
 			var producer = _producers.FirstOrDefault(p => p.Id == producerId);
 			var companyId = producer?.Company?.Id ?? Guid.Empty;
 			await ApiClient.Delete($"Producers/{producerId}?companyId={companyId}");
-			ToastService.ShowSuccess("Producer deleted successfully!");
+			ToastService.ShowSuccess(T.Providers.DeletedToast);
 			await LoadData(false);
-		}, "Failed to delete producer: ");
+		}, T.Providers.DeleteFailed);
 	}
 
 	// LoadingPlace Actions
@@ -147,7 +147,7 @@ public partial class Providers : ComponentBase
 					$"Producers/{_currentProducerId}/loading-place/{_editingLoadingPlace.Id}?companyId={companyId}",
 					loadingPlaceData
 				);
-				ToastService.ShowSuccess("Loading place updated successfully!");
+				ToastService.ShowSuccess(T.Providers.PlaceUpdated);
 			}
 			else
 			{
@@ -156,12 +156,12 @@ public partial class Providers : ComponentBase
 					$"Producers/{_currentProducerId}/loading-place?companyId={companyId}",
 					loadingPlaceData
 				);
-				ToastService.ShowSuccess("Loading place created successfully!");
+				ToastService.ShowSuccess(T.Providers.PlaceCreated);
 			}
 
 			await LoadData(false);
 			CloseLoadingPlaceModal();
-		}, "Failed to save loading place: ");
+		}, T.Providers.PlaceSaveFailed);
 	}
 
 	private void HandleDeleteLoadingPlace((Guid ProducerId, Guid LoadingPlaceId) data)
@@ -174,7 +174,7 @@ public partial class Providers : ComponentBase
 			return;
 		}
 
-		_confirm.Ask("Confirm Delete Loading Place", $"Are you sure you want to delete loading place '{loadingPlace.Name}'? This action cannot be undone.", async () => await DeleteLoadingPlaceConfirmed(data.ProducerId, data.LoadingPlaceId));
+		_confirm.Ask(T.Providers.DeletePlaceTitle, T.Providers.DeletePlaceMessage(loadingPlace.Name), async () => await DeleteLoadingPlaceConfirmed(data.ProducerId, data.LoadingPlaceId));
 	}
 
 	private async Task DeleteLoadingPlaceConfirmed(Guid producerId, Guid loadingPlaceId)
@@ -184,8 +184,8 @@ public partial class Providers : ComponentBase
 			var producer = _producers.FirstOrDefault(p => p.Id == producerId);
 			var companyId = producer?.Company?.Id ?? Guid.Empty;
 			await ApiClient.Delete($"Producers/{producerId}/loading-place/{loadingPlaceId}?companyId={companyId}");
-			ToastService.ShowSuccess("Loading place deleted successfully!");
+			ToastService.ShowSuccess(T.Providers.PlaceDeleted);
 			await LoadData(false);
-		}, "Failed to delete loading place: ");
+		}, T.Providers.PlaceDeleteFailed);
 	}
 }

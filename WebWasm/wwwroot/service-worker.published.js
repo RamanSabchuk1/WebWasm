@@ -1,153 +1,53 @@
-importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js');
-importScripts('./js/firebase-config.js', './js/notification-store.js');
+// Published service worker: offline cache of the app files + push (js/push-sw.js).
+importScripts('./js/notification-store.js', './js/push-sw.js', './service-worker-assets.js');
 
-self.importScripts('./rxjs.umd.min.js');
-self.importScripts('./service-worker-assets.js');
-
-firebase.initializeApp(firebaseConfig);
-const firebaseMessaging = firebase.messaging();
-
-const { fromEvent } = rxjs;
-
-const install$ = fromEvent(self, 'install');
-const activate$ = fromEvent(self, 'activate');
-const fetch$ = fromEvent(self, 'fetch');
-const message$ = fromEvent(self, 'message');
-const notificationClick$ = fromEvent(self, 'notificationclick');
-
-const cacheNamePrefix = 'offline-cache-';
+// The dev and prod admins share one origin on GitHub Pages (/WebWasm/, /ProdA/): the cache name carries the app path,
+// otherwise each admin would delete the other's cache on activate.
+const appPath = new URL(self.registration.scope).pathname;
+const cacheNamePrefix = `offline-cache-${appPath}`;
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
-const offlineAssetsInclude = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/];
-const offlineAssetsExclude = [/^service-worker\.js$/];
-const baseUrl = new URL('/', self.origin);
-const manifestUrlList = self.assetsManifest.assets.map(asset => new URL(asset.url, baseUrl).href);
+// Before 2.0 the cache was named offline-cache-<version>, without the app path.
+const isLegacyCache = (key) => key.startsWith('offline-cache-') && !key.startsWith('offline-cache-/');
 
-// Update check interval (every 1 hour)
-const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000;
+const offlineAssetsInclude = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff2?$/, /\.png$/, /\.svg$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/];
+// splash/: iPhone launch screens, iOS loads them only when the app is added to the Home Screen.
+const offlineAssetsExclude = [/^service-worker\.js$/, /^splash\//];
 
-install$.subscribe(event => {
-	console.log('Service Worker: Install event detected, version:', self.assetsManifest.version);
-	event.waitUntil(
-		onInstall().then(() => {
-			// Skip waiting to activate new service worker immediately
-			return self.skipWaiting();
-		})
-	);
-});
-
-activate$.subscribe(event => {
-	console.log('Service Worker: Activate event detected');
-	event.waitUntil(
-		onActivate().then(() => {
-			// Take control of all clients immediately
-			return self.clients.claim();
-		})
-	);
-});
-
-fetch$.subscribe(event => {
-	event.respondWith(onFetch(event));
-});
-
-message$.subscribe(event => {
-	console.log('Service Worker: Message received', event.data);
-
-	// Handle update check message from client
-	if (event.data === 'CHECK_FOR_UPDATES') {
-		event.waitUntil(checkForUpdates(event));
-		return;
-	}
-
-	// Handle skip waiting message
+self.addEventListener('install', (event) => event.waitUntil(onInstall().then(() => self.skipWaiting())));
+self.addEventListener('activate', (event) => event.waitUntil(onActivate().then(() => self.clients.claim())));
+self.addEventListener('fetch', (event) => event.respondWith(onFetch(event)));
+self.addEventListener('message', (event) => {
 	if (event.data === 'SKIP_WAITING') {
 		self.skipWaiting();
-		return;
 	}
-
-	event.waitUntil(onMessage(event.data));
 });
-
-notificationClick$.subscribe(event => {
-	console.log('Service Worker: Notification click received', event.data);
-	event.notification.close();
-	event.waitUntil(onNotificationClick(event));
-});
-
-firebaseMessaging.onBackgroundMessage(async (payload) => {
-	console.log('[Service Worker] Received Firebase background message:', payload);
-
-	await notificationStore.save(payload);
-
-	// Fallback to data properties if notification properties are missing (Data-only message support)
-	const notificationTitle = payload.notification?.title || payload.data?.title || 'New Notification';
-	const notificationBody = payload.notification?.body || payload.data?.body || '';
-
-	const notificationOptions = {
-		body: notificationBody,
-		icon: 'icon-192.png',
-		badge: 'icon-192.png',
-		data: payload.data, // Ensure data is passed for click handling
-		// Unique tag per push so notifications never collapse/replace each other.
-		tag: (payload.data?.tag || payload.data?.orderId || 'fcm') + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-		renotify: true
-	};
-
-	return self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Periodic update check
-setInterval(() => {
-	console.log('Service Worker: Periodic update check');
-	self.registration.update();
-}, UPDATE_CHECK_INTERVAL);
 
 async function onInstall() {
-	console.info('Service worker: Installing version', self.assetsManifest.version);
-
 	const assetsToCache = self.assetsManifest.assets
-		.filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
-		.filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)));
+		.filter((asset) => offlineAssetsInclude.some((pattern) => pattern.test(asset.url)))
+		.filter((asset) => !offlineAssetsExclude.some((pattern) => pattern.test(asset.url)));
 
 	const cache = await caches.open(cacheName);
-
-	await Promise.all(assetsToCache.map(async asset => {
+	await Promise.all(assetsToCache.map(async (asset) => {
 		try {
 			const response = await fetch(asset.url, { cache: 'no-cache' });
 			if (response.ok) {
 				await cache.put(asset.url, response);
 			}
 		} catch (error) {
-			console.warn(`Service worker: Failed to cache ${asset.url}`, error);
+			console.warn(`Service worker: failed to cache ${asset.url}`, error);
 		}
 	}));
-
-	console.info('Service worker: Installed version', self.assetsManifest.version);
 }
 
 async function onActivate() {
-	console.info('Service worker: Activating version', self.assetsManifest.version);
-
-	// Delete old caches
 	const cacheKeys = await caches.keys();
 	await Promise.all(cacheKeys
-		.filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
-		.map(key => {
-			console.log('Service Worker: Deleting old cache:', key);
-			return caches.delete(key);
-		}));
+		.filter((key) => (key.startsWith(cacheNamePrefix) && key !== cacheName) || isLegacyCache(key))
+		.map((key) => caches.delete(key)));
 
-	// Notify all clients about the new version
-	const clients = await self.clients.matchAll({ type: 'window' });
-	clients.forEach(client => {
-		client.postMessage({
-			type: 'SERVICE_WORKER_UPDATED',
-			version: self.assetsManifest.version,
-			cacheName: cacheName
-		});
-	});
-
-	console.info('Service worker: Activated version', self.assetsManifest.version);
+	const windows = await self.clients.matchAll({ type: 'window' });
+	windows.forEach((client) => client.postMessage({ type: 'SERVICE_WORKER_UPDATED', version: self.assetsManifest.version }));
 }
 
 async function onFetch(event) {
@@ -155,134 +55,44 @@ async function onFetch(event) {
 		return fetch(event.request);
 	}
 
-	const url = new URL(event.request.url);
+	const cache = await caches.open(cacheName);
 
-	// For navigation requests, always try network first, then fall back to cache
+	// Navigation: network first, then the cached page, then the cached index.html (client-side routes).
 	if (event.request.mode === 'navigate') {
 		try {
 			const networkResponse = await fetch(event.request);
 			if (networkResponse.ok) {
-				const cache = await caches.open(cacheName);
 				await cache.put(event.request, networkResponse.clone());
 				return networkResponse;
 			}
-		} catch (error) {
-			console.log('Service Worker: Network failed for navigation, falling back to cache');
+		} catch {
+			// Offline: fall back to the cache below.
 		}
 
-		const cache = await caches.open(cacheName);
-		const cachedResponse = await cache.match(event.request);
-		if (cachedResponse) {
-			return cachedResponse;
-		}
-
-		// Fallback to index.html
-		const cachedIndex = await cache.match('index.html');
-		if (cachedIndex) {
-			return cachedIndex;
-		}
-
-		return fetch('index.html');
+		return (await cache.match(event.request)) ?? (await cache.match('index.html')) ?? fetch('index.html');
 	}
 
-	// For same-origin requests, use cache-first with background update
-	if (url.origin === self.origin) {
-		const cache = await caches.open(cacheName);
-		const cachedResponse = await cache.match(event.request);
-
-		if (cachedResponse) {
-			// Update cache in background, return cached response immediately
-			fetch(event.request).then(response => {
-				if (response.ok) {
-					cache.put(event.request, response.clone());
-				}
-			}).catch(() => {
-				// Ignore network errors for background update
-			});
-			return cachedResponse;
-		}
-
-		// No cache hit — must wait for network
-		try {
-			const response = await fetch(event.request);
-			if (response.ok) {
-				cache.put(event.request, response.clone());
-			}
-			return response;
-		} catch (error) {
-			// Network failed and nothing in cache
-			return new Response('Network error', { status: 408, headers: { 'Content-Type': 'text/plain' } });
-		}
+	// Cross-origin (API, Firebase, map tiles): network only.
+	if (new URL(event.request.url).origin !== self.origin) {
+		return fetch(event.request);
 	}
 
-	// For cross-origin requests, network only
-	return fetch(event.request);
-}
-
-function onMessage(payload) {
-	console.log('[Service Worker] Message received:', payload);
-
-	const title = payload.title || payload.notification?.title || 'New Notification';
-	const body = payload.body || payload.notification?.body || '';
-	const url = payload.url || payload.data?.url || '/';
-
-	self.registration.showNotification(title, {
-		body: body,
-		icon: 'icon-192.png',
-		badge: 'icon-192.png',
-		vibrate: [100, 50, 100],
-		data: { url: url }
-	});
-}
-
-async function onNotificationClick(event) {
-	const data = event.notification.data;
-	const action = data?.clickAction || data?.action;
-	const orderId = data?.orderId;
-	let path = '/';
-
-	if (data?.url) {
-		path = data.url;
-	} else if ((action === 'OPEN_ORDER_DETAILS' || action === 'OPEN_DELIVERY_DETAILS') && orderId) {
-		path = `orders/${orderId}`;
+	// App files: cache first, refreshed in the background.
+	const cachedResponse = await cache.match(event.request);
+	if (cachedResponse) {
+		fetch(event.request)
+			.then((response) => response.ok && cache.put(event.request, response.clone()))
+			.catch(() => { });
+		return cachedResponse;
 	}
 
-	const urlToOpen = new URL(path, self.registration.scope).href;
-
-	const windowClients = await clients.matchAll({
-		type: 'window',
-		includeUncontrolled: true
-	});
-
-	for (const client of windowClients) {
-		if (client.url === urlToOpen && 'focus' in client) {
-			return client.focus();
-		}
-	}
-
-	if (windowClients.length > 0) {
-		const client = windowClients[0];
-		await client.focus();
-		return client.navigate(urlToOpen);
-	}
-
-	if (clients.openWindow) {
-		return clients.openWindow(urlToOpen);
-	}
-}
-
-async function checkForUpdates(event) {
 	try {
-		console.log('Service Worker: Checking for updates...');
-		await self.registration.update();
-
-		// Notify the client that update check is complete
-		if (event.source) {
-			event.source.postMessage({
-				type: 'UPDATE_CHECK_COMPLETE'
-			});
+		const response = await fetch(event.request);
+		if (response.ok) {
+			cache.put(event.request, response.clone());
 		}
-	} catch (error) {
-		console.error('Service Worker: Update check failed', error);
+		return response;
+	} catch {
+		return new Response('Network error', { status: 408, headers: { 'Content-Type': 'text/plain' } });
 	}
 }

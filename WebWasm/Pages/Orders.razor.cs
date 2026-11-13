@@ -6,7 +6,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Orders(CashService cashService, NavigationManager navigationManager, LocalStorageService localStorage)
+public partial class Orders(CashService cashService, LocalStorageService localStorage)
 {
 	private int _totalOrders = 0;
 	private int _pendingOrders = 0;
@@ -31,6 +31,12 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 
 	private double CurrentMinWeight => _minWeight ?? _weightRangeMin;
 	private double CurrentMaxWeight => _maxWeight ?? _weightRangeMax;
+
+	private int ActiveFilterCount => _selectedStatuses.Count
+		+ (_minWeight.HasValue ? 1 : 0) + (_maxWeight.HasValue ? 1 : 0)
+		+ (_fromDate.HasValue ? 1 : 0) + (_toDate.HasValue ? 1 : 0);
+
+	private string FormatWeight(double value) => T.FormatNumber(value, value % 1 == 0 ? 0 : 2);
 
 	private void OnMinWeightChanged(ChangeEventArgs e)
 	{
@@ -169,30 +175,6 @@ public partial class Orders(CashService cashService, NavigationManager navigatio
 		_pendingOrders = _orders.Count(o => o.Status is OrderStatus.PaymentPending or OrderStatus.WaitingApprove);
 		_completedOrders = _orders.Count(o => o.Status == OrderStatus.Completed);
 		RecalculateWeightRange();
-	}
-
-	private static string GetStatus(OrderStatus status)
-	{
-		return status switch
-		{
-			OrderStatus.Completed => "badge-completed",
-			OrderStatus.Cancelled => "badge-cancelled",
-			OrderStatus.Draft => "badge-draft",
-			OrderStatus.WaitingApprove => "badge-waiting-approve",
-			OrderStatus.PaymentPending => "badge-waiting-payment",
-			OrderStatus.Active => "badge-active",
-			OrderStatus.Weighted => "badge-weighted",
-			OrderStatus.CorruptedPayment => "badge-corrupted",
-			OrderStatus.Archived => "badge-archived",
-			OrderStatus.Deleted => "badge-deleted",
-			OrderStatus.PaymentInProgress => "badge-progress",
-			_ => string.Empty
-		};
-	}
-
-	private void NavigateToOrder(Guid id)
-	{
-		navigationManager.NavigateTo($"orders/{id}");
 	}
 
 	protected override async Task OnInitializedAsync()

@@ -7,10 +7,10 @@ public static class UiActions
 	extension(LoadingService loading)
 	{
 		/// <summary>
-		/// Runs a UI action under the loading overlay; an exception becomes an error toast "<paramref name="errorPrefix"/>{message}".
-		/// Replaces the repeated ExecuteWithLoading + try/catch + ShowError block of the pages.
+		/// Runs a UI action under the loading overlay; an exception becomes an error toast built from its message:
+		/// <c>T.Materials.SaveFailed</c>. Replaces the repeated ExecuteWithLoading + try/catch + ShowError block of the pages.
 		/// </summary>
-		public Task Run(ToastService toast, Func<Task> action, string errorPrefix) =>
+		public Task Run(ToastService toast, Func<Task> action, Func<string, string> errorMessage) =>
 			loading.ExecuteWithLoading(async () =>
 			{
 				try
@@ -19,7 +19,7 @@ public static class UiActions
 				}
 				catch (Exception ex)
 				{
-					toast.ShowError($"{errorPrefix}{ex.Message}");
+					toast.ShowError(errorMessage(ex.Message));
 				}
 			});
 	}
@@ -27,7 +27,7 @@ public static class UiActions
 	extension(IJSRuntime js)
 	{
 		/// <summary>Copies to the clipboard and reports the result as a toast (the browser may refuse without focus or HTTPS).</summary>
-		public async Task CopyToClipboard(ToastService toast, string text, string successMessage)
+		public async Task CopyToClipboard(ToastService toast, string text, string successMessage, string failureMessage)
 		{
 			try
 			{
@@ -36,7 +36,7 @@ public static class UiActions
 			}
 			catch (JSException)
 			{
-				toast.ShowError("Failed to copy");
+				toast.ShowError(failureMessage);
 			}
 		}
 	}

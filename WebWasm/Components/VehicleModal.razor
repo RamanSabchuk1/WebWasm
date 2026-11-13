@@ -1,96 +1,63 @@
-@using WebWasm.Models
-@using WebWasm.Services
 @inject ApiClient ApiClient
 
-<ModalShell IsOpen="true" ContainerClass="modal-large" OnClose="() => OnCancel.InvokeAsync()" OnSubmit="SubmitForm">
-		<div class="modal-header">
-			<h2>Create Vehicle</h2>
-			<button class="btn-close" @onclick="() => OnCancel.InvokeAsync()">×</button>
-		</div>
+<ModalShell IsOpen="true" ContainerClass="modal-lg" Title="@T.Vehicles.AddTitle" OnClose="() => OnCancel.InvokeAsync()" OnSubmit="SubmitForm">
+	<ChildContent>
+		<div class="form-grid">
+			<div class="field">
+				<label for="vehicle-model">@T.Vehicles.Model</label>
+				<input id="vehicle-model" type="text" @bind="_model" placeholder="@T.Vehicles.ModelPlaceholder" />
+			</div>
 
-		<div class="modal-body">
-			<form>
-				<div class="form-group">
-					<label for="modelInput">Model *</label>
-					<input id="modelInput" 
-						   type="text" 
-						   @bind="_model" 
-						   placeholder="Vehicle model"
-						   class="form-control" />
-				</div>
+			<div class="field">
+				<label for="vehicle-registration">@T.Vehicles.Registration</label>
+				<input id="vehicle-registration" type="text" @bind="_registrationNumber" />
+			</div>
 
-				<div class="form-group">
-					<label for="registrationInput">Registration Number *</label>
-					<input id="registrationInput" 
-						   type="text" 
-						   @bind="_registrationNumber" 
-						   placeholder="Registration number"
-						   class="form-control" />
-				</div>
+			<div class="field">
+				<label for="vehicle-weight">@T.Vehicles.Weight</label>
+				<input id="vehicle-weight" type="number" min="0" @bind="_vehicleWeight" />
+			</div>
 
-				<div class="form-row">
-					<div class="form-group">
-						<label for="weightInput">Weight (kg) *</label>
-						<input id="weightInput" 
-							   type="number" 
-							   @bind="_vehicleWeight" 
-							   placeholder="0"
-							   class="form-control" />
-					</div>
+			<div class="field">
+				<label for="vehicle-capacity">@T.Vehicles.Capacity</label>
+				<select id="vehicle-capacity" @bind="_loadCapacity">
+					<option value="0" disabled>@T.Vehicles.SelectCapacity</option>
+					@foreach (var capacity in _capacities)
+					{
+						<option value="@capacity.WeightKg" @key="capacity.WeightKg">@T.Vehicles.CapacityOption(T.FormatNumber((decimal)capacity.WeightKg, 0))</option>
+					}
+				</select>
+				@if (_capacitiesError is not null)
+				{
+					<span class="field-error" role="alert">@T.Vehicles.CapacitiesFailed(_capacitiesError)</span>
+				}
+			</div>
 
-					<div class="form-group">
-						<label for="capacityInput">Capacity (kg) *</label>
-						<select id="capacityInput"
-								@bind="_loadCapacity"
-								class="form-control">
-							<option value="0" disabled>Select capacity...</option>
-							@foreach (var capacity in _capacities)
-							{
-								<option value="@capacity.WeightKg">@capacity.WeightKg kg</option>
-							}
-						</select>
-						@if (!string.IsNullOrEmpty(_capacitiesError))
-						{
-							<small class="error-message">@_capacitiesError</small>
-						}
-					</div>
-				</div>
+			<div class="field span-all">
+				<label for="vehicle-driver">@T.Vehicles.Driver</label>
+				<select id="vehicle-driver" @bind="_selectedDriverId">
+					<option value="">@T.Vehicles.SelectDriver</option>
+					@foreach (var (company, driver) in DriversWithCompany)
+					{
+						<option value="@driver.Id" @key="driver.Id">@DriverOption(company, driver)</option>
+					}
+				</select>
+			</div>
 
-				<div class="form-group">
-					<label for="driverSelect">Driver *</label>
-					<select id="driverSelect" 
-							@bind="_selectedDriverId" 
-							class="form-control">
-						<option value="">Select a driver...</option>
-						@foreach (var (company, driver) in DriversWithCompany)
-						{
-							<option value="@driver.Id">@company.Name @(driver.UserInfo?.MobilePhone) @(string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? "Unknown" : driver.UserInfo?.FirstName) </option>
-						}
-					</select>
-				</div>
-
-				<div class="form-group">
-					<label for="photoInput">Photo URL</label>
-					<input id="photoInput" 
-						   type="text" 
-						   @bind="_photo" 
-						   placeholder="Photo URL"
-						   class="form-control" />
-				</div>
-
+			<div class="field span-all">
+				<label for="vehicle-photo">@T.Vehicles.PhotoUrl</label>
+				<input id="vehicle-photo" type="url" @bind="_photo" placeholder="@T.Vehicles.PhotoUrlPlaceholder" />
 				@if (!string.IsNullOrEmpty(_photo))
 				{
-					<div class="photo-preview">
-						<img src="@_photo" alt="Vehicle preview" />
-					</div>
+					<img class="photo-preview" src="@_photo" alt="" />
 				}
-			</form>
+			</div>
 		</div>
-
-		<div class="modal-footer">
-			<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">Cancel</button>
-			<button class="btn-primary" @onclick="SubmitForm" disabled="@(!IsFormValid())">
-				Create
-			</button>
-		</div>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="() => OnCancel.InvokeAsync()">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="SubmitForm" disabled="@(!IsFormValid())">
+			@T.Common.Create
+		</button>
+	</Footer>
 </ModalShell>

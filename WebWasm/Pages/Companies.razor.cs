@@ -5,7 +5,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Companies : ComponentBase
+public partial class Companies
 {
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
@@ -16,6 +16,9 @@ public partial class Companies : ComponentBase
 	private Company? _editingCompany = null;
 	private bool _isCompanyModalOpen = false;
 	private readonly ConfirmState _confirm = new();
+	// The confirm verb and colour depend on the action: delete is red, activate/deactivate is the main button.
+	private string? _confirmText;
+	private bool _confirmDangerous = true;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -55,22 +58,24 @@ public partial class Companies : ComponentBase
 			{
 				case CreateCompany create:
 					await ApiClient.Post("Companies", create);
-					ToastService.ShowSuccess("Company created successfully!");
+					ToastService.ShowSuccess(T.Companies.Created);
 					break;
 				case CompanyUpdate(var companyId, var update):
 					await ApiClient.Put($"Companies/{companyId}", update);
-					ToastService.ShowSuccess("Company updated successfully!");
+					ToastService.ShowSuccess(T.Companies.Updated);
 					break;
 			}
 
 			await LoadCompanies(false);
 			CloseCompanyModal();
-		}, "Failed to call API with company: ");
+		}, T.Companies.SaveFailed);
 	}
 
 	private void HandleDeleteCompany(Company company)
 	{
-		_confirm.Ask("Soft Delete Company", $"Are you sure you want to soft-delete company '{company.Name}'? This will also cascade soft-delete all related Producers, Vehicles, Drivers and Users belonging to this company. This action cannot be easily undone.", async () => await DeleteCompanyConfirmed(company.Id));
+		_confirmText = null;
+		_confirmDangerous = true;
+		_confirm.Ask(T.Companies.DeleteTitle, T.Companies.DeleteMessage(company.Name), async () => await DeleteCompanyConfirmed(company.Id));
 	}
 
 	private async Task DeleteCompanyConfirmed(Guid companyId)
@@ -78,9 +83,9 @@ public partial class Companies : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Admin/company/{companyId}");
-			ToastService.ShowSuccess("Company soft-deleted successfully!");
+			ToastService.ShowSuccess(T.Companies.DeletedToast);
 			await LoadCompanies(false);
-		}, "Failed to delete company: ");
+		}, T.Companies.DeleteFailed);
 	}
 
 	private void HandleToggleActive((Guid CompanyId, bool IsActive) data)
@@ -91,8 +96,12 @@ public partial class Companies : ComponentBase
 			return;
 		}
 
-		var action = data.IsActive ? "activate" : "deactivate";
-		_confirm.Ask($"Confirm {action.ToUpper()} Company", $"Are you sure you want to {action} company '{company.Name}'?", async () => await ToggleActiveConfirmed(data.CompanyId, data.IsActive));
+		_confirmText = data.IsActive ? T.Companies.Activate : T.Companies.Deactivate;
+		_confirmDangerous = false;
+		_confirm.Ask(
+			data.IsActive ? T.Companies.ActivateTitle : T.Companies.DeactivateTitle,
+			data.IsActive ? T.Companies.ActivateMessage(company.Name) : T.Companies.DeactivateMessage(company.Name),
+			async () => await ToggleActiveConfirmed(data.CompanyId, data.IsActive));
 	}
 
 	private async Task ToggleActiveConfirmed(Guid companyId, bool isActive)
@@ -100,8 +109,8 @@ public partial class Companies : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Post($"Companies/{companyId}/active?isActive={isActive.ToString().ToLower()}");
-			ToastService.ShowSuccess($"Company {(isActive ? "activated" : "deactivated")} successfully!");
+			ToastService.ShowSuccess(isActive ? T.Companies.ActivatedToast : T.Companies.DeactivatedToast);
 			await LoadCompanies(false);
-		}, "Failed to update company status: ");
+		}, T.Companies.StatusFailed);
 	}
 }

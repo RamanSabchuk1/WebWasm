@@ -3,7 +3,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class RegionModal : ComponentBase
+public partial class RegionModal
 {
 	private const string Default = "Europe/Minsk";
 	[Parameter] public bool IsOpen { get; set; }
@@ -42,7 +42,7 @@ public partial class RegionModal : ComponentBase
 	{
 		if (!IsValid)
 		{
-			_errorMessage = "Please enter a region name.";
+			_errorMessage = T.Regions.FillName;
 			return;
 		}
 

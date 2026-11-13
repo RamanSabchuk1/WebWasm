@@ -1,0 +1,29 @@
+@* Language and theme switches (design code, sections 8 and 9): sidebar, the phone «More» sheet, profile. *@
+<div class="preferences @(Compact ? "compact" : null)">
+	@if (!Compact)
+	{
+		<span class="field-label">@T.Shell.LanguageLabel</span>
+	}
+	<div class="segmented" role="group" aria-label="@T.Shell.LanguageLabel">
+		<button type="button" aria-pressed="@Aria.State(T.Language == Language.Ru)" @onclick="() => Preferences.SetLanguage(Language.Ru)">@(Compact ? "RU" : T.Shell.Russian)</button>
+		<button type="button" aria-pressed="@Aria.State(T.Language == Language.En)" @onclick="() => Preferences.SetLanguage(Language.En)">@(Compact ? "EN" : T.Shell.English)</button>
+	</div>
+
+	@if (!Compact)
+	{
+		<span class="field-label">@T.Shell.ThemeLabel</span>
+	}
+	<div class="segmented" role="group" aria-label="@T.Shell.ThemeLabel">
+		@foreach (var (mode, icon, title) in Themes)
+		{
+			<button type="button" aria-pressed="@Aria.State(Preferences.Theme == mode)" @onclick="() => Preferences.SetTheme(mode)"
+					title="@title" aria-label="@title" @key="mode">
+				<Icon Name="icon" />
+				@if (!Compact)
+				{
+					<span>@title</span>
+				}
+			</button>
+		}
+	</div>
+</div>

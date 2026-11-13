@@ -1,47 +1,47 @@
 @page "/vehicles"
-@using WebWasm.Services
 @inject CashService CashService
 @inject ApiClient ApiClient
 @inject ToastService ToastService
 @inject LoadingService LoadingService
 
-<PageTitle>Vehicles</PageTitle>
+<AppTitle Text="@T.Shell.Vehicles" />
 
-<div class="vehicles-container">
+<div class="page">
 	<div class="page-header">
 		<div>
-			<h1>🚛 Vehicles</h1>
-			<p class="page-subtitle">Manage vehicle fleet</p>
+			<h1>@T.Shell.Vehicles</h1>
+			<p class="page-subtitle">@T.Vehicles.Subtitle</p>
 		</div>
-		<button class="btn-create" @onclick="OpenCreateModal">
-			➕ Add Vehicle
+		<button type="button" class="btn btn-primary" @onclick="OpenCreateModal">
+			<Icon Name="IconName.Plus" />
+			@T.Vehicles.Add
 		</button>
 	</div>
 
-	<div class="content-card">
-		@if (_vehicles != null)
-		{
-			<VehiclesTable @key="_vehiclesKey" Items="@_vehicles" OnDelete="ShowDeleteConfirmation" />
-		}
-		else
-		{
-			<div class="loading">Loading vehicles...</div>
-		}
-	</div>
+	@if (_vehicles != null)
+	{
+		<VehiclesTable @key="_vehiclesKey" Items="@_vehicles" OnDelete="ShowDeleteConfirmation" />
+	}
+	else
+	{
+		<div class="card">
+			<div class="empty" role="status">
+				<span class="spinner spinner-lg" aria-hidden="true"></span>
+				<p class="empty-title">@T.Common.Loading</p>
+			</div>
+		</div>
+	}
 </div>
 
 @if (_showCreateModal)
 {
 	<VehicleModal DriversWithCompany="@_driverWithCompany"
-				   OnSubmit="CreateVehicle" 
-				   OnCancel="CloseCreateModal" />
+				  OnSubmit="CreateVehicle"
+				  OnCancel="CloseCreateModal" />
 }
 
 <ConfirmDialog IsOpen="@_showDeleteConfirm"
-			   Title="Confirm Delete"
+			   Title="@T.Vehicles.DeleteTitle"
 			   Message="@_deleteConfirmMessage"
-			   ConfirmText="Delete"
-			   CancelText="Cancel"
 			   OnConfirm="ConfirmDelete"
 			   OnCancel="CancelDelete" />
-

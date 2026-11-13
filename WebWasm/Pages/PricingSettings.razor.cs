@@ -10,12 +10,18 @@ namespace WebWasm.Pages;
 /// Company/MaterialType; приоритет цепочки показан в UI (Company → MaterialType → Global).
 /// Списки компаний/материалов — через CashService (паттерн проекта).
 /// </summary>
-public partial class PricingSettings : ComponentBase
+public partial class PricingSettings
 {
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
+
+	private const string ScopeGlobal = "Global";
+	private const string ScopeCompany = "Company";
+	private const string ScopeMaterialType = "MaterialType";
+
+	private static readonly string[] Scopes = [ScopeGlobal, ScopeCompany, ScopeMaterialType];
 
 	private enum Tab
 	{
@@ -24,7 +30,7 @@ public partial class PricingSettings : ComponentBase
 	}
 
 	private Tab _tab = Tab.Settings;
-	private string _scope = "Global";
+	private string _scope = ScopeGlobal;
 	private Guid? _scopeId;
 	private Guid? _companyId;
 	private Guid? _materialTypeId;
@@ -38,27 +44,14 @@ public partial class PricingSettings : ComponentBase
 	private decimal _editValue;
 	private string? _editError;
 
-	private static readonly Dictionary<string, string> RoleNames = new()
-	{
-		["Buyer"] = "покупатель → комиссия",
-		["Supplier"] = "поставщик → материал",
-		["Carrier"] = "перевозчик → доставка",
-	};
+	private string? EditTitle => _editItem is { } item ? T.Pricing.EditTitle(item.Key, T.Pricing.ScopeName(_scope)) : null;
 
 	/// <summary>На кого действует override ключа на уровне компании; null — backend не прислал роли (старая версия).</summary>
-	private static string? CompanyEffect(PricingSettingItem item) => item.CompanyRoles switch
+	private string? CompanyEffect(PricingSettingItem item) => item.CompanyRoles switch
 	{
 		null => null,
-		[] => "на компании не действует",
-		var roles => string.Join(", ", roles.Select(r => RoleNames.GetValueOrDefault(r, r))),
-	};
-
-	private static string Range(PricingSettingItem item) => (item.Min, item.Max) switch
-	{
-		(null, null) => "—",
-		({ } min, null) => $"≥ {min:0.####}",
-		(null, { } max) => $"≤ {max:0.####}",
-		({ } min, { } max) => $"{min:0.####} … {max:0.####}",
+		[] => T.Pricing.NoCompanyEffect,
+		var roles => string.Join(", ", roles.Select(T.Pricing.RoleEffect)),
 	};
 
 	protected override async Task OnInitializedAsync()
@@ -71,19 +64,19 @@ public partial class PricingSettings : ComponentBase
 		_scope = scope;
 		_items = [];
 
-		if (scope == "Company" && _companies.Length == 0)
+		if (scope == ScopeCompany && _companies.Length == 0)
 		{
 			_companies = await CashService.GetData<Company>();
 		}
-		else if (scope == "MaterialType" && _materialTypes.Length == 0)
+		else if (scope == ScopeMaterialType && _materialTypes.Length == 0)
 		{
 			_materialTypes = await CashService.GetData<MaterialType>();
 		}
 
 		_scopeId = scope switch
 		{
-			"Company" => _companyId,
-			"MaterialType" => _materialTypeId,
+			ScopeCompany => _companyId,
+			ScopeMaterialType => _materialTypeId,
 			_ => null,
 		};
 		await LoadItems();
@@ -105,7 +98,7 @@ public partial class PricingSettings : ComponentBase
 
 	private async Task LoadItems()
 	{
-		if (_scope != "Global" && _scopeId is null)
+		if (_scope != ScopeGlobal && _scopeId is null)
 		{
 			_items = [];
 			return;
@@ -118,7 +111,7 @@ public partial class PricingSettings : ComponentBase
 				: $"admin/pricing-settings?scope={_scope}&scopeId={_scopeId}";
 			var items = await ApiClient.Get<PricingSettingItem[]>(query);
 			_items = [.. items.OrderBy(x => x.Key)];
-		}, "Failed to load pricing settings: ");
+		}, T.Pricing.LoadFailed);
 	}
 
 	private void OpenEditDialog(PricingSettingItem item)
@@ -141,7 +134,7 @@ public partial class PricingSettings : ComponentBase
 		var key = item.Key;
 		if ((item.Min is { } min && _editValue < min) || (item.Max is { } max && _editValue > max))
 		{
-			_editError = $"Допустимый диапазон: {Range(item)}";
+			_editError = T.Pricing.RangeError(T.Pricing.Range(item.Min, item.Max));
 			return;
 		}
 
@@ -150,13 +143,13 @@ public partial class PricingSettings : ComponentBase
 			try
 			{
 				await ApiClient.Put("admin/pricing-settings", new SetPricingSettingRequest(_scope, _scopeId, key, _editValue));
-				ToastService.ShowSuccess($"Setting {key} updated.");
+				ToastService.ShowSuccess(T.Pricing.Updated(key));
 				_showEditDialog = false;
 				await LoadItems();
 			}
 			catch (Exception ex)
 			{
-				_editError = ex.Message;
+				_editError = T.Pricing.SaveFailed(ex.Message);
 			}
 		});
 	}
@@ -169,12 +162,12 @@ public partial class PricingSettings : ComponentBase
 			{
 				// Value = null → backend удаляет override, значение снова наследуется по цепочке.
 				await ApiClient.Put("admin/pricing-settings", new SetPricingSettingRequest(_scope, _scopeId, item.Key, null));
-				ToastService.ShowSuccess($"Override {item.Key} reset to inherited.");
+				ToastService.ShowSuccess(T.Pricing.ResetDone(item.Key));
 				await LoadItems();
 			}
 			catch (Exception ex)
 			{
-				ToastService.ShowError($"Failed to reset {item.Key}: {ex.Message}");
+				ToastService.ShowError(T.Pricing.ResetFailed(item.Key, ex.Message));
 			}
 		});
 	}

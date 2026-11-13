@@ -4,7 +4,7 @@ using Microsoft.JSInterop;
 
 namespace WebWasm.Components;
 
-public partial class ModalShell : ComponentBase
+public partial class ModalShell
 {
 	[Inject] private IJSRuntime JS { get; set; } = default!;
 
@@ -13,6 +13,12 @@ public partial class ModalShell : ComponentBase
 	[Parameter] public RenderFragment? ChildContent { get; set; }
 	[Parameter] public EventCallback OnClose { get; set; }
 	[Parameter] public bool TopLayer { get; set; }
+
+	/// <summary>Standard header with this title and the close button; the body and <see cref="Footer"/> are wrapped too.</summary>
+	[Parameter] public string? Title { get; set; }
+
+	/// <summary>Buttons of the window, right-aligned: «Отмена» first, the main button last.</summary>
+	[Parameter] public RenderFragment? Footer { get; set; }
 
 	/// <summary>
 	/// S5: обработчик success-path по Enter — оппозит <see cref="OnClose"/> (Escape).

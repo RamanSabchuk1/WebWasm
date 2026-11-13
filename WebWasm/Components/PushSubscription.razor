@@ -1,60 +1,20 @@
-@using WebWasm.Models
-
-@* Compact: компактный колокольчик вместо кнопки во всю ширину (профиль). *@
-@if (Compact)
-{
-	<div class="bell-wrap">
-		<button class="bell @(IsSubscribed ? "is-on" : null)"
-				@onclick="Subscribe"
-				disabled="@(_isSubscribing || _isLoading || IsSubscribed || HasError)"
-				title="@BellTitle"
-				aria-label="@BellTitle">
-			@if (_isSubscribing || _isLoading)
-			{
-				<span class="bell-spinner" role="status"></span>
-			}
-			else
-			{
-				<span class="bell-glyph">@(HasError ? "🔕" : "🔔")</span>
-			}
-		</button>
-		<span class="bell-caption">@BellCaption</span>
-	</div>
-}
-else
-{
-	@if (_isLoading)
+@* Bell of the push subscription. Taps are handled by the JS module (PushSubscription.razor.js): on iPhone the
+   permission request works only inside the tap handler itself. *@
+<div class="bell-wrap">
+	<button @ref="_button" type="button" class="btn bell @(_state == PushState.On ? "is-on" : null)"
+			disabled="@(!CanTap)" title="@Title" aria-label="@Title">
+		@if (_state is PushState.Checking or PushState.Subscribing)
+		{
+			<span class="spinner" role="status"></span>
+		}
+		else
+		{
+			<Icon Name="@(_state is PushState.On or PushState.Ready ? IconName.Bell : IconName.BellOff)" Size="20" />
+		}
+	</button>
+	<span class="bell-caption">@Caption</span>
+	@if (Hint is not null)
 	{
-		<div class="spinner-border text-primary" role="status">
-			<span class="visually-hidden">Loading...</span>
-		</div>
+		<p class="bell-hint">@Hint</p>
 	}
-	else
-	{
-		<button class="btn btn-primary" @onclick="Subscribe" disabled="@_isSubscribing">
-			@if (_isSubscribing)
-			{
-				<span class="spinner-border spinner-border-sm me-2" role="status"></span>
-			}
-			Subscribe to Notifications
-		</button>
-	}
-
-	@if (!string.IsNullOrEmpty(_errorMessage))
-	{
-		<div class="alert alert-danger mt-3" role="alert">
-			<strong>Error:</strong> @_errorMessage
-		</div>
-	}
-
-	@if (!string.IsNullOrEmpty(_fcmToken))
-	{
-		<div class="alert alert-success mt-3" role="alert">
-			<p><strong>Success!</strong> Push notifications enabled.</p>
-			<details>
-				<summary>View FCM Token</summary>
-				<pre style="word-wrap: break-word; white-space: pre-wrap; font-size: 0.8em;"><code>@_fcmToken</code></pre>
-			</details>
-		</div>
-	}
-}
+</div>

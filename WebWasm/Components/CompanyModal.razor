@@ -1,150 +1,91 @@
-@using WebWasm.Models
-
-<ModalShell IsOpen="IsOpen" ContainerClass="modal-large" OnClose="CloseModal" OnSubmit="HandleSubmit">
-			<div class="modal-header">
-				<h2>@(IsEditMode ? "Edit Company" : "Add New Company")</h2>
-				<button class="btn-close" @onclick="CloseModal">×</button>
-			</div>
-
-			<div class="modal-body">
-				<!-- Company Details Section -->
-				<div class="form-section">
-					<h3>Company Details</h3>
-					<div class="form-row">
-						<div class="form-group">
-							<label>Name *</label>
-								<input type="text"
-									   class="form-control"
-									   @bind="_name"
-									   placeholder="Enter company name" />
-						</div>
-
-						<div class="form-group">
-							<label>UNP *</label>
-							<input type="text"
-								   class="form-control"
-								   @bind="_unp"
-								   placeholder="Enter UNP"
-								   disabled="@IsEditMode" />
-							@if (IsEditMode)
-							{
-								<small class="form-help">UNP name cannot be changed</small>
-							}
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label>Address *</label>
-						<input type="text"
-							   class="form-control"
-							   @bind="_address"
-							   placeholder="Enter address" />
-					</div>
-
-					<div class="form-row">
-						<div class="form-group">
-							<label>Corporate Email *</label>
-							<input type="email"
-								   class="form-control"
-								   @bind="_corporateEmail"
-								   placeholder="company@example.com" />
-						</div>
-
-						<div class="form-group">
-							<label>Legal Type *</label>
-							<input type="text"
-								   class="form-control"
-								   @bind="_legalType"
-								   placeholder="e.g., LLC, JSC, etc." 
-								   disabled="@IsEditMode" />
-							@if (IsEditMode)
-							{
-								<small class="form-help">Legal Type name cannot be changed</small>
-							}
-						</div>
-					</div>
+<ModalShell IsOpen="IsOpen" ContainerClass="modal-lg" Title="@(IsEditMode ? T.Companies.EditTitle : T.Companies.AddTitle)"
+			OnClose="CloseModal" OnSubmit="HandleSubmit">
+	<ChildContent>
+		<section>
+			<h3 class="section-title">@T.Companies.Details</h3>
+			<div class="form-grid">
+				<div class="field">
+					<label for="company-name">@T.Common.Name</label>
+					<input id="company-name" type="text" @bind="_name" />
 				</div>
 
-				<!-- Bank Account Section -->
-				<div class="form-section">
-					<h3>Bank Account</h3>
-					<div class="form-row">
-						<div class="form-group">
-							<label>Bank Number *</label>
-							<input type="text"
-								   class="form-control"
-								   @bind="_bankNumber"
-								   placeholder="Enter bank account number"
-								   disabled="@IsEditMode" />
-							@if (IsEditMode)
-							{
-								<small class="form-help">Bank Number name cannot be changed</small>
-							}
-						</div>
-
-						<div class="form-group">
-							<label>BIC *</label>
-							<input type="text"
-								   class="form-control"
-								   @bind="_bic"
-								   placeholder="Enter BIC code"
-								   disabled="@IsEditMode" />
-							@if (IsEditMode)
-							{
-								<small class="form-help">BIC name cannot be changed</small>
-							}
-						</div>
-					</div>
+				<div class="field">
+					<label for="company-unp">@T.Companies.Unp</label>
+					<input id="company-unp" type="text" @bind="_unp" disabled="@IsEditMode" />
+					@if (IsEditMode)
+					{
+						<span class="hint">@T.Companies.CannotChange</span>
+					}
 				</div>
 
-				<!-- Operational Info Section -->
-				<div class="form-section">
-					<h3>Operational Information</h3>
-					<div class="form-group">
-						<label>Rebate</label>
-						<input type="number"
-							   class="form-control"
-							   @bind="_rebate"
-							   step="0.01"
-							   min="-100"
-							   max="100"
-							   placeholder="0.00" />
-					</div>
-
-					<div class="form-group">
-						<label>Photo URL</label>
-						<input type="text"
-							   class="form-control"
-							   @bind="_photo"
-							   placeholder="Enter company photo URL (optional)" />
-						@if (!string.IsNullOrEmpty(_photo))
-						{
-							<div class="photo-preview">
-								<img src="@_photo" alt="Company preview" />
-							</div>
-						}
-					</div>
-
-					<div class="form-group">
-						<label>Location *</label>
-						<LocationMapPicker
-										   InitialLocation="@_location"
-										   OnLocationChanged="HandleLocationChanged" />
-					</div>
+				<div class="field span-all">
+					<label for="company-address">@T.Common.Address</label>
+					<input id="company-address" type="text" @bind="_address" />
 				</div>
 
-				@if (!string.IsNullOrEmpty(_errorMessage))
-				{
-					<div class="error-message">
-						⚠️ @_errorMessage
-					</div>
-				}
-			</div>
+				<div class="field">
+					<label for="company-email">@T.Companies.CorporateEmail</label>
+					<input id="company-email" type="email" @bind="_corporateEmail" placeholder="@T.Companies.EmailPlaceholder" />
+				</div>
 
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
-				<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!IsValid)">
-					@(IsEditMode ? "Update Company" : "Create Company")
-				</button>
+				<div class="field">
+					<label for="company-legal-type">@T.Companies.LegalType</label>
+					<input id="company-legal-type" type="text" @bind="_legalType" placeholder="@T.Companies.LegalTypePlaceholder" disabled="@IsEditMode" />
+					@if (IsEditMode)
+					{
+						<span class="hint">@T.Companies.CannotChange</span>
+					}
+				</div>
+
+				<div class="field">
+					<label for="company-rebate">@T.Companies.Rebate</label>
+					<input id="company-rebate" type="number" step="0.01" min="-100" max="100" @bind="_rebate" />
+				</div>
+
+				<div class="field span-all">
+					<label for="company-photo">@T.Companies.PhotoUrl</label>
+					<input id="company-photo" type="url" @bind="_photo" placeholder="@T.Companies.PhotoUrlPlaceholder" />
+					@if (!string.IsNullOrEmpty(_photo))
+					{
+						<img class="photo-preview" src="@_photo" alt="" />
+					}
+				</div>
 			</div>
+		</section>
+
+		<section>
+			<h3 class="section-title">@T.Companies.BankAccount</h3>
+			<div class="form-grid">
+				<div class="field">
+					<label for="company-bank-number">@T.Companies.BankNumber</label>
+					<input id="company-bank-number" type="text" @bind="_bankNumber" disabled="@IsEditMode" />
+				</div>
+
+				<div class="field">
+					<label for="company-bic">@T.Companies.Bic</label>
+					<input id="company-bic" type="text" @bind="_bic" disabled="@IsEditMode" />
+				</div>
+			</div>
+			@if (IsEditMode)
+			{
+				<p class="hint">@T.Companies.CannotChange</p>
+			}
+		</section>
+
+		<section>
+			<h3 class="section-title">@T.Companies.Location</h3>
+			<LocationMapPicker InitialLocation="@_location" OnLocationChanged="HandleLocationChanged" />
+		</section>
+
+		@if (_showErrors && !IsValid)
+		{
+			<p class="field-error" role="alert">@T.Companies.FillRequired</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="HandleSubmit" disabled="@(!IsValid)">
+			@(IsEditMode ? T.Common.Save : T.Common.Create)
+		</button>
+	</Footer>
 </ModalShell>

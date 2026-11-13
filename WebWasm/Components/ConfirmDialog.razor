@@ -1,16 +1,11 @@
-@* S5: Enter = подтверждение, Escape = отмена *@
-<ModalShell IsOpen="IsOpen" ContainerClass="modal-sm" TopLayer="true" OnClose="() => OnCancel.InvokeAsync()" OnSubmit="() => OnConfirm.InvokeAsync()">
-	<div class="confirm-header">
-		<h2>@Title</h2>
-		<button class="btn-close" @onclick="() => OnCancel.InvokeAsync()">×</button>
-	</div>
-
-	<div class="confirm-body">
+@* Enter = confirm, Escape = cancel. *@
+<ModalShell IsOpen="IsOpen" ContainerClass="modal-sm" TopLayer="true" Title="@(Title ?? T.Common.ConfirmDeleteTitle)"
+			OnClose="() => OnCancel.InvokeAsync()" OnSubmit="() => OnConfirm.InvokeAsync()">
+	<ChildContent>
 		<p>@Message</p>
-	</div>
-
-	<div class="confirm-footer">
-		<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">@CancelText</button>
-		<button class="btn-danger" @onclick="() => OnConfirm.InvokeAsync()">@ConfirmText</button>
-	</div>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="() => OnCancel.InvokeAsync()">@(CancelText ?? T.Common.Cancel)</button>
+		<button type="button" class="btn @(IsDangerous ? "btn-danger" : "btn-primary")" @onclick="() => OnConfirm.InvokeAsync()">@(ConfirmText ?? T.Common.Delete)</button>
+	</Footer>
 </ModalShell>

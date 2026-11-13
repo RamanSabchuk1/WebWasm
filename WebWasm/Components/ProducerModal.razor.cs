@@ -3,7 +3,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class ProducerModal : ComponentBase
+public partial class ProducerModal
 {
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public Producer? EditingProducer { get; set; }
@@ -14,7 +14,7 @@ public partial class ProducerModal : ComponentBase
 	private string _name = string.Empty;
 	private Guid? _companyId = null;
 	private List<ProducerWorkingTimeEntry> _workingTimeEntries = [];
-	private string _errorMessage = string.Empty;
+	private bool _showErrors;
 
 	private bool _wasOpen;
 
@@ -40,7 +40,7 @@ public partial class ProducerModal : ComponentBase
 		_name = string.Empty;
 		_companyId = null;
 		_workingTimeEntries = [];
-		_errorMessage = string.Empty;
+		_showErrors = false;
 	}
 
 	private void AddWorkingTimeEntry()
@@ -65,7 +65,7 @@ public partial class ProducerModal : ComponentBase
 	{
 		if (!IsValid)
 		{
-			_errorMessage = "Please fill in producer name and add at least one working time entry";
+			_showErrors = true;
 			return;
 		}
 

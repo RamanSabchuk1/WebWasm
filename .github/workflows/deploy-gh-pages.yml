@@ -18,30 +18,38 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Repository variable (Settings → Secrets and variables → Actions → Variables): Dev in WebWasm, Prod in the prod copy.
+      # Not set = Dev. It selects the API address (appsettings.Prod.json) and the icon set (Environments/Prod).
+      APP_ENVIRONMENT: ${{ vars.APP_ENVIRONMENT || 'Dev' }}
     steps:
+      - name: Check APP_ENVIRONMENT
+        run: |
+          case "$APP_ENVIRONMENT" in
+            Dev|Prod) echo "Environment: $APP_ENVIRONMENT" ;;
+            *) echo "APP_ENVIRONMENT must be Dev or Prod, got '$APP_ENVIRONMENT'"; exit 1 ;;
+          esac
+
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
       - name: Install wasm-tools workload
         run: dotnet workload install wasm-tools
 
-      - name: Restore dependencies
-        run: dotnet restore WebWasm/WebWasm.csproj
+      - name: Test
+        run: dotnet test --project WebWasm.Tests/WebWasm.Tests.csproj
 
       - name: Publish
-        run: dotnet publish WebWasm/WebWasm.csproj -c Release -o publish
+        run: dotnet publish WebWasm/WebWasm.csproj -c Release -o publish -p:WasmApplicationEnvironmentName=$APP_ENVIRONMENT
 
-      - name: Update base href and service worker
-        run: |
-          sed -i 's|<base href="/" />|<base href="/${{ github.event.repository.name }}/" />|g' publish/wwwroot/index.html
-          if [ -f publish/wwwroot/service-worker.js ]; then
-            sed -i 's|const base = "/";|const base = "/${{ github.event.repository.name }}/";|g' publish/wwwroot/service-worker.js || true
-          fi
+      # The site lives at /<repository name>/, the same code works for any repository name.
+      - name: Update base href
+        run: sed -i 's|<base href="/" />|<base href="/${{ github.event.repository.name }}/" />|g' publish/wwwroot/index.html
 
       - name: Fix Blazor WASM File Hashes
         uses: StefH/ghaction-BlazorWebAssemblyFileHashFixer@v1
@@ -52,7 +60,7 @@ jobs:
         run: touch publish/wwwroot/.nojekyll
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: publish/wwwroot
 
@@ -65,4 +73,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

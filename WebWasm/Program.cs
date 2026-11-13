@@ -9,11 +9,16 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddHttpClient();
+var settings = AppSettings.From(builder.Configuration);
+builder.Services.AddSingleton(settings);
+builder.Services.AddHttpClient(ApiClient.HttpClientName, client => client.BaseAddress = settings.ApiBaseAddress);
 
 var options = SerializationHelper.SerializerOptions();
 
 builder.Services.AddSingleton<LocalStorageService>();
+builder.Services.AddSingleton<Preferences>();
+// Interface texts of the chosen language for every component (LocalizedComponent.T).
+builder.Services.AddCascadingValue(provider => provider.GetRequiredService<Preferences>().TextsSource);
 
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton<EncryptionService>();
@@ -26,4 +31,6 @@ builder.Services.AddSingleton<AuthenticationStateProvider>(provider => provider.
 
 builder.Services.AddAuthorizationCore();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+await host.Services.GetRequiredService<Preferences>().Initialize();
+await host.RunAsync();

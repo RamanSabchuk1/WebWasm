@@ -5,7 +5,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Supports(CashService cashService, ApiClient apiClient, ToastService toastService, LoadingService loadingService) : ComponentBase
+public partial class Supports(CashService cashService, ApiClient apiClient, ToastService toastService, LoadingService loadingService)
 {
 	private ICollection<SuggestionsWithUser> _suggestions = [];
 
@@ -27,13 +27,13 @@ public partial class Supports(CashService cashService, ApiClient apiClient, Toas
 		await loadingService.Run(toastService, async () =>
 		{
 			await apiClient.Post($"Supports/suggestion/apply?suggestionId={suggestionId}");
-			toastService.ShowSuccess("Suggestion applied successfully!");
+			toastService.ShowSuccess(T.Support.AppliedToast);
 			await LoadSuggestions(false);
-		}, "Failed to apply suggestion: ");
+		}, T.Support.ApplyFailed);
 	}
 
 	public record SuggestionsWithUser(Suggestion Suggestion, User? User)
 	{
-		public string GetUserName() => User.ShortName;
+		public string? GetUserName() => User.ShortName;
 	}
 }

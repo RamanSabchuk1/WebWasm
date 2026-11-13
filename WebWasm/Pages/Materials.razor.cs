@@ -4,7 +4,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Materials : ComponentBase
+public partial class Materials
 {
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
@@ -50,35 +50,32 @@ public partial class Materials : ComponentBase
 			if (_editingMaterial is not null)
 			{
 				await ApiClient.Put($"MaterialTypes/{_editingMaterial.Id}", materialInfo);
-				ToastService.ShowSuccess("Material updated successfully!");
+				ToastService.ShowSuccess(T.Materials.Updated);
 			}
 			else
 			{
-				// Create new material
 				await ApiClient.Post("MaterialTypes", materialInfo);
-				ToastService.ShowSuccess("Material created successfully!");
+				ToastService.ShowSuccess(T.Materials.Created);
 			}
 
 			await LoadMaterials(false);
 			CloseModal();
-		}, "Failed to save material: ");
+		}, T.Materials.SaveFailed);
 	}
 
 	private async Task HandleDelete(Guid materialId)
 	{
-		// Check if material has children
-		var hasChildren = _materials.Any(m => m.ParentId == materialId);
-		if (hasChildren)
+		if (_materials.Any(m => m.ParentId == materialId))
 		{
-			ToastService.ShowError("Cannot delete material with children. Please delete or reassign child materials first.");
+			ToastService.ShowError(T.Materials.HasChildren);
 			return;
 		}
 
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"MaterialTypes/{materialId}");
-			ToastService.ShowSuccess("Material deleted successfully!");
+			ToastService.ShowSuccess(T.Materials.DeletedToast);
 			await LoadMaterials(false);
-		}, "Failed to delete material: ");
+		}, T.Materials.DeleteFailed);
 	}
 }

@@ -3,7 +3,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class Toast : ComponentBase, IDisposable
+public partial class Toast : IDisposable
 {
 	[Inject] private ToastService ToastSvc { get; set; } = default!;
 
@@ -31,7 +31,8 @@ public partial class Toast : ComponentBase, IDisposable
 	{
 		try
 		{
-			await Task.Delay(4000, token);
+			// Errors stay longer: they usually need to be read to the end.
+			await Task.Delay(message.Type == ToastType.Error ? 8000 : 4000, token);
 		}
 		catch (TaskCanceledException)
 		{
@@ -56,13 +57,12 @@ public partial class Toast : ComponentBase, IDisposable
 		_messages.Remove(message);
 	}
 
-	private static string GetIcon(ToastType type) => type switch
+	private static IconName IconOf(ToastType type) => type switch
 	{
-		ToastType.Success => "✓",
-		ToastType.Error => "✕",
-		ToastType.Warning => "⚠",
-		ToastType.Info => "ℹ",
-		_ => "ℹ"
+		ToastType.Success => IconName.Success,
+		ToastType.Error => IconName.Error,
+		ToastType.Warning => IconName.Warning,
+		_ => IconName.Info,
 	};
 
 	public void Dispose()

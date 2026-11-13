@@ -1,93 +1,86 @@
-@using WebWasm.Models
-
-<ModalShell IsOpen="@(IsOpen && Region is not null)" ContainerClass="modal-large" OnClose="CloseModal">
-	@if (Region is not null)
-	{
-		<div class="modal-header">
-			<h2>@Region.Name - Details</h2>
-			<button class="btn-close" @onclick="CloseModal">×</button>
-		</div>
-
-		<div class="modal-body">
-			@if (Region.Levels?.Count > 0)
+@if (Region is { } region)
+{
+	<ModalShell IsOpen="IsOpen" ContainerClass="modal-lg" Title="@T.Regions.DetailsTitle(region.Name)" OnClose="CloseModal">
+		<ChildContent>
+			@if (region.Levels?.Count > 0)
 			{
-				<div class="levels-tabs">
-					@foreach (var level in Region.Levels)
-					{
-						<div class="level-tab">
-							<div class="level-header">
-								<h3>
-									<span class="level-badge level-badge-@level.Type.ToString().ToLower()">
-										@level.Type
-									</span>
-									Algorithm: @AlgorithmTranslation(level.CalculationAlgorithm)
-								</h3>
-								<div class="level-actions">
-									<button class="btn-action btn-edit-level"
-											@onclick="() => OnEditLevel.InvokeAsync((Region, level))"
-											title="Edit this level">
-										✏️ Edit Level
-									</button>
-									<button class="btn-action btn-delete-level"
-											@onclick="() => OnDeleteLevel.InvokeAsync((Region, level.Id))"
-											title="Delete this level">
-										🗑️ Delete Level
-									</button>
-								</div>
-							</div>
-
-							<div class="level-content">
-								<div class="level-info">
-									<p><strong>Triangles:</strong> @(level.Triangles?.Count ?? 0)</p>
-									@if (level.Info?.Info?.Count > 0)
-									{
-										<div class="prices-section">
-											<strong>Price Info:</strong>
-											<div class="prices-grid">
-												@foreach (var priceEntry in level.Info.Info)
-												{
-													<div class="price-item">
-														<span class="price-key">@priceEntry.Key KG:</span>
-														<span class="price-value">
-															@priceEntry.Value.MinPrice - @priceEntry.Value.MaxPrice
-														</span>
-													</div>
-												}
-											</div>
-										</div>
-									}
-								</div>
-
-								@if (level.Triangles?.Count > 0)
-								{
-									<TriangleMap Triangles="@level.Triangles"
-												 LevelType="@level.Type"
-												 MapHeight="400px" />
-								}
-								else
-								{
-									<div class="empty-state">
-										No triangles in this level
-									</div>
-								}
+				@foreach (var level in region.Levels)
+				{
+					<section class="card" @key="level.Id">
+						<div class="card-header">
+							<h3 class="card-title">@T.Enums.LevelType(level.Type)</h3>
+							<div class="cluster">
+								<button type="button" class="btn btn-ghost btn-sm" @onclick="() => OnEditLevel.InvokeAsync((region, level))">
+									<Icon Name="IconName.Edit" />
+									@T.Common.Edit
+								</button>
+								<button type="button" class="btn btn-ghost btn-sm danger-text" @onclick="() => OnDeleteLevel.InvokeAsync((region, level.Id))">
+									<Icon Name="IconName.Delete" />
+									@T.Common.Delete
+								</button>
 							</div>
 						</div>
-					}
-				</div>
+
+						<div class="stack">
+							<dl class="kv">
+								<dt>@T.Regions.Algorithm</dt>
+								<dd>@T.Regions.AlgorithmName(level.CalculationAlgorithm)</dd>
+								<dt>@T.Regions.Triangles</dt>
+								<dd class="tabular">@(level.Triangles?.Count ?? 0)</dd>
+							</dl>
+
+							@if (level.Info?.Info?.Count > 0)
+							{
+								<div class="table-wrap">
+									<table>
+										<thead>
+											<tr>
+												<th class="col-justify-end">@T.Regions.NetWeight</th>
+												<th class="col-justify-end">@T.Regions.MinPrice</th>
+												<th class="col-justify-end">@T.Regions.MaxPrice</th>
+											</tr>
+										</thead>
+										<tbody>
+											@foreach (var (weight, price) in level.Info.Info)
+											{
+												<tr @key="weight">
+													<td class="num">@T.FormatNumber((decimal)weight, 0)</td>
+													<td class="num">@T.FormatNumber(price.MinPrice)</td>
+													<td class="num">@T.FormatNumber(price.MaxPrice)</td>
+												</tr>
+											}
+										</tbody>
+									</table>
+								</div>
+							}
+
+							@if (level.Triangles?.Count > 0)
+							{
+								<TriangleMap Triangles="@level.Triangles" LevelType="@level.Type" MapHeight="400px" />
+							}
+							else
+							{
+								<p class="muted small">@T.Regions.NoBoundary</p>
+							}
+						</div>
+					</section>
+				}
 			}
 			else
 			{
-				<div class="empty-state">
-					<p>No levels configured for this region</p>
+				<div class="empty">
+					<Icon Name="IconName.Regions" />
+					<p class="empty-title">@T.Regions.NoLevels</p>
+					<p class="empty-hint">@T.Regions.NoLevelsHint</p>
 				</div>
 			}
-		</div>
-
-		<div class="modal-footer">
-			<button class="btn-secondary" @onclick="() => OnAddLevel.InvokeAsync(Region)">
-				+ Add Level
+		</ChildContent>
+		<Footer>
+			<button type="button" class="btn" @onclick="CloseModal">@T.Common.Close</button>
+			<button type="button" class="btn btn-primary" @onclick="() => OnAddLevel.InvokeAsync(region)">
+				<Icon Name="IconName.Plus" />
+				@T.Regions.AddLevel
 			</button>
-			<button class="btn-secondary" @onclick="CloseModal">Close</button>
-		</div>
-	}
-</ModalShell>
+		</Footer>
+	</ModalShell>
+}

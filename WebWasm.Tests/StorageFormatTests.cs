@@ -88,7 +88,7 @@ public class StorageFormatTests
 		var (blazored, js) = CreateBlazored();
 		js.Items["k"] = "abc+/=";
 
-		Assert.Equal(await blazored.GetItemAsync<string>("k"), StorageFormat.Deserialize<string>("abc+/=", Options));
+		Assert.Equal(await blazored.GetItemAsync<string>("k", TestContext.Current.CancellationToken), StorageFormat.Deserialize<string>("abc+/=", Options));
 	}
 
 	[Theory]

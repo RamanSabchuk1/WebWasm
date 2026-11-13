@@ -13,6 +13,8 @@ public partial class LocationMapPicker : LeafletMapBase
 	[Parameter] public bool ShowInputs { get; set; } = true;
 
 	private DotNetObjectReference<LocationMapPicker>? _dotNetRef;
+	// Several pickers can be on one page (order details): label/input ids must not clash.
+	private readonly string _idPrefix = $"map-{Guid.NewGuid():N}";
 	private double _latitude;
 	private double _longitude;
 
@@ -51,7 +53,7 @@ public partial class LocationMapPicker : LeafletMapBase
 		}
 		catch (JSException ex)
 		{
-			OnMapError($"Error updating marker: {ex.Message}");
+			OnMapError(T.Maps.MarkerFailed(ex.Message));
 		}
 	}
 

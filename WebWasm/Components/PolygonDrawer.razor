@@ -1,58 +1,59 @@
-@using WebWasm.Models
 @inherits LeafletMapBase
 
-<div class="polygon-drawer-container">
+<div class="drawer">
 	<div class="map-wrapper">
 		<div @ref="MapElement" class="leaflet-map"></div>
 	</div>
 
 	<div class="drawing-controls">
-		<div class="points-list">
-			<h4>Points (@_points.Count)</h4>
+		<div class="points">
+			<span class="field-label">@T.Maps.Points(_points.Count)</span>
 			@if (_points.Count > 0)
 			{
-				<div class="points-items">
+				<ol class="points-list">
 					@for (int i = 0; i < _points.Count; i++)
 					{
 						var point = _points[i];
 						var index = i;
-						<div class="point-item" @key="index">
-							<span class="point-index">@(index + 1)</span>
-							<span class="point-coords">
-								@point.Latitude.ToString("F6"), @point.Longitude.ToString("F6")
-							</span>
-							<button class="btn-delete-point" @onclick="() => DeletePoint(index)" title="Delete point">🗑️</button>
-						</div>
+						<li class="point" @key="index">
+							<span class="point-index tabular">@(index + 1)</span>
+							<span class="point-coords tabular truncate">@T.Maps.Coordinates(T.FormatNumber(point.Latitude, 6), T.FormatNumber(point.Longitude, 6))</span>
+							<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="() => DeletePoint(index)"
+									title="@T.Maps.DeletePoint" aria-label="@T.Maps.DeletePoint">
+								<Icon Name="IconName.Delete" />
+							</button>
+						</li>
 					}
-				</div>
+				</ol>
 			}
 			else
 			{
-				<p class="no-points">Click on map to add points</p>
+				<p class="hint">@T.Maps.NoPoints</p>
 			}
 		</div>
 
-		<div class="control-buttons">
-			<button class="btn-undo" @onclick="UndoLastPoint" disabled="@(_points.Count == 0)">
-				✖️ Undo
+		<div class="cluster control-buttons">
+			<button type="button" class="btn btn-sm" @onclick="UndoLastPoint" disabled="@(_points.Count == 0)" title="@T.Maps.UndoHint">
+				<Icon Name="IconName.Undo" />
+				@T.Maps.Undo
 			</button>
-			<button class="btn-clear" @onclick="ClearAll" disabled="@(_points.Count == 0)">
-				🧹 Clear
+			<button type="button" class="btn btn-sm" @onclick="ClearAll" disabled="@(_points.Count == 0)">
+				<Icon Name="IconName.Delete" />
+				@T.Common.Clear
 			</button>
 		</div>
-
-		@if (!string.IsNullOrEmpty(_errorMessage))
-		{
-			<div class="error-message">
-				🌋 @_errorMessage
-			</div>
-		}
 	</div>
 
-	<div class="action-buttons">
-		<button class="btn-secondary" @onclick="() => OnCancel.InvokeAsync()">Cancel</button>
-		<button class="btn-primary" @onclick="HandleConfirm" disabled="@(_points.Count < 3)">
-			✅ Confirm Polygon (@_points.Count points)
+	@if (!string.IsNullOrEmpty(_errorMessage))
+	{
+		<p class="field-error" role="alert">@_errorMessage</p>
+	}
+
+	<div class="cluster drawer-actions">
+		<button type="button" class="btn" @onclick="() => OnCancel.InvokeAsync()">@T.Common.Cancel</button>
+		<button type="button" class="btn" @onclick="HandleConfirm" disabled="@(_points.Count < 3)">
+			<Icon Name="IconName.Check" />
+			@T.Maps.ApplyBoundary
 		</button>
 	</div>
 </div>

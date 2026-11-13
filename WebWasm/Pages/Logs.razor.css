@@ -1,0 +1,32 @@
+.expandable {
+	cursor: pointer;
+}
+
+.message {
+	min-width: 280px;
+	overflow-wrap: anywhere;
+}
+
+.row-actions .cluster {
+	flex-wrap: nowrap;
+	justify-content: flex-end;
+}
+
+.exception-row:hover {
+	background: none;
+}
+
+.exception {
+	margin: 0;
+	padding: var(--space-3);
+	max-height: 360px;
+	overflow: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--surface-2);
+	color: var(--text);
+	font-size: var(--font-xs);
+	line-height: 16px;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}

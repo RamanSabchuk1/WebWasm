@@ -1,39 +1,33 @@
-@using WebWasm.Components
 @inherits LayoutComponentBase
 
 <AuthorizeView>
 	<Authorized>
-		<div class="app-container">
-			<nav class="sidebar">
+		<div class="shell">
+			<aside class="sidebar">
 				<NavMenu />
-			</nav>
+			</aside>
 
-			<main class="main-content">
-				<header class="top-header mobile-only">
-					<div class="header-content">
-						<div class="brand-title">
-							<span class="brand-icon">⚡</span>
-							<span class="brand-text">Admin Panel</span>
-						</div>
-						<div class="header-actions">
-							<NavLink href="logs" class="mobile-logs-link" title="System Logs">
-								<span>📋</span>
-							</NavLink>
-							<NavLink href="myuserinfo">
-								<div class="user-info">
-									<span class="user-avatar">👤</span>
-								</div>
-							</NavLink>
-						</div>
-					</div>
-				</header>
+			<header class="top-header">
+				<a class="brand" href="">
+					<img class="brand-logo" src="logo.svg" alt="" />
+					<span class="brand-name">Kliffort</span>
+					@if (Settings.EnvironmentLabel is { } label)
+					{
+						<span class="badge badge-accent">@label</span>
+					}
+				</a>
+				<NavLink class="btn btn-ghost btn-icon" href="myuserinfo" title="@T.Shell.Profile" aria-label="@T.Shell.Profile">
+					<Icon Name="IconName.User" Size="20" />
+				</NavLink>
+			</header>
 
-				<article class="page-content">
+			<main class="main">
+				<div class="content">
 					@Body
-				</article>
+				</div>
 			</main>
 
-			<nav class="mobile-nav">
+			<nav class="bottom-nav">
 				<NavMenu IsMobile="true" />
 			</nav>
 		</div>

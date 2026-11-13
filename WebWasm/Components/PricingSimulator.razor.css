@@ -1,107 +1,32 @@
-/* Калькулятор цен. Цвета источников значений — один набор для легенды и ячеек. */
+/* Калькулятор цен. Цвета источников значений — один набор для легенды, ячеек и цен региона (только токены темы). */
 
-.sim-section {
-	margin-bottom: 1.75rem;
-}
-
-	.sim-section h3 {
-		margin: 0 0 0.75rem;
-		font-size: 1.1rem;
-	}
-
-.custom-order h4 {
-	margin: 1.25rem 0 0.25rem;
-	font-size: 1rem;
-}
-
-.section-head {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 0.5rem;
-}
-
-.sim-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-	gap: 0.75rem 1rem;
-	align-items: end;
-}
-
-.field {
-	display: flex;
-	flex-direction: column;
-	gap: 0.3rem;
-	font-size: 0.85rem;
-}
-
-	.field em {
-		font-style: normal;
-		color: var(--text-secondary, #7A7A7A);
-		font-size: 0.75rem;
-	}
-
-	.field select {
-		padding: 0.5rem 0.6rem;
-		border: 1px solid var(--border-color, #E5D5C0);
-		border-radius: 8px;
-		background: var(--bg-primary, #FFFBF5);
-		color: var(--text-primary, #3D2E1F);
-		font-size: 0.95rem;
-		width: 100%;
-		min-width: 0;
-	}
-
-.hint {
-	color: var(--text-secondary, #7A7A7A);
-	font-size: 0.8rem;
-	margin: 0.4rem 0 0.75rem;
-}
-
-.busy {
-	font-size: 0.8rem;
-	color: var(--color-primary-dark, #8B7355);
-}
-
-.btn-link {
-	border: none;
-	background: none;
-	color: var(--color-primary-dark, #8B7355);
-	text-decoration: underline;
-	cursor: pointer;
-	font-size: 0.85rem;
-	padding: 0;
-}
-
-/* --- источники значений --- */
-
-.src-default { background: #EEECE8; }
-.src-global { background: #DCE9F7; }
-.src-material-0 { background: #CDEBD3; }
-.src-material-1 { background: #E1F2CF; }
-.src-material-2 { background: #EEF6E3; }
-.src-supplier { background: #FBE1C4; }
-.src-carrier { background: #E5DAF5; }
-.src-buyer { background: #CFEDE9; }
+.src-default { background: var(--surface-2); }
+.src-global { background: var(--info-soft); }
+.src-material-0 { background: var(--success-soft); }
+.src-material-1 { background: color-mix(in srgb, var(--success-soft) 55%, var(--surface)); }
+.src-material-2 { background: color-mix(in srgb, var(--success-soft) 25%, var(--surface)); }
+.src-supplier { background: var(--accent-soft); }
+.src-carrier { background: color-mix(in srgb, var(--info-soft) 50%, var(--danger-soft)); }
+.src-buyer { background: color-mix(in srgb, var(--info-soft) 50%, var(--success-soft)); }
 
 .src-override {
-	background: #FFF1A8;
-	outline: 2px dashed #C9A227;
+	background: var(--warning-soft);
+	outline: 2px dashed var(--warning);
 	outline-offset: -2px;
 }
 
 .src-legend {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.35rem;
-	margin-bottom: 0.75rem;
+	gap: var(--space-1) var(--space-2);
 }
 
 .src-chip {
-	font-size: 0.75rem;
-	padding: 0.2rem 0.55rem;
-	border-radius: 999px;
+	padding: 2px var(--space-2);
+	border-radius: var(--radius-pill);
+	font-size: var(--font-xs);
+	line-height: 16px;
+	color: var(--text);
 }
 
 /* --- таблица резолюции: группы по составляющей цены, сетка со склейкой одинаковых ячеек --- */
@@ -109,71 +34,66 @@
 .res-groups {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
-	gap: 0.75rem 1rem;
-	margin-top: 0.75rem;
+	gap: var(--space-3) var(--space-4);
 }
 
 .res-group {
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: 10px;
-	padding: 0.5rem 0.6rem 0.6rem;
-	background: #fff;
-	margin-top: 0.75rem;
-}
-
-.res-groups .res-group {
-	margin-top: 0;
+	min-width: 0;
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
 }
 
 .res-group-head {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: baseline;
-	gap: 0.2rem 0.6rem;
-	margin-bottom: 0.4rem;
+	gap: var(--space-1) var(--space-3);
+	margin-bottom: var(--space-2);
 }
 
-	.res-group-head h4 {
-		margin: 0;
-		font-size: 0.95rem;
-	}
-
-	.res-group-head .hint {
-		margin: 0;
-	}
+.res-title {
+	font-size: var(--font-md);
+	line-height: 20px;
+}
 
 .res-grid {
 	display: grid;
 	grid-template-columns: minmax(9rem, max-content) repeat(var(--cols), minmax(0, 1fr));
 	gap: 3px;
-	font-size: 0.82rem;
+	font-size: var(--font-sm);
 }
 
 .res-colhead {
-	font-size: 0.72rem;
-	color: var(--text-secondary, #7A7A7A);
-	padding: 0 0.3rem;
+	display: flex;
+	flex-direction: column;
 	align-self: end;
+	padding: 0 var(--space-1);
+	font-size: var(--font-xs);
+	line-height: 16px;
+	color: var(--text-muted);
 }
 
 .res-key {
-	font-weight: 400;
-	padding: 0.3rem 0.4rem 0.3rem 0;
-	cursor: help;
 	align-self: center;
+	padding: var(--space-1) var(--space-2) var(--space-1) 0;
 	overflow-wrap: anywhere;
+	cursor: help;
 }
 
-	.res-key code {
-		font-size: 0.78rem;
-	}
-
 .res-cell {
-	position: relative;
-	padding: 0.3rem 0.45rem;
-	border-radius: 6px;
-	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 	min-width: 0;
+	grid-column: span var(--span, 1);
+	padding: var(--space-1) var(--space-2);
+	border: 0;
+	border-radius: var(--radius-sm);
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
 }
 
 	.res-cell:hover {
@@ -181,294 +101,163 @@
 	}
 
 .res-empty {
-	color: #B9B2A8;
-	text-align: center;
+	align-items: center;
+	justify-content: center;
+	border: 1px dashed var(--border);
+	color: var(--text-muted);
 	cursor: default;
-	background: repeating-linear-gradient(135deg, #FAF7F2, #FAF7F2 6px, #F3EEE6 6px, #F3EEE6 12px);
 }
+
+	.res-empty:hover {
+		filter: none;
+	}
 
 .res-line {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: baseline;
-	gap: 0.1rem 0.45rem;
-	padding-right: 4.5rem;
+	gap: 0 var(--space-2);
 }
 
 .res-value {
+	font-size: var(--font-md);
 	font-weight: 700;
-	font-size: 0.95rem;
+	font-variant-numeric: tabular-nums;
 }
 
-.res-source {
-	font-size: 0.72rem;
-	color: #5A5A5A;
+.res-source,
+.res-saved,
+.res-note,
+.res-colnote {
+	font-size: var(--font-xs);
+	line-height: 16px;
+	color: var(--text-muted);
 }
 
-/* Старое значение в углу ячейки — чтобы не ходить на соседнюю вкладку за ним. */
+/* Сохранённое значение — чтобы не ходить за ним на вкладку «Настройки». */
 .res-saved {
-	position: absolute;
-	top: 2px;
-	right: 4px;
-	font-size: 0.65rem;
-	color: #7A5C00;
-	background: rgba(255, 255, 255, 0.75);
-	border-radius: 4px;
-	padding: 0 3px;
-	max-width: 55%;
-	text-align: right;
+	color: var(--warning);
 }
 
-.res-note {
-	font-size: 0.68rem;
-	color: #6A6A6A;
-	margin-top: 0.1rem;
-	line-height: 1.25;
-}
+/* --- цены региона: вся ячейка — кнопка правки --- */
 
-.region-table {
-	border-collapse: separate;
-	border-spacing: 3px;
-	font-size: 0.82rem;
-}
-
-	.region-table th, .region-table td {
-		text-align: left;
-		padding: 0.25rem 0.6rem;
-		background: var(--bg-primary, #FFFBF5);
-		border-radius: 4px;
-	}
-
-	.region-table td.price-default {
-		background: #EEEAE4;
-		color: #6A6A6A;
-	}
-
-	.region-table td.price-edit {
-		cursor: pointer;
-	}
-
-		.region-table td.price-edit:hover {
-			filter: brightness(0.96);
-		}
-
-.res-table-wrap {
-	overflow-x: auto;
-}
-
-.custom-table {
+.price-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-1);
 	width: 100%;
-	border-collapse: separate;
-	border-spacing: 3px;
-	font-size: 0.82rem;
-}
-
-.mini-switch {
-	display: inline-flex;
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: 6px;
-	overflow: hidden;
-}
-
-	.mini-switch button {
-		border: none;
-		background: #fff;
-		padding: 0.2rem 0.55rem;
-		font-size: 0.8rem;
-		cursor: pointer;
-	}
-
-		.mini-switch button.active {
-			background: var(--color-primary, #8B7355);
-			color: #fff;
-		}
-
-.truck-list {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.1rem 0.8rem;
-	margin-top: 0.2rem;
-}
-
-.slot-line {
-	font-size: 0.72rem;
-	margin-top: 0.4rem;
-	padding: 0.3rem 0.45rem;
-	background: #F3EEE6;
-	border-radius: 6px;
-}
-
-.override-list, .custom-list, .custom-controls, .param-chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-	align-items: center;
-	margin-top: 0.6rem;
-}
-
-.filter-title {
-	font-size: 0.8rem;
-	color: var(--text-secondary, #7A7A7A);
-}
-
-.override-chip, .chip, .param-chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	border: 1px solid var(--border-color, #E5D5C0);
-	background: #fff;
-	border-radius: 999px;
-	padding: 0.25rem 0.65rem;
-	font-size: 0.8rem;
-}
-
-.chip, .param-chip {
-	cursor: pointer;
-}
-
-	.chip:disabled {
-		opacity: 0.4;
-		cursor: default;
-	}
-
-.param-chip.changed {
-	background: #FFF1A8;
-	border-color: #C9A227;
-}
-
-.chip-x {
-	border: none;
-	background: none;
-	cursor: pointer;
-	font-size: 1rem;
-	line-height: 1;
 	padding: 0;
-	color: #8A8A8A;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+	.price-btn:hover {
+		text-decoration: underline;
+	}
+
+td.price-default {
+	background: var(--surface-2);
+	color: var(--text-muted);
+}
+
+/* --- правки в памяти и доставки своего заказа --- */
+
+.sim-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: 0 0 0 var(--space-2);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
+	font-size: var(--font-sm);
+}
+
+.param-changed {
+	background: var(--warning-soft);
+	border-color: var(--warning);
 }
 
 /* --- ползунки --- */
 
 .sliders {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-	gap: 1rem 1.5rem;
-	margin: 1rem 0 1.25rem;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+	gap: var(--space-4) var(--space-6);
 }
+
+.slider {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2);
+	min-width: 0;
+}
+
+	.slider input[type="range"] {
+		width: 100%;
+	}
 
 .slider-head {
 	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
 	justify-content: space-between;
-	gap: 0.5rem;
-	font-size: 0.85rem;
+	gap: var(--space-2);
+	width: 100%;
+	font-size: var(--font-sm);
 }
 
-.slider input[type="range"] {
-	width: 100%;
+.path-switch {
+	max-width: 100%;
+	flex-wrap: wrap;
 }
 
 .range-wrap {
 	position: relative;
+	width: 100%;
 }
 
 /* Отметки порогов формулы под ползунком: ниже первой — минимальная цена, выше второй — максимальная. */
 .mark {
 	position: absolute;
+	left: var(--at);
 	bottom: -4px;
 	width: 2px;
 	height: 8px;
-	background: var(--color-primary-dark, #8B7355);
+	background: var(--text-muted);
 	transform: translateX(-1px);
 	pointer-events: none;
 }
 
-.slider-hint {
-	font-size: 0.72rem;
-	color: var(--text-secondary, #7A7A7A);
-	margin-top: 0.3rem;
-}
-
-/* --- таблица своего заказа --- */
-
-.custom-table th, .custom-table td {
-	text-align: left;
-	padding: 0.3rem 0.45rem;
-	background: var(--bg-primary, #FFFBF5);
-	border-radius: 4px;
-}
-
-.validation-error {
-	color: #B3261E;
-}
-
-/* --- модалки (по ConfirmDialog.razor.css) --- */
-
-.confirm-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 1.25rem 1.5rem;
-	border-bottom: 1px solid var(--border-color, #E5D5C0);
-}
-
-	.confirm-header h2 {
-		margin: 0;
-		font-size: 1.15rem;
-	}
-
-.btn-close {
-	background: none;
-	border: none;
-	font-size: 2rem;
-	line-height: 1;
-	color: var(--text-secondary, #7A7A7A);
-	cursor: pointer;
-}
-
-.confirm-body {
-	padding: 1.25rem 1.5rem;
-}
-
-.confirm-footer {
+.truck-list {
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: flex-end;
-	gap: 0.6rem;
-	padding: 1rem 1.5rem;
-	border-top: 1px solid var(--border-color, #E5D5C0);
+	gap: 2px var(--space-3);
+	margin-top: var(--space-1);
+	font-variant-numeric: tabular-nums;
 }
 
-.btn-secondary {
-	padding: 0.65rem 1.1rem;
-	border-radius: 8px;
-	cursor: pointer;
-	background: var(--bg-surface, #FAF7F2);
-	color: var(--text-primary, #3D2E1F);
-	border: 1px solid var(--border-color, #E5D5C0);
+.slot-line {
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	font-size: var(--font-xs);
+	line-height: 16px;
 }
 
-.form-group {
-	margin-bottom: 0.9rem;
+.custom-order {
+	padding-top: var(--space-2);
 }
 
-	.form-group label {
-		display: block;
-		font-size: 0.85rem;
-		margin-bottom: 0.35rem;
-	}
+/* --- телефон: сетка резолюции в одну колонку, этап — подписью над значением --- */
 
-	.form-group input, .form-group select {
-		width: 100%;
-		padding: 0.55rem 0.7rem;
-		border: 1px solid var(--border-color, #E5D5C0);
-		border-radius: 8px;
-		font-size: 1rem;
-		box-sizing: border-box;
-	}
-
-
-/* --- телефон: сетка и таблица своего заказа превращаются в карточки --- */
-
-@media (max-width: 700px) {
+@media (max-width: 767px) {
 	.res-grid {
 		grid-template-columns: 1fr;
 	}
@@ -483,9 +272,9 @@
 
 		.res-cell[data-label]:not([data-label=""])::before {
 			content: attr(data-label);
-			display: block;
-			font-size: 0.68rem;
-			color: #6A6A6A;
+			font-size: var(--font-xs);
+			line-height: 16px;
+			color: var(--text-muted);
 		}
 
 	.res-empty {
@@ -493,30 +282,6 @@
 	}
 
 	.res-key {
-		padding-top: 0.5rem;
-	}
-
-	.custom-table, .custom-table tbody, .custom-table tr, .custom-table td {
-		display: block;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	.custom-table thead {
-		display: none;
-	}
-
-	.custom-table tr {
-		margin-bottom: 0.75rem;
-		border: 1px solid var(--border-color, #E5D5C0);
-		border-radius: 8px;
-		padding: 0.35rem;
-	}
-
-	.custom-table td::before {
-		content: attr(data-label);
-		display: block;
-		font-size: 0.68rem;
-		color: #6A6A6A;
+		padding-top: var(--space-2);
 	}
 }

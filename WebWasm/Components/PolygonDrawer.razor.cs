@@ -30,7 +30,7 @@ public partial class PolygonDrawer : LeafletMapBase
 			_points = [.. InitialPoints];
 		}
 
-		return ("initDrawingMap", [PointsData(), _dotNetRef = DotNetObjectReference.Create(this)]);
+		return ("initDrawingMap", [PointsData(), _dotNetRef = DotNetObjectReference.Create(this), "--accent"]);
 	}
 
 	private List<object> PointsData() => [.. _points.Select(p => new { lat = p.Latitude, lng = p.Longitude })];
@@ -99,7 +99,7 @@ public partial class PolygonDrawer : LeafletMapBase
 	{
 		if (_points.Count < 3)
 		{
-			_errorMessage = "A polygon requires at least 3 points.";
+			_errorMessage = T.Maps.MinPoints;
 			return;
 		}
 

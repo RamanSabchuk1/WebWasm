@@ -3,7 +3,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class CompanyModal : ComponentBase
+public partial class CompanyModal
 {
 	[Parameter] public Company? EditingCompany { get; set; }
 	[Parameter] public bool IsOpen { get; set; }
@@ -21,7 +21,7 @@ public partial class CompanyModal : ComponentBase
 	private string _photo = string.Empty;
 	private double _rebate;
 	private Location? _location;
-	private string _errorMessage = string.Empty;
+	private bool _showErrors;
 
 	private bool _wasOpen;
 
@@ -62,7 +62,7 @@ public partial class CompanyModal : ComponentBase
 		_photo = string.Empty;
 		_rebate = 0;
 		_location = null;
-		_errorMessage = string.Empty;
+		_showErrors = false;
 	}
 
 	private void HandleLocationChanged(Location location)
@@ -82,15 +82,9 @@ public partial class CompanyModal : ComponentBase
 
 	private async Task HandleSubmit()
 	{
-		if (!IsValid)
+		if (!IsValid || _location is null)
 		{
-			_errorMessage = "Please fill in all required fields";
-			return;
-		}
-
-		if (_location is null)
-		{
-			_errorMessage = "Please select a location on the map";
+			_showErrors = true;
 			return;
 		}
 

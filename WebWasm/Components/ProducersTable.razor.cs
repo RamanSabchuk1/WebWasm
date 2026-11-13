@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Helpers;
+using WebWasm.Localization;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class ProducersTable : ComponentBase
+public partial class ProducersTable
 {
 	private const string SearchKey = "search_providers";
 	[Parameter] public List<Producer> Producers { get; set; } = [];
@@ -46,22 +47,10 @@ public partial class ProducersTable : ComponentBase
 	private void ToggleWorkingTimeExpand(Guid id) => _expandedWorkingTimes.Toggle(id);
 	private void ToggleLoadingPlacesExpand(Guid id) => _expandedLoadingPlaces.Toggle(id);
 
-	private static string GetCompanyName(Producer producer)
-	{
-		return producer.Company?.Name ?? "(No Company)";
-	}
+	private static IEnumerable<(ProducerWorkingTime Time, int Index)> SortedWorkingTimes(Producer producer) =>
+		producer.ProducerWorkingTime.OrderBy(w => w.DayOfWeek).Select((w, i) => (w, i));
 
-	private static string GetDayAbbreviation(DayOfWeek day) => day switch
-	{
-		DayOfWeek.Monday => "Mon",
-		DayOfWeek.Tuesday => "Tue",
-		DayOfWeek.Wednesday => "Wed",
-		DayOfWeek.Thursday => "Thu",
-		DayOfWeek.Friday => "Fri",
-		DayOfWeek.Saturday => "Sat",
-		DayOfWeek.Sunday => "Sun",
-		_ => day.ToString()
-	};
+	private static string Time(TimeOnly time) => Texts.FormatTime(time);
 
 	protected override async Task OnInitializedAsync()
 	{

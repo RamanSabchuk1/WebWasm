@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using WebWasm.Localization;
 
 namespace WebWasm.Components;
 
@@ -7,7 +8,7 @@ namespace WebWasm.Components;
 /// Leaflet map component: after the first render imports its JS module (<see cref="ModulePath"/>), lets the
 /// subclass create the map in <see cref="MapElement"/> and disposes both on removal.
 /// </summary>
-public abstract class LeafletMapBase : ComponentBase, IAsyncDisposable
+public abstract class LeafletMapBase : LocalizedComponent, IAsyncDisposable
 {
 	[Inject] protected IJSRuntime JS { get; set; } = default!;
 
@@ -40,7 +41,7 @@ public abstract class LeafletMapBase : ComponentBase, IAsyncDisposable
 		}
 		catch (JSException ex)
 		{
-			OnMapError($"Failed to load map: {ex.Message}");
+			OnMapError(T.Maps.LoadFailed(ex.Message));
 			return;
 		}
 
@@ -51,7 +52,7 @@ public abstract class LeafletMapBase : ComponentBase, IAsyncDisposable
 		}
 		catch (JSException ex)
 		{
-			OnMapError($"Failed to initialize map: {ex.Message}");
+			OnMapError(T.Maps.InitFailed(ex.Message));
 		}
 	}
 

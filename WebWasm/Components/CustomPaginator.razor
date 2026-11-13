@@ -1,24 +1,18 @@
-@using Microsoft.AspNetCore.Components.QuickGrid
-
 @if (State != null && ResolvedTotalItems.HasValue && TotalPages > 1)
 {
-	<div class="pagination">
-		<button @onclick="GoToFirstPage" disabled="@(!CanGoToPreviousPage())">
-			First
+	<nav class="pagination" aria-label="@T.Common.PageOf(CurrentPage, TotalPages)">
+		<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="GoToFirstPage" disabled="@(!CanGoToPreviousPage())" title="@T.Common.FirstPage" aria-label="@T.Common.FirstPage">
+			<Icon Name="IconName.First" />
 		</button>
-		<button @onclick="GoToPreviousPage" disabled="@(!CanGoToPreviousPage())">
-			Previous
+		<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="GoToPreviousPage" disabled="@(!CanGoToPreviousPage())" title="@T.Common.PreviousPage" aria-label="@T.Common.PreviousPage">
+			<Icon Name="IconName.ChevronLeft" />
 		</button>
-
-		<span class="pagination-state">
-			Page @CurrentPage of @TotalPages
-		</span>
-
-		<button @onclick="GoToNextPage" disabled="@(!CanGoToNextPage())">
-			Next
+		<span class="pagination-state">@T.Common.PageOf(CurrentPage, TotalPages)</span>
+		<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="GoToNextPage" disabled="@(!CanGoToNextPage())" title="@T.Common.NextPage" aria-label="@T.Common.NextPage">
+			<Icon Name="IconName.ChevronRight" />
 		</button>
-		<button @onclick="GoToLastPage" disabled="@(!CanGoToNextPage())">
-			Last
+		<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="GoToLastPage" disabled="@(!CanGoToNextPage())" title="@T.Common.LastPage" aria-label="@T.Common.LastPage">
+			<Icon Name="IconName.Last" />
 		</button>
-	</div>
+	</nav>
 }

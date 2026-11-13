@@ -1,40 +1,31 @@
-@using WebWasm.Models
 @inherits LeafletMapBase
 
-<div class="location-picker-container">
+<div class="location-picker">
 	@if (!string.IsNullOrEmpty(Title))
 	{
-		<p class="map-hint">📍 @Title</p>
+		<p class="cluster caption">
+			<Icon Name="IconName.Pin" />
+			@Title
+		</p>
 	}
-	<div class="map-wrapper" @attributes="@(string.IsNullOrEmpty(MapHeight) ? null : new Dictionary<string, object> { { "style", $"height:{MapHeight}" } })">
+	<div class="map-wrapper" style="@(string.IsNullOrEmpty(MapHeight) ? null : $"--map-height: {MapHeight}")">
 		<div @ref="MapElement" class="leaflet-map"></div>
 	</div>
 
 	@if (ShowInputs)
 	{
-		<div class="location-info">
-			<div class="coordinates">
-				<div class="coord-group">
-					<label>Latitude:</label>
-					<input type="number"
-						   step="0.000001"
-						   @bind="_latitude"
-						   @bind:event="oninput"
-						   @onchange="UpdateMarkerFromInput"
-						   class="coord-input" />
-				</div>
-				<div class="coord-group">
-					<label>Longitude:</label>
-					<input type="number"
-						   step="0.000001"
-						   @bind="_longitude"
-						   @bind:event="oninput"
-						   @onchange="UpdateMarkerFromInput"
-						   class="coord-input" />
-				</div>
+		<div class="form-grid">
+			<div class="field">
+				<label for="@($"{_idPrefix}-lat")">@T.Maps.Latitude</label>
+				<input id="@($"{_idPrefix}-lat")" type="number" step="0.000001"
+					   @bind="_latitude" @bind:event="oninput" @onchange="UpdateMarkerFromInput" />
 			</div>
-			<p class="map-hint">💡 Click on the map to select a location</p>
+			<div class="field">
+				<label for="@($"{_idPrefix}-lng")">@T.Maps.Longitude</label>
+				<input id="@($"{_idPrefix}-lng")" type="number" step="0.000001"
+					   @bind="_longitude" @bind:event="oninput" @onchange="UpdateMarkerFromInput" />
+			</div>
 		</div>
+		<p class="hint">@T.Maps.PickHint</p>
 	}
-
 </div>

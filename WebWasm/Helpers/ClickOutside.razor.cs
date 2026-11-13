@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 
 namespace WebWasm.Helpers;
 
-public partial class ClickOutside : ComponentBase, IAsyncDisposable
+public partial class ClickOutside : IAsyncDisposable
 {
 	[Inject] private IJSRuntime JS { get; set; } = default!;
 

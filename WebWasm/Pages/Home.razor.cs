@@ -8,15 +8,8 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 {
 	private const string TurnoverFilterStorageKey = "home_turnover_filter";
 
-	private static readonly (string Key, string Label)[] _turnoverPresets =
-	[
-		("1w", "1W"),
-		("2w", "2W"),
-		("1m", "1M"),
-		("2m", "2M"),
-		("1q", "1Q"),
-		("all", "All time"),
-	];
+	// Labels: T.Home.Preset(key).
+	private static readonly string[] _turnoverPresets = ["1w", "2w", "1m", "2m", "1q", "all"];
 
 	private int _ordersTodayCount;
 	private int _usersCount;
@@ -38,10 +31,10 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 	private async ValueTask LoadData()
 	{
 		// Каждый счётчик грузится сам по себе: сбой одного — тост и 0, остальные показываются.
-		var activities = Safe(cashService.GetData<ActivityRecord>().AsTask(), [], "recent activity");
-		var ordersToday = Safe(api.Get<int>("Counts/orders-today").AsTask(), 0, "orders today");
-		var users = Safe(api.Get<int>("Counts/users").AsTask(), 0, "users count");
-		var companies = Safe(api.Get<int>("Counts/companies").AsTask(), 0, "companies count");
+		var activities = Safe(cashService.GetData<ActivityRecord>().AsTask(), [], T.Home.ActivityFailed);
+		var ordersToday = Safe(api.Get<int>("Counts/orders-today").AsTask(), 0, T.Home.OrdersTodayFailed);
+		var users = Safe(api.Get<int>("Counts/users").AsTask(), 0, T.Home.UsersFailed);
+		var companies = Safe(api.Get<int>("Counts/companies").AsTask(), 0, T.Home.CompaniesFailed);
 		await Task.WhenAll(activities, ordersToday, users, companies, LoadTurnover());
 
 		_activityRecords = activities.Result;
@@ -50,7 +43,7 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 		_companiesCount = companies.Result;
 	}
 
-	private async Task<T> Safe<T>(Task<T> load, T fallback, string what)
+	private async Task<TResult> Safe<TResult>(Task<TResult> load, TResult fallback, Func<string, string> errorMessage)
 	{
 		try
 		{
@@ -58,7 +51,7 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 		}
 		catch (Exception ex)
 		{
-			toastService.ShowError($"Failed to load {what}: {ex.Message}");
+			toastService.ShowError(errorMessage(ex.Message));
 			return fallback;
 		}
 	}
@@ -80,7 +73,7 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 			query = "?" + string.Join("&", parts);
 		}
 
-		_turnover = await Safe(api.Get<TurnoverInfo>($"Counts/turnover{query}").AsTask(), new TurnoverInfo(0, 0), "turnover");
+		_turnover = await Safe(api.Get<TurnoverInfo>($"Counts/turnover{query}").AsTask(), new TurnoverInfo(0, 0), T.Home.TurnoverFailed);
 	}
 
 	private async Task ApplyTurnoverPreset(string preset)
@@ -154,16 +147,17 @@ public partial class Home(CashService cashService, ApiClient api, LocalStorageSe
 	{
 		return _turnoverPreset switch
 		{
-			"custom" when _turnoverFrom is not null || _turnoverTo is not null => $"{FormatDate(_turnoverFrom) ?? "…"} — {FormatDate(_turnoverTo) ?? "…"}",
-			"custom" => "all time",
-			var p => _turnoverPresets.FirstOrDefault(x => x.Key == p).Label ?? "all time",
+			"custom" when _turnoverFrom is not null || _turnoverTo is not null => $"{DisplayDate(_turnoverFrom)} — {DisplayDate(_turnoverTo)}",
+			"custom" => T.Home.AllTime,
+			var p => T.Home.Preset(p),
 		};
 	}
 
+	// yyyy-MM-dd: the API query and the value of <input type="date">, not for display.
 	private static string? FormatDate(DateOnly? date) => date?.ToString("yyyy-MM-dd");
 
-	private string GetRevenue() => $"{_turnover.Turnover:F2} BYN";
-	private string GetProfit() => $"{_turnover.Profit:F2} BYN";
-	private static string GetDate(ActivityRecord record) => record.Date.ToLocalTime().ToString("MM.dd - HH:mm");
+	private string DisplayDate(DateOnly? date) => date is { } d ? T.FormatDate(d) : "…";
+
+	private string FormatCount(int value) => T.FormatNumber((decimal)value, 0);
 }
 

@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
 using WebWasm.Helpers;
+using WebWasm.Localization;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class CompaniesTable : ComponentBase
+public partial class CompaniesTable
 {
 	private const string SearchKey = "search_companies";
 	private const string SortKey = "sort_companies";
 	private const string TypeFilterKey = "companies_type_filter";
+	private static readonly CompanyType[] FilterTypes = [CompanyType.Buyer, CompanyType.Cargo, CompanyType.Provider];
 	[Parameter] public List<Company> Companies { get; set; } = [];
 	[Parameter] public EventCallback<(Guid CompanyId, bool IsActive)> OnToggleActive { get; set; }
 	[Parameter] public EventCallback<Company> OnEditCompany { get; set; }
@@ -21,7 +23,6 @@ public partial class CompaniesTable : ComponentBase
 	private string _searchText = string.Empty;
 	private SortState _sortState = new();
 	private CompanyType? _companyTypeFilter;
-	private bool _showFilters;
 	private readonly HashSet<Guid> _expandedCompanies = [];
 	private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
 
@@ -64,6 +65,8 @@ public partial class CompaniesTable : ComponentBase
 
 	private void ToggleExpand(Guid id) => _expandedCompanies.Toggle(id);
 
+	private static string OrDash(string? value) => string.IsNullOrEmpty(value) ? Texts.Dash : value;
+
 	protected override async Task OnInitializedAsync()
 	{
 		_searchText = await LocalStorage.GetItemOrDefaultAsync(SearchKey, string.Empty);
@@ -96,7 +99,7 @@ public partial class CompaniesTable : ComponentBase
 	private static IEnumerable<CompanyType> GetTypeFlags(CompanyType type)
 	{
 		// None не показываем: временно API не присылает тип для покупателей.
-		foreach (var flag in new[] { CompanyType.Buyer, CompanyType.Cargo, CompanyType.Provider })
+		foreach (var flag in FilterTypes)
 		{
 			if ((type & flag) == flag)
 			{
@@ -104,7 +107,4 @@ public partial class CompaniesTable : ComponentBase
 			}
 		}
 	}
-
-	private static string FormatCreated(DateTime created) =>
-		created == DateTime.MinValue ? string.Empty : created.ToString("d");
 }

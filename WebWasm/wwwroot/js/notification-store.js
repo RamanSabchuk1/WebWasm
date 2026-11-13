@@ -1,8 +1,11 @@
 // IndexedDB history of push notifications, shared by the page and both service workers.
+// The database name carries the app path (/WebWasm/, /ProdA/): the dev and prod admins share one origin on GitHub Pages.
 self.notificationStore = {
+	dbName: 'notifications:' + new URL(self.registration ? self.registration.scope : document.baseURI).pathname,
+
 	open: function () {
 		return new Promise((resolve, reject) => {
-			const req = indexedDB.open('webwasm-db', 1);
+			const req = indexedDB.open(this.dbName, 1);
 			req.onupgradeneeded = (e) => {
 				const db = e.target.result;
 				if (!db.objectStoreNames.contains('notifications')) {
@@ -28,17 +31,11 @@ self.notificationStore = {
 	},
 
 	// Keeps the last 40 once there are more than 50.
-	save: async function (payload) {
+	save: async function ({ title, body, data }) {
 		try {
 			const db = await this.open();
 			const store = db.transaction('notifications', 'readwrite').objectStore('notifications');
-			store.add({
-				title: payload.notification?.title || payload.data?.title || 'Notification',
-				body: payload.notification?.body || payload.data?.body || '',
-				data: payload.data || null,
-				timestamp: new Date().toISOString(),
-				isRead: false
-			});
+			store.add({ title, body, data: data || null, timestamp: new Date().toISOString(), isRead: false });
 
 			const countReq = store.count();
 			countReq.onsuccess = () => {

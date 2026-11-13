@@ -1,12 +1,14 @@
-@using WebWasm.Models
 @inherits LeafletMapBase
 
-<div class="location-picker-container">
-	@if(ShowTitle)
+<div class="triangle-map">
+	@if (ShowTitle)
 	{
-		<p class="map-hint">📍 @LevelType</p>
+		<p class="cluster caption">
+			<Icon Name="IconName.Pin" />
+			@T.Enums.LevelType(LevelType)
+		</p>
 	}
-	<div class="map-container" style="height: @MapHeight">
+	<div class="map-wrapper" style="--map-height: @MapHeight">
 		<div @ref="MapElement" class="leaflet-map"></div>
 	</div>
 </div>

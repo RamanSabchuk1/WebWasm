@@ -6,7 +6,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Services;
 
-public class CashService(ApiClient apiClient, ToastService toastService, LoadingService loadingService)
+public class CashService(ApiClient apiClient, ToastService toastService, LoadingService loadingService, Preferences preferences)
 {
 	private static readonly JsonSerializerOptions _serOptions = SerializationHelper.SerializerOptions();
 
@@ -79,11 +79,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 	public async ValueTask<UserInfo?> GetUserInfo(bool useCash = true)
 	{
 		var key = nameof(UserInfo);
-		if (!_typeFetch.TryGetValue(key, out var fetchFunc))
-		{
-			toastService.ShowError("Fetch user Info not found");
-			return null;
-		}
+		var fetchFunc = _typeFetch[key];
 
 		if (!_cachedData.TryGetValue(key, out var cachedInfo))
 		{
@@ -110,7 +106,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			}
 			catch (Exception ex)
 			{
-				toastService.ShowError($"Failed to load {key}: {ex.Message}");
+				toastService.ShowError(preferences.Texts.Common.LoadFailed(ex.Message));
 			}
 		});
 
@@ -147,7 +143,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			}
 			catch (Exception ex)
 			{
-				toastService.ShowError($"Failed to load {key}: {ex.Message}");
+				toastService.ShowError(preferences.Texts.Common.LoadFailed(ex.Message));
 			}
 		});
 
@@ -266,7 +262,7 @@ public class CashService(ApiClient apiClient, ToastService toastService, Loading
 			}
 			catch (Exception ex)
 			{
-				toastService.ShowError($"Failed to load {key}: {ex.Message}");
+				toastService.ShowError(preferences.Texts.Common.LoadFailed(ex.Message));
 			}
 		});
 

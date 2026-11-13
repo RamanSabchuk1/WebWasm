@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Components;
+using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class Login(NavigationManager navManager)
+public partial class Login(NavigationManager navManager, ApiClient apiClient, AppSettings settings)
 {
 	public record LoginModel()
 	{
@@ -16,6 +17,8 @@ public partial class Login(NavigationManager navManager)
 	private bool _isLoading = false;
 	private string? _errorMessage;
 
+	private AppSettings Settings => settings;
+
 	private async Task HandleLogin()
 	{
 		_errorMessage = null;
@@ -25,17 +28,16 @@ public partial class Login(NavigationManager navManager)
 		{
 			if (string.IsNullOrWhiteSpace(_loginModel.Username) || string.IsNullOrWhiteSpace(_loginModel.Password))
 			{
-				_errorMessage = "Username and password cannot be empty.";
+				_errorMessage = T.Login.Empty;
 				return;
 			}
 
-			await ApiClient.Login(_loginModel);
+			await apiClient.Login(_loginModel);
 			navManager.NavigateTo("myuserinfo");
-
 		}
 		catch (Exception ex)
 		{
-			_errorMessage = $"Login failed: {ex.Message}";
+			_errorMessage = T.Login.Failed(ex.Message);
 		}
 		finally
 		{

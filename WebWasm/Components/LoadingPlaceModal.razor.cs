@@ -3,7 +3,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class LoadingPlaceModal : ComponentBase
+public partial class LoadingPlaceModal
 {
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public LoadingPlace? EditingLoadingPlace { get; set; }
@@ -16,7 +16,7 @@ public partial class LoadingPlaceModal : ComponentBase
 	private Guid _materialTypeId = Guid.Empty;
 	private decimal _cost = 0;
 	private int _volume = 0;
-	private string _errorMessage = string.Empty;
+	private bool _showErrors;
 
 	protected override void OnParametersSet()
 	{
@@ -44,7 +44,7 @@ public partial class LoadingPlaceModal : ComponentBase
 		_materialTypeId = Guid.Empty;
 		_cost = 0;
 		_volume = 0;
-		_errorMessage = string.Empty;
+		_showErrors = false;
 	}
 
 	private void HandleLocationChanged(Location location)
@@ -61,15 +61,9 @@ public partial class LoadingPlaceModal : ComponentBase
 
 	private async Task HandleSubmit()
 	{
-		if (!IsValid)
+		if (!IsValid || _location is null)
 		{
-			_errorMessage = "Please fill in all required fields";
-			return;
-		}
-
-		if (_location is null)
-		{
-			_errorMessage = "Please select a location on the map";
+			_showErrors = true;
 			return;
 		}
 

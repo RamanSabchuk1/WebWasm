@@ -1,20 +1,13 @@
-@using WebWasm.Helpers
-
+@* «Three dots» menu of a table row (D41). Items: <button class="menu-item">, deleting — menu-item menu-item-danger. *@
 <div class="dropdown-actions">
-	<button @ref="_triggerRef"
-			class="btn-trigger"
-			type="button"
-			title="@Title"
-			@onclick="ToggleAsync">
-		⋮
+	<button @ref="_triggerRef" type="button" class="btn btn-ghost btn-icon btn-sm" title="@(Title ?? T.Common.Actions)"
+			aria-label="@(Title ?? T.Common.Actions)" aria-expanded="@Aria.State(_open)" @onclick="ToggleAsync">
+		<Icon Name="IconName.More" />
 	</button>
 	@if (_open)
 	{
 		<ClickOutside OnClickOutside="Close">
-			<div @ref="_menuRef"
-				 class="dropdown-menu-content"
-				 style="@MenuStyle"
-				 @onclick="Close">
+			<div @ref="_menuRef" class="menu @MenuClass" role="menu" style="@MenuPosition" @onclick="Close">
 				@ChildContent
 			</div>
 		</ClickOutside>

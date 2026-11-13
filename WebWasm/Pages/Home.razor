@@ -1,115 +1,103 @@
 @page "/"
 
-<PageTitle>Home - Admin Dashboard</PageTitle>
+<AppTitle Text="@T.Shell.Home" />
 
-<div class="welcome-section">
-	<div class="welcome-content">
-		<h1>Welcome Back! 👋</h1>
-		<p class="welcome-subtitle">SuperAdmin Dashboard</p>
-		<p class="welcome-description">Manage your platform efficiently with powerful tools.</p>
-	</div>
-</div>
-
-@* Переключатели периода — в едином стиле kind-switch (эталон: фильтры на Users/Companies) *@
-<div class="turnover-filter">
-	<span class="turnover-filter-title">💳 Turnover period:</span>
-	<div class="kind-switch turnover-presets">
-		@foreach (var (key, label) in _turnoverPresets)
-		{
-			<button type="button"
-					class="kind-switch-btn @(_turnoverPreset == key ? "active" : "")"
-					@onclick="() => ApplyTurnoverPreset(key)">
-				@label
-			</button>
-		}
-	</div>
-	<div class="turnover-range">
-		<input type="date"
-			   class="turnover-date"
-			   value="@FormatDate(_turnoverFrom)"
-			   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
-			   @onchange="OnTurnoverFromChanged" />
-		<span class="turnover-date-sep">—</span>
-		<input type="date"
-			   class="turnover-date"
-			   value="@FormatDate(_turnoverTo)"
-			   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
-			   @onchange="OnTurnoverToChanged" />
-	</div>
-</div>
-
-<div class="quick-stats">
-	<div class="quick-stat-card primary">
-		<span class="quick-stat-icon">📦</span>
-		<div class="quick-stat-info">
-			<span class="quick-stat-value">@_ordersTodayCount</span>
-			<span class="quick-stat-label">Orders Today</span>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Home</h1>
+			<p class="page-subtitle">@T.Home.Subtitle</p>
 		</div>
 	</div>
-	<div class="quick-stat-card">
-		<span class="quick-stat-icon">👥</span>
-		<div class="quick-stat-info">
-			<span class="quick-stat-value">@_usersCount</span>
-			<span class="quick-stat-label">Total Users</span>
-		</div>
-	</div>
-	<div class="quick-stat-card">
-		<span class="quick-stat-icon">🏢</span>
-		<div class="quick-stat-info">
-			<span class="quick-stat-value">@_companiesCount</span>
-			<span class="quick-stat-label">Companies</span>
-		</div>
-	</div>
-	<div class="quick-stat-card">
-		<span class="quick-stat-icon">💳</span>
-		<div class="quick-stat-info">
-			<span class="quick-stat-value">@GetRevenue()</span>
-			<span class="quick-stat-subvalue">Profit (pre-tax): @GetProfit()</span>
-			<span class="quick-stat-label">Turnover (@GetTurnoverPeriodLabel())</span>
-		</div>
-	</div>
-</div>
 
-<div class="dashboard-grid">
-	<div class="dashboard-card">
+	<div class="stats">
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.Orders" />@T.Home.OrdersToday</span>
+			<span class="stat-value">@FormatCount(_ordersTodayCount)</span>
+		</div>
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.Users" />@T.Shell.Users</span>
+			<span class="stat-value">@FormatCount(_usersCount)</span>
+		</div>
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.Companies" />@T.Shell.Companies</span>
+			<span class="stat-value">@FormatCount(_companiesCount)</span>
+		</div>
+	</div>
+
+	<div class="card">
 		<div class="card-header">
-			<h3>Quick Actions</h3>
+			<h2 class="card-title">@T.Home.Turnover</h2>
+			<span class="badge badge-neutral tabular">@GetTurnoverPeriodLabel()</span>
 		</div>
-		<div class="action-grid">
-			<a href="orders" class="action-item">
-				<span class="action-icon">📦</span>
-				<span class="action-text">New Order</span>
-			</a>
-			<a href="users" class="action-item">
-				<span class="action-icon">👤</span>
-				<span class="action-text">Add User</span>
-			</a>
-			<a href="companies" class="action-item">
-				<span class="action-icon">🏢</span>
-				<span class="action-text">Add Company</span>
-			</a>
-			<a href="supports" class="action-item">
-				<span class="action-icon">🎧</span>
-				<span class="action-text">Support</span>
-			</a>
-		</div>
-	</div>
 
-	<div class="dashboard-card">
-		<div class="card-header">
-			<h3>Recent Activity</h3>
-		</div>
-		<div class="activity-list">
-			@foreach (var item in _activityRecords)
-			{
-				<div class="activity-item">
-					<span class="activity-icon">📇</span>
-					<div class="activity-content">
-						<span class="activity-title">@item.Description</span>
-						<span class="activity-time">@GetDate(item)</span>
-					</div>
+		<div class="toolbar">
+			<div class="field">
+				<span class="field-label">@T.Home.Period</span>
+				<div class="segmented presets" role="group" aria-label="@T.Home.Period">
+					@foreach (var preset in _turnoverPresets)
+					{
+						<button type="button" aria-pressed="@Aria.State(_turnoverPreset == preset)" @onclick="() => ApplyTurnoverPreset(preset)" @key="preset">
+							@T.Home.Preset(preset)
+						</button>
+					}
 				</div>
-			}
+			</div>
+			<div class="field period-date">
+				<label for="turnover-from">@T.Home.PeriodStart</label>
+				<input id="turnover-from" type="date"
+					   value="@FormatDate(_turnoverFrom)"
+					   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
+					   @onchange="OnTurnoverFromChanged" />
+			</div>
+			<div class="field period-date">
+				<label for="turnover-to">@T.Home.PeriodEnd</label>
+				<input id="turnover-to" type="date"
+					   value="@FormatDate(_turnoverTo)"
+					   max="@FormatDate(DateOnly.FromDateTime(DateTime.Today))"
+					   @onchange="OnTurnoverToChanged" />
+			</div>
 		</div>
+
+		<div class="turnover">
+			<div class="stat">
+				<span class="stat-label"><Icon Name="IconName.Banknote" />@T.Home.Turnover</span>
+				<span class="stat-value">@T.FormatMoney(_turnover.Turnover)</span>
+				<span class="caption">@T.Home.TurnoverHint</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label"><Icon Name="IconName.Wallet" />@T.Home.Profit</span>
+				<span class="stat-value">@T.FormatMoney(_turnover.Profit)</span>
+				<span class="caption">@T.Home.ProfitHint</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-header">
+			<h2 class="card-title">@T.Home.RecentActivity</h2>
+		</div>
+		@if (_activityRecords.Length > 0)
+		{
+			<ul class="activity">
+				@foreach (var (index, item) in _activityRecords.Index())
+				{
+					<li class="activity-item" @key="index">
+						<Icon Name="IconName.Clock" Class="muted" />
+						<div class="activity-text">
+							<span>@item.Description</span>
+							<span class="caption tabular">@T.FormatDateTime(item.Date.ToLocalTime())</span>
+						</div>
+					</li>
+				}
+			</ul>
+		}
+		else
+		{
+			<div class="empty">
+				<Icon Name="IconName.Inbox" />
+				<p class="empty-title">@T.Home.NoActivity</p>
+			</div>
+		}
 	</div>
 </div>

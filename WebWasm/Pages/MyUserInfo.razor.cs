@@ -7,8 +7,10 @@ using WebWasm.Services;
 namespace WebWasm.Pages;
 
 public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingService, CashService cashService, ToastService toastService,
-	IJSRuntime jsRuntime, NavigationManager navigationManager)
+	IJSRuntime jsRuntime, NavigationManager navigationManager, AppSettings settings)
 {
+	private AppSettings Settings => settings;
+
 	private UserInfo? _userInfo;
 	private SetUserNames _updateUser = new(string.Empty, string.Empty, string.Empty);
 	private List<PushNotificationItem> _notifications = [];
@@ -23,10 +25,11 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 			var parts = new[] { _userInfo?.LastName, _userInfo?.FirstName, _userInfo?.MiddleName }
 				.Where(x => !string.IsNullOrWhiteSpace(x));
 			var name = string.Join(' ', parts);
-			return string.IsNullOrWhiteSpace(name) ? "Имя не заполнено" : name;
+			return string.IsNullOrWhiteSpace(name) ? T.Profile.NoName : name;
 		}
 	}
 
+	/// <summary>Empty when the name is not set: the avatar then shows the user icon.</summary>
 	private string Initials
 	{
 		get
@@ -36,7 +39,7 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 			var initials = string.Concat(
 				string.IsNullOrEmpty(first) ? string.Empty : first[..1],
 				string.IsNullOrEmpty(last) ? string.Empty : last[..1]);
-			return string.IsNullOrEmpty(initials) ? "👤" : initials.ToUpperInvariant();
+			return initials.ToUpperInvariant();
 		}
 	}
 
@@ -75,7 +78,7 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 		}
 		catch (Exception ex)
 		{
-			toastService.ShowError($"Failed to load notifications: {ex.Message}");
+			toastService.ShowError(T.Push.HistoryLoadFailed(ex.Message));
 		}
 	}
 
@@ -115,8 +118,8 @@ public partial class MyUserInfo(ApiClient apiClient, LoadingService loadingServi
 			await apiClient.Put("Users/user-info", _updateUser);
 			await LoadData(false);
 			_isEditingNames = false;
-			toastService.ShowSuccess("User successfully updated!");
-		}, "Failed to Update user: ");
+			toastService.ShowSuccess(T.Profile.Saved);
+		}, T.Profile.SaveFailed);
 	}
 }
 

@@ -5,36 +5,43 @@ using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class PushSubscription : ComponentBase
+public partial class PushSubscription(ApiClient apiClient, AppSettings settings, IJSRuntime js) : IAsyncDisposable
 {
-	[Inject] private ApiClient ApiClient { get; set; } = default!;
-	[Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+	private ElementReference _button;
+	private IJSObjectReference? _module;
+	private DotNetObjectReference<PushSubscription>? _self;
+	private PushState _state = PushState.Checking;
+	private string? _error;
 
-	/// <summary>Компактный режим (колокольчик) для шапки профиля.</summary>
-	[Parameter] public bool Compact { get; set; }
+	private bool CanTap => _state is PushState.Ready or PushState.On or PushState.Failed;
 
-	private string? _fcmToken;
-	private string? _errorMessage;
-	private bool _isLoading = true;
-	private bool _isSubscribing;
-
-	private bool IsSubscribed => !string.IsNullOrEmpty(_fcmToken);
-	private bool HasError => !string.IsNullOrEmpty(_errorMessage);
-
-	private string BellTitle => (_isSubscribing, IsSubscribed, HasError) switch
+	private string Title => _state switch
 	{
-		(true, _, _) => "Subscribing…",
-		(_, true, _) => "Push-уведомления включены",
-		(_, _, true) => _errorMessage!,
-		_ => "Включить push-уведомления",
+		PushState.On => T.Push.Rebind,
+		PushState.Failed => _error ?? T.Push.FailedTitle,
+		_ => T.Push.Enable,
 	};
 
-	private string BellCaption => (IsSubscribed, HasError) switch
+	private string Caption => _state switch
 	{
-		(true, _) => "Включены",
-		(_, true) => "Недоступно",
-		_ => "Уведомления",
+		PushState.Checking => T.Push.Checking,
+		PushState.Subscribing => T.Push.Subscribing,
+		PushState.On => T.Push.On,
+		PushState.Ready => T.Push.Notifications,
+		PushState.Denied => T.Push.Denied,
+		PushState.Failed => T.Push.Error,
+		_ => T.Push.Unavailable,
 	};
+
+	private string? Hint => _state switch
+	{
+		PushState.InstallRequired => T.Push.InstallRequired,
+		PushState.Denied => T.Push.DeniedHint,
+		PushState.Unsupported => T.Push.UnsupportedHint,
+		_ => null,
+	};
+
+	private string DeviceName => settings.EnvironmentLabel is null ? $"{settings.Name} PWA" : $"{settings.Name} {settings.EnvironmentLabel} PWA";
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
@@ -43,63 +50,96 @@ public partial class PushSubscription : ComponentBase
 			return;
 		}
 
-		bool isSupported;
 		try
 		{
-			isSupported = await JSRuntime.InvokeAsync<bool>("eval", "'Notification' in window && 'serviceWorker' in navigator");
+			_module = await js.InvokeAsync<IJSObjectReference>("import", "./Components/PushSubscription.razor.js");
+			_self = DotNetObjectReference.Create(this);
+			_state = ParseStatus(await _module.InvokeAsync<string>("attach", _button, _self));
 		}
-		catch (JSException)
+		catch (JSException ex)
 		{
-			isSupported = false;
+			Console.WriteLine($"Push subscription is unavailable: {ex.Message}");
+			_state = PushState.Unsupported;
 		}
 
-		if (!isSupported)
-		{
-			_errorMessage = "Push notifications are not supported in this browser.";
-		}
-
-		_isLoading = false;
 		StateHasChanged();
 	}
 
-	private async Task Subscribe()
+	[JSInvokable]
+	public void OnSubscribing()
 	{
-		_errorMessage = null;
-		_isSubscribing = true;
+		_state = PushState.Subscribing;
+		_error = null;
+		StateHasChanged();
+	}
 
-		try
+	[JSInvokable]
+	public async Task OnSubscribeResult(string status, string? token, string? error, string userAgent)
+	{
+		if (status == "granted" && !string.IsNullOrEmpty(token))
 		{
-			var permission = await JSRuntime.InvokeAsync<string>("Notification.requestPermission");
-			if (permission != "granted")
+			try
 			{
-				_errorMessage = "Notification permission was denied. Please enable notifications in your browser settings.";
-				return;
+				await apiClient.Post("DeviceTokens", new DeviceTokenInfo(token, DeviceName, new Dictionary<string, string>
+				{
+					["platform"] = "web",
+					["userAgent"] = userAgent,
+				}));
+				// «Включены» — только когда backend принял токен.
+				_state = PushState.On;
 			}
-
-			var token = await JSRuntime.InvokeAsync<string?>("getFcmToken");
-			if (string.IsNullOrEmpty(token))
+			catch (Exception ex)
 			{
-				_errorMessage = "Could not retrieve FCM token. Please check the browser console for more details.";
-				return;
+				_state = PushState.Failed;
+				_error = ex.Message;
 			}
+		}
+		else
+		{
+			_state = status == "granted" ? PushState.Failed : ParseStatus(status);
+			_error = error ?? (status == "granted" ? T.Push.NoToken : null);
+		}
 
-			var info = new DeviceTokenInfo(token, "WebWasm PWA", new Dictionary<string, string>
+		StateHasChanged();
+	}
+
+	private static PushState ParseStatus(string status) => status switch
+	{
+		"subscribed" => PushState.On,
+		"default" or "granted" => PushState.Ready,
+		"denied" => PushState.Denied,
+		"install-required" => PushState.InstallRequired,
+		"error" => PushState.Failed,
+		_ => PushState.Unsupported,
+	};
+
+	public async ValueTask DisposeAsync()
+	{
+		GC.SuppressFinalize(this);
+		if (_module is not null)
+		{
+			try
 			{
-				{ "platform", "web" },
-				{ "userAgent", await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent") }
-			});
+				await _module.InvokeVoidAsync("detach", _button);
+				await _module.DisposeAsync();
+			}
+			catch (JSDisconnectedException)
+			{
+			}
+		}
 
-			await ApiClient.Post("DeviceTokens", info);
-			// «Включены» — только когда backend принял токен.
-			_fcmToken = token;
-		}
-		catch (Exception ex)
-		{
-			_errorMessage = $"An error occurred: {ex.Message}";
-		}
-		finally
-		{
-			_isSubscribing = false;
-		}
+		_self?.Dispose();
+	}
+
+	private enum PushState
+	{
+		Checking,
+		Ready,
+		Subscribing,
+		On,
+		Denied,
+		InstallRequired,
+		Unsupported,
+		Failed,
 	}
 }

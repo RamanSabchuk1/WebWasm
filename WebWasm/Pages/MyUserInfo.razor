@@ -1,95 +1,122 @@
 @page "/myuserinfo"
 
-<PageTitle>My Profile</PageTitle>
+<AppTitle Text="@T.Shell.Profile" />
 
-<div class="profile-page">
+<div class="page profile">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Profile</h1>
+			<p class="page-subtitle">@T.Profile.Subtitle</p>
+		</div>
+	</div>
 
-	@* Identity: ФИО меняют один раз в жизни, поэтому по умолчанию это read-only шапка,
-	   а не форма во весь экран. Правка — по карандашу. Колокольчик уведомлений — справа. *@
-	<section class="identity-card">
-		<div class="identity-avatar">@Initials</div>
+	@* The name changes once in a lifetime: read-only by default, the form opens with the pencil. *@
+	<section class="card identity">
+		<div class="avatar" aria-hidden="true">
+			@if (Initials is { Length: > 0 } initials)
+			{
+				@initials
+			}
+			else
+			{
+				<Icon Name="IconName.User" Size="20" />
+			}
+		</div>
 
 		<div class="identity-main">
 			@if (_isEditingNames)
 			{
-				<EditForm Model="@_updateUser" OnValidSubmit="HandleSave" class="identity-form">
+				<EditForm Model="@_updateUser" OnValidSubmit="HandleSave" class="stack">
 					<DataAnnotationsValidator />
 
-					<div class="name-fields">
+					<div class="form-grid">
 						<div class="field">
-							<label for="firstName">First Name</label>
-							<InputText id="firstName" @bind-Value="_updateUser.FirstName" placeholder="First name" class="field-input" />
+							<label for="lastName">@T.Profile.LastName</label>
+							<InputText id="lastName" @bind-Value="_updateUser.LastName" autocomplete="family-name" />
+							<ValidationMessage For="@(() => _updateUser.LastName)" />
+						</div>
+						<div class="field">
+							<label for="firstName">@T.Profile.FirstName</label>
+							<InputText id="firstName" @bind-Value="_updateUser.FirstName" autocomplete="given-name" />
 							<ValidationMessage For="@(() => _updateUser.FirstName)" />
 						</div>
 						<div class="field">
-							<label for="middleName">Middle Name</label>
-							<InputText id="middleName" @bind-Value="_updateUser.MiddleName" placeholder="Middle name" class="field-input" />
+							<label for="middleName">@T.Profile.MiddleName</label>
+							<InputText id="middleName" @bind-Value="_updateUser.MiddleName" autocomplete="additional-name" />
 							<ValidationMessage For="@(() => _updateUser.MiddleName)" />
-						</div>
-						<div class="field">
-							<label for="lastName">Last Name</label>
-							<InputText id="lastName" @bind-Value="_updateUser.LastName" placeholder="Last name" class="field-input" />
-							<ValidationMessage For="@(() => _updateUser.LastName)" />
 						</div>
 					</div>
 
 					<div class="identity-actions">
-						<button type="button" class="btn-ghost" @onclick="CancelEditNames">Cancel</button>
-						<button type="submit" class="btn-accent">Save</button>
+						<button type="button" class="btn" @onclick="CancelEditNames">@T.Common.Cancel</button>
+						<button type="submit" class="btn btn-primary">@T.Common.Save</button>
 					</div>
 				</EditForm>
 			}
 			else
 			{
-				<h1 class="identity-name">
-					@FullName
-					<button class="btn-icon-inline" title="Edit name" aria-label="Edit name" @onclick="StartEditNames">✏️</button>
-				</h1>
-				<p class="identity-meta">@(_userInfo?.MobilePhone ?? "—")</p>
+				<div class="identity-name">
+					<h2>@FullName</h2>
+					<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="StartEditNames" title="@T.Profile.EditName" aria-label="@T.Profile.EditName">
+						<Icon Name="IconName.Edit" />
+					</button>
+				</div>
+				<p class="muted tabular">@(_userInfo?.MobilePhone ?? Texts.Dash)</p>
 			}
 		</div>
 
-		@* Колокольчик вместо кнопки-простыни «Subscribe to Notifications» *@
 		<div class="identity-aside">
-			<PushSubscription Compact="true" />
+			<PushSubscription />
 		</div>
 	</section>
 
-	@* История PUSH — самостоятельный блок со счётчиком и внятным пустым состоянием *@
-	<section class="notifications-card">
-		<header class="notifications-header">
-			<h2>Notifications</h2>
-			@if (_notifications.Count > 0)
+	<section class="card">
+		<div class="card-header">
+			<h2 class="card-title">@T.Profile.Settings</h2>
+		</div>
+		<PreferenceSwitches />
+		<div class="about cluster caption">
+			<span class="tabular">@T.Shell.Version(AppSettings.Version)</span>
+			@if (Settings.EnvironmentLabel is { } label)
 			{
-				<span class="notifications-count">@_notifications.Count</span>
+				<span class="badge badge-accent">@label</span>
 			}
-		</header>
+		</div>
+	</section>
+
+	<section class="card">
+		<div class="card-header">
+			<div class="cluster">
+				<h2 class="card-title">@T.Push.History</h2>
+				@if (_notifications.Count > 0)
+				{
+					<span class="badge badge-neutral tabular">@_notifications.Count</span>
+				}
+			</div>
+		</div>
 
 		@if (_notifications.Count > 0)
 		{
-			<ul class="notification-list">
+			<ul class="notes">
 				@foreach (var note in _notifications)
 				{
-					<li class="notification-item @(IsClickable(note) ? "is-clickable" : null)"
-						@onclick="() => NavigateToNotification(note)">
-						<div class="note-dot"></div>
+					<li class="note @(IsClickable(note) ? "is-clickable" : null)" @onclick="() => NavigateToNotification(note)" @key="note.Id">
+						<Icon Name="IconName.Bell" Class="muted" />
 						<div class="note-content">
-							<div class="note-title">@note.Title</div>
-							<div class="note-body">@note.Body</div>
+							<span class="strong">@note.Title</span>
+							<span class="small muted">@note.Body</span>
 						</div>
-						<time class="note-time">@note.Timestamp.ToLocalTime().ToString("g")</time>
+						<time class="caption tabular nowrap">@T.FormatDateTime(note.Timestamp.ToLocalTime())</time>
 					</li>
 				}
 			</ul>
 		}
 		else
 		{
-			<div class="empty-state">
-				<div class="empty-icon">🔔</div>
-				<p class="empty-title">Тут пока пусто</p>
-				<p class="empty-hint">
-					Уведомления о заказах появятся здесь. Если колокольчик неактивен — включите подписку.
-				</p>
+			<div class="empty">
+				<Icon Name="IconName.Bell" />
+				<p class="empty-title">@T.Push.HistoryEmpty</p>
+				<p class="empty-hint">@T.Push.HistoryEmptyHint</p>
 			</div>
 		}
 	</section>

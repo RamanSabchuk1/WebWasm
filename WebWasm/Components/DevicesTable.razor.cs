@@ -12,9 +12,10 @@ namespace WebWasm.Components;
 /// подсветка дублей по Device (case-insensitive), чекбоксы + multi-unbind.
 /// QuickGrid заменён на manual-разметку: группировку QuickGrid не поддерживает.
 /// </summary>
-public partial class DevicesTable : ComponentBase
+public partial class DevicesTable
 {
 	private const string SearchKey = "search_devices";
+	private const string AnonymousKey = "anonymous";
 
 	[Parameter, EditorRequired] public IEnumerable<DeviceTokenWithUser> Devices { get; set; } = [];
 	[Parameter] public EventCallback<(string, Guid)> OnUnbind { get; set; }
@@ -32,6 +33,7 @@ public partial class DevicesTable : ComponentBase
 
 	// Confirmation dialog state (single и multi unbind делят один диалог)
 	private bool _showConfirmDialog = false;
+	private string _confirmTitle = string.Empty;
 	private string _confirmMessage = string.Empty;
 	private List<(string Token, Guid UserInfoId)> _pendingUnbinds = [];
 
@@ -48,6 +50,9 @@ public partial class DevicesTable : ComponentBase
 	private void ToggleSelect(string token) => _selectedTokens.Toggle(token);
 
 	private void ClearSelection() => _selectedTokens.Clear();
+
+	// The group without a user has no name of its own: it gets the localized one.
+	private string GroupName(DeviceGroup group) => group.Key == AnonymousKey ? T.Devices.Anonymous : group.Name;
 
 	private bool IsGroupFullySelected(DeviceGroup group) =>
 		group.Items.Count > 0 && group.Items.All(i => _selectedTokens.Contains(i.DeviceToken.Token));
@@ -92,15 +97,17 @@ public partial class DevicesTable : ComponentBase
 			return [.. items
 				.GroupBy(d => d.User?.UserInfo.Id)
 				.Select(g => new DeviceGroup(
-					g.Key?.ToString() ?? "anonymous",
+					g.Key?.ToString() ?? AnonymousKey,
 					g.First().GetUserName(),
 					[.. g.OrderBy(d => d.DeviceToken.Device, StringComparer.OrdinalIgnoreCase)]))
-				.OrderBy(g => g.Key == "anonymous" ? 1 : 0)
+				.OrderBy(g => g.Key == AnonymousKey ? 1 : 0)
 				.ThenBy(g => g.Name, StringComparer.OrdinalIgnoreCase)];
 		}
 	}
 
-	// Пагинация по группам (пользователей много — owner, 2026-08-27): Skip/Take в разметке по одному расчёту FilteredGroups.
+	// Пагинация по группам (пользователей много — owner, 2026-08-27): Skip/Take по одному расчёту FilteredGroups.
+	private IEnumerable<DeviceGroup> PageOf(List<DeviceGroup> groups) =>
+		groups.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage).Take(_pagination.ItemsPerPage);
 
 	// Дубли: одинаковое Device (case-insensitive, trimmed) более чем у одного токена внутри группы.
 	private static HashSet<string> GetDuplicateDevices(IEnumerable<DeviceTokenWithUser> items) =>
@@ -131,7 +138,8 @@ public partial class DevicesTable : ComponentBase
 	private void ShowUnbindConfirmation(string token, Guid userId, string deviceName)
 	{
 		_pendingUnbinds = [(token, userId)];
-		_confirmMessage = $"Are you sure you want to unbind the device '{deviceName}'? This action cannot be undone.";
+		_confirmTitle = T.Devices.UnbindTitle;
+		_confirmMessage = T.Devices.UnbindMessage(deviceName);
 		_showConfirmDialog = true;
 	}
 
@@ -139,14 +147,15 @@ public partial class DevicesTable : ComponentBase
 	{
 		if (_selectedTokens.Count == 0)
 		{
-			ToastService.ShowWarning("No devices selected");
+			ToastService.ShowWarning(T.Devices.NoneSelected);
 			return;
 		}
 
 		_pendingUnbinds = [.. Devices
 			.Where(d => _selectedTokens.Contains(d.DeviceToken.Token))
 			.Select(d => (d.DeviceToken.Token, d.DeviceToken.UserInfoId))];
-		_confirmMessage = $"Are you sure you want to unbind {_pendingUnbinds.Count} selected device(s)? This action cannot be undone.";
+		_confirmTitle = T.Devices.UnbindManyTitle;
+		_confirmMessage = T.Devices.UnbindManyMessage(_pendingUnbinds.Count);
 		_showConfirmDialog = true;
 	}
 
@@ -173,5 +182,5 @@ public partial class DevicesTable : ComponentBase
 		_pendingUnbinds = [];
 	}
 
-	private Task CopyToClipboard(string text) => JSRuntime.CopyToClipboard(ToastService, text, "Copied to clipboard!");
+	private Task CopyToClipboard(string text) => JSRuntime.CopyToClipboard(ToastService, text, T.Common.Copied, T.Common.CopyFailed);
 }

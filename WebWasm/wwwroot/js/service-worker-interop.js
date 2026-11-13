@@ -1,4 +1,5 @@
-// Page side of the service worker: update notifications, foreground push messages, notification history.
+// Page side of the service worker: update notifications and notification history.
+// Pushes are always shown by the service worker (js/push-sw.js), also when the app is open.
 window.serviceWorkerInterop = {
 	dotNetReference: null,
 	_listeners: [],
@@ -44,8 +45,6 @@ window.serviceWorkerInterop = {
 				});
 			});
 		}
-
-		window.onForegroundPush = (payload) => this.dotNetReference?.invokeMethodAsync('OnForegroundMessage', payload);
 	},
 
 	// Activates a waiting service worker (if any) and reloads the page.
@@ -70,7 +69,6 @@ window.serviceWorkerInterop = {
 		this._listeners = [];
 		clearInterval(this._updateTimer);
 		this._updateTimer = null;
-		window.onForegroundPush = null;
 		this.dotNetReference = null;
 	}
 };

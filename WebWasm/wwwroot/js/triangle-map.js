@@ -1,9 +1,12 @@
 import { loadLeaflet } from './leaflet-loader.js';
 
-export async function initMap(mapElement, triangles, color) {
+// colorVar: design token of the triangles (e.g. '--info'), read from the page so the map follows the theme.
+// popupText: localized label shown on hover, passed from C#.
+export async function initMap(mapElement, triangles, colorVar, popupText) {
 	await loadLeaflet();
 
 	const L = window.L;
+	const color = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim();
 
 	// Calculate bounds from all triangle points
 	let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
@@ -44,7 +47,7 @@ export async function initMap(mapElement, triangles, color) {
 		}).addTo(map);
 
 		// Add popup on hover
-		polygon.bindPopup('Triangle', { closeButton: false });
+		polygon.bindPopup(popupText, { closeButton: false });
 		polygon.on('mouseover', () => polygon.openPopup());
 		polygon.on('mouseout', () => polygon.closePopup());
 	});

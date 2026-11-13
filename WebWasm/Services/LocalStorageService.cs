@@ -1,18 +1,27 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.JSInterop;
 using WebWasm.Helpers;
 
 namespace WebWasm.Services;
 
-/// <summary>Browser localStorage with values in the app's JSON format (<see cref="StorageFormat"/>).</summary>
-public class LocalStorageService(IJSRuntime js, JsonSerializerOptions options)
+/// <summary>
+/// Browser localStorage with values in the app's JSON format (<see cref="StorageFormat"/>). Keys start with the app path
+/// (<c>/WebWasm/</c>, <c>/ProdA/</c>): the dev and prod admins share one origin on GitHub Pages and would otherwise
+/// overwrite each other's token and filters.
+/// </summary>
+public class LocalStorageService(IJSRuntime js, JsonSerializerOptions options, IWebAssemblyHostEnvironment host)
 {
+	private readonly string _keyPrefix = new Uri(host.BaseAddress).AbsolutePath;
+
+	private string Key(string key) => _keyPrefix + key;
+
 	public async ValueTask<T?> GetItemAsync<T>(string key)
 	{
 		string? stored;
 		try
 		{
-			stored = await js.InvokeAsync<string?>("localStorage.getItem", key);
+			stored = await js.InvokeAsync<string?>("localStorage.getItem", Key(key));
 		}
 		catch (JSException ex)
 		{
@@ -45,7 +54,7 @@ public class LocalStorageService(IJSRuntime js, JsonSerializerOptions options)
 		var json = StorageFormat.Serialize(value, options);
 		try
 		{
-			await js.InvokeVoidAsync("localStorage.setItem", key, json);
+			await js.InvokeVoidAsync("localStorage.setItem", Key(key), json);
 		}
 		catch (JSException ex)
 		{
@@ -58,7 +67,7 @@ public class LocalStorageService(IJSRuntime js, JsonSerializerOptions options)
 	{
 		try
 		{
-			await js.InvokeVoidAsync("localStorage.removeItem", key);
+			await js.InvokeVoidAsync("localStorage.removeItem", Key(key));
 		}
 		catch (JSException ex)
 		{

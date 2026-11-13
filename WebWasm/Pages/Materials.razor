@@ -1,22 +1,20 @@
 @page "/materials"
-@using WebWasm.Components
 
-<PageTitle>Materials</PageTitle>
+<AppTitle Text="@T.Shell.Materials" />
 
-<div class="page-header">
-	<h1>🧉 Materials</h1>
-	<p class="page-subtitle">Manage materials inventory</p>
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>Material List</h3>
-		<button class="btn-primary" @onclick="OpenAddModal">+ Add Material</button>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Materials</h1>
+			<p class="page-subtitle">@T.Materials.Subtitle</p>
+		</div>
+		<button type="button" class="btn btn-primary" @onclick="OpenAddModal">
+			<Icon Name="IconName.Plus" />
+			@T.Materials.Add
+		</button>
 	</div>
-	<MaterialsTable
-					Materials="@_materials"
-					OnEdit="@HandleEdit"
-					OnDelete="@HandleDelete" />
+
+	<MaterialsTable Materials="@_materials" OnEdit="@HandleEdit" OnDelete="@HandleDelete" />
 </div>
 
 <MaterialModal IsOpen="@_isModalOpen"

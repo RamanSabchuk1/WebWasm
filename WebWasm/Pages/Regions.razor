@@ -1,20 +1,20 @@
 @page "/regions"
-@using WebWasm.Components
 
-<PageTitle>Regions</PageTitle>
+<AppTitle Text="@T.Shell.Regions" />
 
-<div class="page-header">
-	<h1>🌍 Regions</h1>
-	<p class="page-subtitle">Manage geographical regions and delivery levels</p>
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>Region List</h3>
-		<button class="btn-primary" @onclick="OpenAddRegionModal">+ Add Region</button>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Regions</h1>
+			<p class="page-subtitle">@T.Regions.Subtitle</p>
+		</div>
+		<button type="button" class="btn btn-primary" @onclick="OpenAddRegionModal">
+			<Icon Name="IconName.Plus" />
+			@T.Regions.Add
+		</button>
 	</div>
-	<RegionsTable
-				  Regions="@_regions"
+
+	<RegionsTable Regions="@_regions"
 				  OnView="@HandleViewDetails"
 				  OnEdit="@HandleEditRegion"
 				  OnDelete="@HandleDeleteRegion" />
@@ -26,11 +26,11 @@
 			 OnSubmit="@HandleRegionSubmit" />
 
 <RegionDetailsModal IsOpen="@_isDetailsModalOpen"
-					 Region="@_viewingRegion"
-					 OnClose="@CloseDetailsModal"
-					 OnAddLevel="@HandleAddLevel"
-					 OnDeleteLevel="@HandleDeleteLevel"
-					 OnEditLevel="@HandleEditLevel" />
+					Region="@_viewingRegion"
+					OnClose="@CloseDetailsModal"
+					OnAddLevel="@HandleAddLevel"
+					OnDeleteLevel="@HandleDeleteLevel"
+					OnEditLevel="@HandleEditLevel" />
 
 <LevelEditor IsOpen="@_isLevelEditorOpen"
 			 Region="@_editingLevelRegion"
@@ -40,11 +40,5 @@
 			 OnSubmitPrices="@HandleLevelSubmitPrices"
 			 OnSubmitGeometry="@HandleLevelSubmitGeometry" />
 
-<ConfirmDialog IsOpen="_confirm.IsOpen"
-			   Title="@_confirm.Title"
-			   Message="@_confirm.Message"
-			   ConfirmText="Delete"
-			   CancelText="Cancel"
-			   OnConfirm="_confirm.Confirm"
-			   OnCancel="_confirm.Cancel"
-			   IsDangerous="true" />
+<ConfirmDialog IsOpen="_confirm.IsOpen" Title="@_confirm.Title" Message="@_confirm.Message"
+			   OnConfirm="_confirm.Confirm" OnCancel="_confirm.Cancel" />

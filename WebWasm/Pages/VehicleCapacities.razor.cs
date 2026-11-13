@@ -9,7 +9,7 @@ namespace WebWasm.Pages;
 /// Backend: GET/POST/PUT/DELETE /admin/vehicle-capacities (S4.5.3). Удаление — с выбором
 /// «переназначить на другой вес» / «удалить машины (+ каскад слотов)» и предупреждением.
 /// </summary>
-public partial class VehicleCapacities : ComponentBase
+public partial class VehicleCapacities
 {
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
@@ -41,8 +41,9 @@ public partial class VehicleCapacities : ComponentBase
 		await LoadCapacities();
 	}
 
-	private static string FormatWeight(int weightKg) =>
-		weightKg % 1000 == 0 ? $"{weightKg / 1000} t" : $"{weightKg} kg";
+	private bool HasReassignTarget => _capacities.Any(x => x.WeightKg != _deleteWeightKg);
+
+	private string FormatWeight(int weightKg) => T.Pricing.Weight(weightKg);
 
 	private async Task LoadCapacities()
 	{
@@ -50,7 +51,7 @@ public partial class VehicleCapacities : ComponentBase
 		{
 			var capacities = await ApiClient.Get<VehicleCapacity[]>("admin/vehicle-capacities");
 			_capacities = [.. capacities.OrderBy(x => x.WeightKg)];
-		}, "Failed to load vehicle capacities: ");
+		}, T.Capacities.LoadFailed);
 	}
 
 	private void OpenCreateDialog()
@@ -68,13 +69,13 @@ public partial class VehicleCapacities : ComponentBase
 	{
 		if (_createWeightKg <= 0)
 		{
-			_createError = "Weight must be a positive number of kg.";
+			_createError = T.Capacities.WeightPositive;
 			return;
 		}
 
 		if (_createMaxPrice < _createMinPrice)
 		{
-			_createError = "Default Max Price must be greater than or equal to Min Price.";
+			_createError = T.Capacities.MaxBelowMin;
 			return;
 		}
 
@@ -83,13 +84,13 @@ public partial class VehicleCapacities : ComponentBase
 			try
 			{
 				await ApiClient.Post("admin/vehicle-capacities", new CreateVehicleCapacityRequest(_createWeightKg, _createMinPrice, _createMaxPrice));
-				ToastService.ShowSuccess($"Capacity {FormatWeight(_createWeightKg)} created.");
+				ToastService.ShowSuccess(T.Capacities.Created(FormatWeight(_createWeightKg)));
 				_showCreateDialog = false;
 				await LoadCapacities();
 			}
 			catch (Exception ex)
 			{
-				_createError = ex.Message;
+				_createError = T.Capacities.CreateFailed(ex.Message);
 			}
 		});
 	}
@@ -110,7 +111,7 @@ public partial class VehicleCapacities : ComponentBase
 	{
 		if (_editMaxPrice < _editMinPrice)
 		{
-			_editError = "Default Max Price must be greater than or equal to Min Price.";
+			_editError = T.Capacities.MaxBelowMin;
 			return;
 		}
 
@@ -119,13 +120,13 @@ public partial class VehicleCapacities : ComponentBase
 			try
 			{
 				await ApiClient.Put($"admin/vehicle-capacities/{_editWeightKg}", new UpdateVehicleCapacityRequest(_editMinPrice, _editMaxPrice, _editIsActive));
-				ToastService.ShowSuccess($"Capacity {FormatWeight(_editWeightKg)} updated.");
+				ToastService.ShowSuccess(T.Capacities.Updated(FormatWeight(_editWeightKg)));
 				_showEditDialog = false;
 				await LoadCapacities();
 			}
 			catch (Exception ex)
 			{
-				_editError = ex.Message;
+				_editError = T.Capacities.SaveFailed(ex.Message);
 			}
 		});
 	}
@@ -148,7 +149,7 @@ public partial class VehicleCapacities : ComponentBase
 		{
 			if (_reassignToWeightKg <= 0 || _reassignToWeightKg == _deleteWeightKg)
 			{
-				_deleteError = "Choose a valid target weight for reassignment.";
+				_deleteError = T.Capacities.ChooseTarget;
 				return;
 			}
 
@@ -160,13 +161,13 @@ public partial class VehicleCapacities : ComponentBase
 			try
 			{
 				await ApiClient.Delete(endpoint);
-				ToastService.ShowSuccess($"Capacity {FormatWeight(_deleteWeightKg)} deleted.");
+				ToastService.ShowSuccess(T.Capacities.Deleted(FormatWeight(_deleteWeightKg)));
 				_showDeleteDialog = false;
 				await LoadCapacities();
 			}
 			catch (Exception ex)
 			{
-				_deleteError = ex.Message;
+				_deleteError = T.Capacities.DeleteFailed(ex.Message);
 			}
 		});
 	}

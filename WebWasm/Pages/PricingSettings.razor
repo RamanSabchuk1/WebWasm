@@ -1,152 +1,182 @@
 @page "/pricing-settings"
-@using WebWasm.Components
-@using WebWasm.Models
 
-<PageTitle>Pricing Settings</PageTitle>
+<AppTitle Text="@T.Shell.PricingSettings" />
 
-<div class="page-header">
-	<h1>💰 Pricing Settings</h1>
-	<p class="page-subtitle">Приоритет переопределений: <strong>Company</strong> → <strong>MaterialType</strong> → <strong>Global</strong> → дефолт ключа. Пустой override = наследование.</p>
-</div>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.PricingSettings</h1>
+			<p class="page-subtitle">@T.Pricing.Subtitle</p>
+		</div>
+	</div>
 
-<div class="page-tabs scope-switch" role="tablist">
-	<button class="scope-btn @(_tab == Tab.Settings ? "active" : "")" role="tab" @onclick="() => _tab = Tab.Settings">Настройки</button>
-	<button class="scope-btn @(_tab == Tab.Simulator ? "active" : "")" role="tab" @onclick="() => _tab = Tab.Simulator">Калькуляция</button>
-</div>
+	<div class="segmented page-tabs" role="group" aria-label="@T.Pricing.TabsLabel">
+		<button type="button" aria-pressed="@Aria.State(_tab == Tab.Settings)" @onclick="() => _tab = Tab.Settings">
+			<Icon Name="IconName.Settings" />
+			@T.Pricing.TabSettings
+		</button>
+		<button type="button" aria-pressed="@Aria.State(_tab == Tab.Simulator)" @onclick="() => _tab = Tab.Simulator">
+			<Icon Name="IconName.Chart" />
+			@T.Pricing.TabSimulator
+		</button>
+	</div>
 
-@if (_tab == Tab.Simulator)
-{
-	<div class="content-card">
+	@if (_tab == Tab.Simulator)
+	{
 		<PricingSimulator />
-	</div>
-	return;
-}
-
-<div class="content-card">
-	<div class="card-header">
-		<div class="scope-switch">
-			<button class="scope-btn @(_scope == "Global" ? "active" : "")" @onclick='() => ChangeScope("Global")'>Global</button>
-			<button class="scope-btn @(_scope == "Company" ? "active" : "")" @onclick='() => ChangeScope("Company")'>Company</button>
-			<button class="scope-btn @(_scope == "MaterialType" ? "active" : "")" @onclick='() => ChangeScope("MaterialType")'>MaterialType</button>
-		</div>
-		@if (_scope == "Company")
-		{
-			<select class="scope-select" value="@(_companyId?.ToString() ?? "")" @onchange="OnCompanyChanged">
-				<option value="">— выберите компанию —</option>
-				@foreach (var company in _companies)
-				{
-					<option value="@company.Id">@company.Name</option>
-				}
-			</select>
-		}
-		else if (_scope == "MaterialType")
-		{
-			<select class="scope-select" value="@(_materialTypeId?.ToString() ?? "")" @onchange="OnMaterialTypeChanged">
-				<option value="">— выберите тип материала —</option>
-				@foreach (var materialType in _materialTypes)
-				{
-					<option value="@materialType.Id">@materialType.Name</option>
-				}
-			</select>
-		}
-	</div>
-
-	@if (_scope != "Global" && _scopeId is null)
-	{
-		<div class="empty-state">
-			<p>Выберите @(_scope == "Company" ? "компанию" : "тип материала") для просмотра переопределений.</p>
-		</div>
-	}
-	else if (_items.Count == 0)
-	{
-		<div class="empty-state">
-			<p>No pricing settings found.</p>
-		</div>
 	}
 	else
 	{
-		<div style="overflow-x: auto;">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Key</th>
-						<th>Description</th>
-						<th>Default</th>
-						<th>Range</th>
-						<th>Override компании действует на</th>
-						<th>Override (@_scope)</th>
-						<th>Effective</th>
-						<th>Updated</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var item in _items)
+		<div class="card">
+			<div class="toolbar">
+				<div class="segmented scope-switch" role="group" aria-label="@T.Pricing.ScopeLabel">
+					@foreach (var scope in Scopes)
 					{
-						<tr>
-							<td><code>@item.Key</code></td>
-							<td>@item.Description</td>
-							<td>@(item.Default?.ToString("0.####") ?? "—")</td>
-							<td>@Range(item)</td>
-							@{
-								var effect = CompanyEffect(item);
-								// На скоупе Company подсвечиваем ключи, override которых ни на что не влияет.
-								var useless = _scope == "Company" && item.CompanyRoles is [];
-							}
-							<td class="@(useless ? "validation-warning" : "")">@(effect ?? "—")</td>
-							<td>
-								@if (item.OverrideValue is not null)
-								{
-									<strong>@item.OverrideValue.Value.ToString("0.####")</strong>
-								}
-								else
-								{
-									<span class="inherited">наследуется</span>
-								}
-							</td>
-							<td>@(item.EffectiveValue?.ToString("0.####") ?? "не задано")</td>
-							<td>@(item.Updated?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-							@* table_actions_fix: кнопки свёрнуты в dropdown «три точки» (эталон — Users.razor) *@
-							<td class="actions-cell">
-								<ActionsDropdown Title="Действия" MenuHeight="110">
-									<button class="btn-action" @onclick="() => OpenEditDialog(item)">✏️ Set</button>
-									@if (item.OverrideValue is not null)
-									{
-										<button class="btn-action btn-action-danger" @onclick="() => ResetOverride(item)">↩︎ Reset</button>
-									}
-								</ActionsDropdown>
-							</td>
-						</tr>
+						<button type="button" @key="scope" aria-pressed="@Aria.State(_scope == scope)" @onclick="() => ChangeScope(scope)">@T.Pricing.ScopeName(scope)</button>
 					}
-				</tbody>
-			</table>
+				</div>
+				@if (_scope == ScopeCompany)
+				{
+					<div class="scope-picker">
+						<select value="@(_companyId?.ToString() ?? "")" @onchange="OnCompanyChanged" aria-label="@T.Pricing.ScopeName(ScopeCompany)">
+							<option value="">@T.Pricing.ChooseCompany</option>
+							@foreach (var company in _companies)
+							{
+								<option value="@company.Id" @key="company.Id">@company.Name</option>
+							}
+						</select>
+					</div>
+				}
+				else if (_scope == ScopeMaterialType)
+				{
+					<div class="scope-picker">
+						<select value="@(_materialTypeId?.ToString() ?? "")" @onchange="OnMaterialTypeChanged" aria-label="@T.Pricing.ScopeName(ScopeMaterialType)">
+							<option value="">@T.Pricing.ChooseMaterialType</option>
+							@foreach (var materialType in _materialTypes)
+							{
+								<option value="@materialType.Id" @key="materialType.Id">@materialType.Name</option>
+							}
+						</select>
+					</div>
+				}
+			</div>
+
+			@if (_scope != ScopeGlobal && _scopeId is null)
+			{
+				<div class="empty">
+					<Icon Name="@(_scope == ScopeCompany ? IconName.Companies : IconName.Materials)" />
+					<p class="empty-title">@(_scope == ScopeCompany ? T.Pricing.ChooseCompany : T.Pricing.ChooseMaterialType)</p>
+					<p class="empty-hint">@(_scope == ScopeCompany ? T.Pricing.ChooseCompanyHint : T.Pricing.ChooseMaterialTypeHint)</p>
+				</div>
+			}
+			else if (_items.Count == 0)
+			{
+				<div class="empty">
+					<Icon Name="IconName.Pricing" />
+					<p class="empty-title">@T.Pricing.Empty</p>
+					<p class="empty-hint">@T.Pricing.EmptyHint</p>
+				</div>
+			}
+			else
+			{
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>@T.Pricing.Key</th>
+								<th>@T.Common.Description</th>
+								<th class="num">@T.Pricing.Default</th>
+								<th class="num">@T.Pricing.RangeColumn</th>
+								<th>@T.Pricing.CompanyEffectColumn</th>
+								<th class="num">@T.Pricing.OverrideColumn(T.Pricing.ScopeName(_scope))</th>
+								<th class="num">@T.Pricing.Effective</th>
+								<th>@T.Common.Updated</th>
+								<th><span class="visually-hidden">@T.Common.Actions</span></th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var item in _items)
+							{
+								// На уровне компании подсвечиваем ключи, значение которых ни на что не влияет.
+								var useless = _scope == ScopeCompany && item.CompanyRoles is [];
+								<tr @key="item.Key">
+									<td><code>@item.Key</code></td>
+									<td class="description">@item.Description</td>
+									<td class="num nowrap">@(item.Default is { } defaultValue ? T.Pricing.Number(defaultValue) : Texts.Dash)</td>
+									<td class="num nowrap">@T.Pricing.Range(item.Min, item.Max)</td>
+									<td class="@(useless ? "warning-text" : null)">@(CompanyEffect(item) ?? Texts.Dash)</td>
+									<td class="num nowrap">
+										@if (item.OverrideValue is { } overrideValue)
+										{
+											<span class="strong">@T.Pricing.Number(overrideValue)</span>
+										}
+										else
+										{
+											<span class="muted">@T.Pricing.Inherited</span>
+										}
+									</td>
+									<td class="num nowrap">
+										@if (item.EffectiveValue is { } effective)
+										{
+											@T.Pricing.Number(effective)
+										}
+										else
+										{
+											<span class="muted">@T.Pricing.NotSet</span>
+										}
+									</td>
+									<td class="tabular nowrap">@T.FormatDateTime(item.Updated?.ToLocalTime())</td>
+									<td class="num">
+										<ActionsDropdown MenuHeight="90">
+											<button type="button" class="menu-item" @onclick="() => OpenEditDialog(item)">
+												<Icon Name="IconName.Edit" />
+												@T.Pricing.SetValue
+											</button>
+											@if (item.OverrideValue is not null)
+											{
+												<button type="button" class="menu-item menu-item-danger" @onclick="() => ResetOverride(item)">
+													<Icon Name="IconName.Undo" />
+													@T.Pricing.ResetValue
+												</button>
+											}
+										</ActionsDropdown>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
 		</div>
 	}
 </div>
 
-@* Установка override значения *@
-<ModalShell IsOpen="@_showEditDialog" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog" OnSubmit="SubmitEdit">
-	<div class="confirm-header">
-		<h2>@_editItem?.Key (@_scope)</h2>
-		<button class="btn-close" @onclick="CloseEditDialog">×</button>
-	</div>
-	<div class="confirm-body">
-		<div class="form-group">
-			<label>Value (дефолт: @(_editItem?.Default?.ToString("0.####") ?? "—"), диапазон: @(_editItem is null ? "—" : Range(_editItem)))</label>
-			<input type="number" step="0.0001" min="@_editItem?.Min" max="@_editItem?.Max" @bind="_editValue" />
-		</div>
-		@if (_scope == "Company" && _editItem?.CompanyRoles is [])
+@* Установка значения на выбранном уровне *@
+<ModalShell IsOpen="@_showEditDialog" Title="@EditTitle" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseEditDialog" OnSubmit="SubmitEdit">
+	<ChildContent>
+		@if (_editItem is { } editItem)
 		{
-			<p class="validation-warning">⚠️ У этого ключа настройка на уровне компании ни на что не влияет: расчёт возьмёт значение типа материала или глобальное.</p>
+			<div class="field">
+				<label for="pricing-value">@T.Pricing.ValueLabel</label>
+				<input id="pricing-value" type="number" step="0.0001" min="@editItem.Min" max="@editItem.Max" @bind="_editValue" />
+				<span class="hint">@T.Pricing.ValueHint(editItem.Default is { } editDefault ? T.Pricing.Number(editDefault) : Texts.Dash, T.Pricing.Range(editItem.Min, editItem.Max))</span>
+			</div>
+			@if (_scope == ScopeCompany && editItem.CompanyRoles is [])
+			{
+				<p class="hint warning-text">
+					<Icon Name="IconName.Warning" />
+					@T.Pricing.CompanyNoEffectWarning
+				</p>
+			}
+			<p class="hint">@T.Pricing.ResetHint</p>
+			@if (!string.IsNullOrEmpty(_editError))
+			{
+				<p class="field-error" role="alert">@_editError</p>
+			}
 		}
-		<p class="page-subtitle">Пустое действие не предусмотрено — для сброса override используйте ↩︎ Reset в таблице (вернёт наследование по цепочке).</p>
-		@if (!string.IsNullOrEmpty(_editError))
-		{
-			<p class="validation-error">@_editError</p>
-		}
-	</div>
-	<div class="confirm-footer">
-		<button class="btn-secondary" @onclick="CloseEditDialog">Cancel</button>
-		<button class="btn-primary" @onclick="SubmitEdit">Save</button>
-	</div>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseEditDialog">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="SubmitEdit">@T.Common.Save</button>
+	</Footer>
 </ModalShell>

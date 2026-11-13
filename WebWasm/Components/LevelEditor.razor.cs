@@ -3,8 +3,10 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class LevelEditor : ComponentBase
+public partial class LevelEditor
 {
+	private static readonly byte[] Algorithms = [1, 2];
+
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public Region? Region { get; set; }
 	[Parameter] public Level? EditingLevel { get; set; }
@@ -124,14 +126,14 @@ public partial class LevelEditor : ComponentBase
 	{
 		if (!CanSubmit)
 		{
-			_errorMessage = "Please complete all fields and draw a valid polygon (minimum 3 points).";
+			_errorMessage = T.Regions.FillLevel;
 			return;
 		}
 
 		var priceInfo = _priceEditor?.GetPrices();
 		if (priceInfo is null || priceInfo.Count == 0)
 		{
-			_errorMessage = "Invalid price information.";
+			_errorMessage = T.Regions.CheckPrices;
 			return;
 		}
 
@@ -150,7 +152,7 @@ public partial class LevelEditor : ComponentBase
 		}
 		catch (Exception ex)
 		{
-			_errorMessage = $"Error: {ex.Message}";
+			_errorMessage = T.Regions.LevelSaveFailed(ex.Message);
 		}
 	}
 
@@ -159,7 +161,7 @@ public partial class LevelEditor : ComponentBase
 		var priceInfo = _priceEditor?.GetPrices();
 		if (priceInfo is null || priceInfo.Count == 0)
 		{
-			_errorMessage = "Invalid price information.";
+			_errorMessage = T.Regions.CheckPrices;
 			return;
 		}
 
@@ -170,7 +172,7 @@ public partial class LevelEditor : ComponentBase
 		}
 		catch (Exception ex)
 		{
-			_errorMessage = $"Error: {ex.Message}";
+			_errorMessage = T.Regions.PricesSaveFailed(ex.Message);
 		}
 	}
 
@@ -178,7 +180,7 @@ public partial class LevelEditor : ComponentBase
 	{
 		if (_points.Count < 3)
 		{
-			_errorMessage = "Polygon must have at least 3 points.";
+			_errorMessage = T.Maps.MinPoints;
 			return;
 		}
 
@@ -189,7 +191,7 @@ public partial class LevelEditor : ComponentBase
 		}
 		catch (Exception ex)
 		{
-			_errorMessage = $"Error: {ex.Message}";
+			_errorMessage = T.Regions.BoundarySaveFailed(ex.Message);
 		}
 	}
 

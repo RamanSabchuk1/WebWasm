@@ -25,9 +25,9 @@ public static class CollectionExtensions
 
 	extension(User? user)
 	{
-		/// <summary>"First Last", the login when there is no first name, "Anonymous" when there is no user.</summary>
-		public string ShortName => user is null
-			? "Anonymous"
+		/// <summary>"First Last", the login when there is no first name, null when there is no user (the caller shows a localized text).</summary>
+		public string? ShortName => user is null
+			? null
 			: string.IsNullOrEmpty(user.UserInfo.FirstName)
 				? user.Login
 				: $"{user.UserInfo.FirstName} {user.UserInfo.LastName}";

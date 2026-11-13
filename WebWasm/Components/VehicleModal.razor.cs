@@ -22,7 +22,8 @@ public partial class VehicleModal
 	private string _photo = string.Empty;
 	private Guid _selectedDriverId;
 	private IReadOnlyList<VehicleCapacityOption> _capacities = [];
-	private string _capacitiesError = string.Empty;
+	// Reason of the failed capacities load; the message is built at render time in the current language.
+	private string? _capacitiesError;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -34,8 +35,14 @@ public partial class VehicleModal
 		catch (Exception ex)
 		{
 			_capacities = [];
-			_capacitiesError = $"Failed to load capacities: {ex.Message}";
+			_capacitiesError = ex.Message;
 		}
+	}
+
+	private string DriverOption(Company company, Driver driver)
+	{
+		var name = string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? T.Vehicles.UnnamedDriver : driver.UserInfo.FirstName;
+		return string.Join(" · ", new[] { company.Name, driver.UserInfo?.MobilePhone, name }.Where(part => !string.IsNullOrWhiteSpace(part)));
 	}
 
 	private bool IsFormValid()

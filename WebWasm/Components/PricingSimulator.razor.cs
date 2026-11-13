@@ -1,18 +1,18 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
-using static WebWasm.Helpers.PriceChartMath;
 
 namespace WebWasm.Components;
 
 /// <summary>
-/// Калькулятор цен (вкладка «Калькуляция» страницы Pricing Settings). SA выбирает точку погрузки, перевозчика и покупателя,
+/// Калькулятор цен (вкладка «Калькулятор» страницы Pricing Settings). SA выбирает площадку погрузки, перевозчика и покупателя,
 /// видит, во что зарезолвились настройки и откуда (цвет ячейки), подставляет значения в памяти и смотрит график цен
 /// по доле пути в городе. Считает backend (та же формула, что у настоящих заказов): POST admin/pricing-settings/simulation;
 /// ползунки — с задержкой, устаревшие ответы отбрасываются. Ничего не сохраняет.
 /// </summary>
-public partial class PricingSimulator : ComponentBase, IDisposable
+public partial class PricingSimulator : IDisposable
 {
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
@@ -85,20 +85,20 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 	/// <summary>Группа таблицы — составляющая цены; колонки — этапы, на которых ключ резолвится по-разному.</summary>
 	private sealed record GroupInfo(string Title, string Hint, ColumnInfo[] Columns);
 
-	private static readonly GroupInfo[] Groups =
+	private GroupInfo[] Groups =>
 	[
-		new("Материал", "Цена поставщика. Его компания влияет только здесь.", [new("Material", "")]),
-		new("Доставка", "При создании заказа перевозчик неизвестен, поэтому его настройки действуют только в правой колонке.",
+		new(T.Simulator.GroupMaterial, T.Simulator.GroupMaterialHint, [new("Material", "")]),
+		new(T.Simulator.GroupDelivery, T.Simulator.GroupDeliveryHint,
 		[
-			new("DeliveryOnCreate", "при создании заказа"),
-			new("DeliveryForCarrier", "у перевозчика"),
+			new("DeliveryOnCreate", T.Simulator.StageOnCreate),
+			new("DeliveryForCarrier", T.Simulator.StageForCarrier),
 		]),
-		new("Комиссия платформы", "Процент зависит от того, есть ли у покупателя компания.",
+		new(T.Simulator.GroupCommission, T.Simulator.GroupCommissionHint,
 		[
-			new("CommissionNoCompany", "покупатель без компании"),
-			new("CommissionCompany", "покупатель-компания"),
+			new("CommissionNoCompany", T.Simulator.StageNoCompany),
+			new("CommissionCompany", T.Simulator.StageCompany),
 		]),
-		new("Слоты водителя", "На цену не влияют: определяют, сколько времени заказ займёт в слоте водителя.", [new("SlotsOnly", "")]),
+		new(T.Simulator.GroupSlots, T.Simulator.GroupSlotsHint, [new("SlotsOnly", "")]),
 	];
 
 	private PricingSimulationLoadingPlace? LoadingPlace => _options?.LoadingPlaces.FirstOrDefault(x => x.Id == _loadingPlaceId);
@@ -121,7 +121,7 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 		catch (Exception ex)
 		{
 			_error = ex.Message;
-			ToastService.ShowError($"Не удалось загрузить списки для калькулятора: {ex.Message}");
+			ToastService.ShowError(T.Simulator.OptionsFailed(ex.Message));
 		}
 	}
 
@@ -301,7 +301,7 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 			if (sequence == _sequence)
 			{
 				_error = ex.Message;
-				ToastService.ShowError($"Калькулятор не посчитал: {ex.Message}");
+				ToastService.ShowError(T.Simulator.ComputeFailed(ex.Message));
 			}
 		}
 		finally
@@ -322,15 +322,35 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 		_weightTons = Math.Clamp(_weightTons, ranges.MinTons, ranges.MaxTons);
 	}
 
-	private static string Num(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
-
-	private static string Value(decimal? value) => value?.ToString("0.####", CultureInfo.InvariantCulture) ?? "не задано";
-
+	/// <summary>Число для атрибутов ползунка: всегда с точкой, браузер другой формат не примет.</summary>
 	private static string Inv(double value) => value.ToString(CultureInfo.InvariantCulture);
 
 	/// <summary>Положение отметки на ползунке в процентах ширины.</summary>
 	private static string MarkLeft(double value, double min, double max) =>
 		(max <= min ? 0 : Math.Clamp((value - min) / (max - min) * 100, 0, 100)).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+
+	// --- подписи ---
+
+	private string Money(decimal value) => T.Pricing.Money(value);
+
+	private string PlaceLabel(PricingSimulationLoadingPlace place) =>
+		T.Simulator.PlaceOption(place.ProducerName, place.Name, place.MaterialName, Money(place.CostPerTon));
+
+	private string ProgressionText => T.FormatNumber(_progressionDraft, 2);
+
+	private string ProgressionLabel => _progression is null ? $"{ProgressionText} ({T.Simulator.ProgressionSaved})" : ProgressionText;
+
+	private static string? PriceClass(PricingSimulationPrice price) => price.IsOverride ? "src-override" : price.FromDefault ? "price-default" : null;
+
+	private string PriceTitle(PricingSimulationPrice price) =>
+		price.IsOverride ? T.Simulator.SourceOverride : price.FromDefault ? T.Simulator.PriceDefault : T.Simulator.PriceRegion;
+
+	/// <summary>Что VolumePriceProgression делает с линией: y, доля применения и изменение доставки и комиссии (multiplier − 1).</summary>
+	private string VolumeEffect(int deliveries, double y, decimal multiplier)
+	{
+		var change = multiplier - 1m;
+		return T.Simulator.VolumeEffect(deliveries, T.FormatNumber(y, 2), T.Pricing.Share(1 - y), change == 0m ? null : T.Pricing.SignedShare(change));
+	}
 
 	// --- точка графика, выбранная кликом (по умолчанию середина оси) ---
 
@@ -351,7 +371,7 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 		}
 
 		var trip = point.Minutes * r.Slot.RoundTripFactor * (1 + r.Slot.TrafficBuffer);
-		return (trip, SlotWindowMinutes(r.Slot.PreparationMinutes, trip + r.Slot.LoadingMinutes), point.Minutes);
+		return (trip, PriceChartMath.SlotWindowMinutes(r.Slot.PreparationMinutes, trip + r.Slot.LoadingMinutes), point.Minutes);
 	}
 
 	// --- таблица резолюции ---
@@ -359,11 +379,11 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 	/// <summary>Пояснение к колонке целиком: почему настройки компании тут действуют или нет.</summary>
 	private string? ColumnNote(string column) => column switch
 	{
-		"DeliveryForCarrier" when _carrierId is null => "выберите перевозчика в «Участниках», чтобы подставить его Vat и Fee",
+		"DeliveryForCarrier" when _carrierId is null => T.Simulator.NoteChooseCarrier,
 		"DeliveryForCarrier" => Carriers.FirstOrDefault(x => x.Id == _carrierId)?.Name,
-		"CommissionNoCompany" => "настройки компании не действуют",
-		"CommissionCompany" when _buyerId is null => "компания не выбрана: считается как компания без своих настроек",
-		"CommissionCompany" => "действуют настройки выбранного покупателя",
+		"CommissionNoCompany" => T.Simulator.NoteCompanyIgnored,
+		"CommissionCompany" when _buyerId is null => T.Simulator.NoteNoBuyer,
+		"CommissionCompany" => T.Simulator.NoteBuyerChosen,
 		_ => null,
 	};
 
@@ -373,6 +393,10 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 
 	private static PricingSimulationCell?[] CellsOf(PricingSimulationSetting setting, GroupInfo group) =>
 		[.. group.Columns.Select(col => setting.Cells.FirstOrDefault(c => c.Column == col.Id))];
+
+	/// <summary>Этапы склеенной ячейки: «при создании заказа и у перевозчика» (подпись ячейки на телефоне).</summary>
+	private string StagesOf(GroupInfo group, int start, int length) =>
+		string.Join(T.Simulator.StagesJoin, group.Columns.Skip(start).Take(length).Select(c => c.Stage).Where(x => x.Length > 0));
 
 	/// <summary>
 	/// Склеенная ячейка правится на любом скоупе любой из её колонок: иначе компания перевозчика пропадала из списка,
@@ -394,7 +418,7 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 		a.Value == b.Value && a.Note == b.Note && a.SavedValue == b.SavedValue
 		&& a.Source.Scope == b.Source.Scope && a.Source.ScopeId == b.Source.ScopeId && a.Source.IsOverride == b.Source.IsOverride;
 
-	/// <summary>Цепочка материала точки погрузки, лист первым — для оттенков зелёного.</summary>
+	/// <summary>Цепочка материала площадки погрузки, лист первым — для оттенков цвета материала.</summary>
 	private Guid[] MaterialChain => _result?.Settings
 		.SelectMany(s => s.Cells)
 		.Select(c => c.EditTargets.Where(t => t.Scope == "MaterialType").Select(t => t.ScopeId!.Value).ToArray())
@@ -423,12 +447,14 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 	private static bool ChangedFromSaved(PricingSimulationCell cell) =>
 		cell.Value != cell.SavedValue || cell.Source.Scope != cell.SavedSource.Scope || cell.Source.ScopeId != cell.SavedSource.ScopeId;
 
+	private bool EditKeyHasOverrides => _editSetting is { } setting && _overrides.Any(x => x.Override.Key == setting.Key);
+
 	private void OpenEdit(PricingSimulationSetting setting, PricingSimulationCell cell)
 	{
 		// Значение ползунка графика правится самим ползунком.
 		if (cell.Source.IsOverride && cell.Source.Scope is null)
 		{
-			ToastService.ShowInfo("Это значение задаёт ползунок VolumePriceProgression над графиком. Верните его в «сохранённое», чтобы править в таблице.");
+			ToastService.ShowInfo(T.Simulator.ProgressionCellInfo);
 			return;
 		}
 
@@ -463,7 +489,7 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 
 		if ((setting.Min is { } min && _editValue < min) || (setting.Max is { } max && _editValue > max))
 		{
-			_editError = $"Допустимый диапазон: {Value(setting.Min)} … {Value(setting.Max)}";
+			_editError = T.Pricing.RangeError(T.Pricing.Range(setting.Min, setting.Max));
 			return;
 		}
 
@@ -518,9 +544,9 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 
 	private string ParamTitle => _param switch
 	{
-		ParamKind.MaterialCost => "Цена материала за тонну на точке погрузки",
-		ParamKind.SupplierRebate => "Rebate поставщика, %",
-		_ => "Rebate перевозчика, %",
+		ParamKind.MaterialCost => T.Simulator.MaterialCostTitle,
+		ParamKind.SupplierRebate => T.Simulator.SupplierRebateTitle,
+		_ => T.Simulator.CarrierRebateTitle,
 	};
 
 	private bool ParamChanged(ParamKind kind) => kind switch
@@ -537,13 +563,13 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 			// Границы — как у API компаний (Rebate от −100 до 100) и неотрицательная цена.
 			if (_param is ParamKind.MaterialCost && _paramValue < 0)
 			{
-				_paramError = "Цена не может быть отрицательной";
+				_paramError = T.Simulator.NegativePrice;
 				return;
 			}
 
 			if (_param is ParamKind.SupplierRebate or ParamKind.CarrierRebate && _paramValue is < -100 or > 100)
 			{
-				_paramError = "Rebate — от −100 до 100 %";
+				_paramError = T.Simulator.RebateRange;
 				return;
 			}
 		}
@@ -569,6 +595,10 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 
 	// --- цены тоннажей региона ---
 
+	private string? RegionEditTitle => _regionEdit is { } edit ? T.Simulator.RegionEditTitle(T.Pricing.KgAsTons(edit.WeightKg), edit.Level == City) : null;
+
+	private bool RegionEditHasOverride => _regionEdit is { } edit && _regionPrices.Any(x => x.Level == edit.Level && x.WeightKg == edit.WeightKg);
+
 	private void OpenRegionPrice(uint weightKg, string level, PricingSimulationPrice? price)
 	{
 		_regionEdit = (weightKg, level);
@@ -588,7 +618,7 @@ public partial class PricingSimulator : ComponentBase, IDisposable
 
 		if (!reset && (_regionMin < 0 || _regionMax < _regionMin))
 		{
-			_regionError = "Цены не меньше 0, максимальная не меньше минимальной";
+			_regionError = T.Simulator.RegionPriceError;
 			return;
 		}
 

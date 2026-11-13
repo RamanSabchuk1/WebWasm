@@ -1,15 +1,14 @@
-@using WebWasm.Services
-@implements IDisposable
-
 @if (_messages.Count > 0)
 {
-	<div class="toast-container">
+	<div class="toast-stack" role="status" aria-live="polite">
 		@foreach (var message in _messages)
 		{
-			<div class="toast toast-@message.Type.ToString().ToLower()" @key="message">
-				<span class="toast-icon">@GetIcon(message.Type)</span>
-				<span class="toast-message">@message.Text</span>
-				<button class="toast-close" @onclick="() => RemoveMessage(message)">×</button>
+			<div class="toast toast-@message.Type.ToString().ToLowerInvariant()" @key="message">
+				<Icon Name="IconOf(message.Type)" Size="20" />
+				<span class="toast-text">@message.Text</span>
+				<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="() => RemoveMessage(message)" title="@T.Common.Close" aria-label="@T.Common.Close">
+					<Icon Name="IconName.Close" />
+				</button>
 			</div>
 		}
 	</div>

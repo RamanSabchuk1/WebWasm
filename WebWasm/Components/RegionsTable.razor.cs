@@ -6,7 +6,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class RegionsTable : ComponentBase
+public partial class RegionsTable
 {
 	private const string SearchKey = "search_regions";
 	private const string SortKey = "sort_regions";
@@ -41,19 +41,8 @@ public partial class RegionsTable : ComponentBase
 		}
 	}
 
-	private static List<string> GetRegionTypes(Region region)
-	{
-		var types = new HashSet<string>();
-		if (region.Levels is not null)
-		{
-			foreach (var level in region.Levels)
-			{
-				types.Add(level.Type.ToString());
-			}
-		}
-
-		return [.. types.OrderBy(t => t)];
-	}
+	private static List<LevelType> GetLevelTypes(Region region) =>
+		region.Levels is null ? [] : [.. region.Levels.Select(l => l.Type).Distinct().Order()];
 
 	protected override async Task OnInitializedAsync()
 	{

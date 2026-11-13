@@ -1,0 +1,5 @@
+@* Sortable column header of a QuickGrid table: None → ascending → descending (SortHelper.Cycle). *@
+<button type="button" class="sort-header @(IsSorted ? "is-sorted" : null)" @onclick="() => OnSort.InvokeAsync(Key)">
+	<span>@Title</span>
+	<Icon Name="@SortIcon" />
+</button>

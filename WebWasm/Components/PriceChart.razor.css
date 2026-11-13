@@ -2,60 +2,17 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.5rem 1rem;
-	margin-bottom: 0.75rem;
+	gap: var(--space-2) var(--space-4);
+	margin-bottom: var(--space-3);
 }
 
 .mode-switch {
-	display: inline-flex;
+	max-width: 100%;
 	flex-wrap: wrap;
-	background: var(--bg-primary, #FFFBF5);
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: 8px;
-	padding: 4px;
-	gap: 4px;
 }
 
-.mode-btn {
-	border: none;
-	background: transparent;
-	padding: 0.4rem 0.75rem;
-	border-radius: 6px;
-	cursor: pointer;
-	font-size: 0.875rem;
-	color: var(--text-primary, #3A3A3A);
-}
-
-	.mode-btn.active {
-		background: var(--color-primary, #8B7355);
-		color: #fff;
-	}
-
-.toggle {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	font-size: 0.875rem;
-	cursor: pointer;
-}
-
-.factor-control label {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem 1rem;
-	font-size: 0.9rem;
-}
-
-.factor-control input[type="range"] {
-	flex: 1 1 220px;
-	max-width: 420px;
-}
-
-.hint {
-	color: var(--text-secondary, #7A7A7A);
-	font-size: 0.8rem;
-	margin: 0.35rem 0 0.75rem;
+.chart-hint {
+	margin-bottom: var(--space-3);
 }
 
 .chart-wrap {
@@ -69,57 +26,97 @@
 		user-select: none;
 	}
 
+/* --- цвета линий: класс задаёт color, элементы рисуются currentColor --- */
+
+.pc-c0 { color: var(--info); }
+.pc-c1 { color: var(--success); }
+.pc-c2 { color: var(--danger); }
+.pc-c3 { color: var(--warning); }
+.pc-c4 { color: var(--text-muted); }
+.pc-c5 { color: var(--text); }
+.pc-c6 { color: var(--border-strong); }
+.pc-custom { color: var(--accent); }
+
 .grid {
-	stroke: #E9E2D8;
+	stroke: var(--border);
 	stroke-width: 1;
 }
 
-.ref-line {
-	stroke: #999;
-	stroke-dasharray: 2 3;
-}
-
 .tick {
-	font-size: 11px;
-	fill: #7A7A7A;
+	font-size: var(--font-xs);
+	fill: var(--text-muted);
+	font-variant-numeric: tabular-nums;
 }
 
 .axis-title {
-	font-size: 11px;
-	fill: #5A5A5A;
+	font-size: var(--font-xs);
+	fill: var(--text-muted);
 	font-weight: 600;
 }
 
+.series {
+	fill: none;
+	stroke: currentColor;
+	stroke-linejoin: round;
+}
+
+.band {
+	fill: currentColor;
+	fill-opacity: 0.08;
+	stroke: none;
+}
+
 .series-label {
-	font-size: 11px;
+	font-size: var(--font-xs);
 	font-weight: 700;
+	fill: currentColor;
 }
 
 .star {
-	fill: #FFD54F;
-	stroke: #333;
+	fill: currentColor;
+	stroke: var(--surface);
 	stroke-width: 1.2;
 }
 
 .hover-line {
-	stroke: #555;
+	stroke: var(--text-muted);
 	stroke-dasharray: 3 3;
 	pointer-events: none;
 }
 
+	.hover-line.pinned {
+		stroke: var(--accent);
+		stroke-dasharray: none;
+	}
+
+.hover-dot {
+	fill: var(--surface);
+	stroke: currentColor;
+	stroke-width: 2;
+}
+
+/* Прозрачная область над графиком ловит наведение и касания. */
+.hit {
+	fill: none;
+	pointer-events: all;
+}
+
+/* --- подсказка --- */
+
 .pc-tooltip {
 	position: absolute;
-	top: 8px;
+	top: var(--space-2);
 	max-width: min(420px, 80%);
-	background: rgba(255, 255, 255, 0.96);
-	border: 1px solid var(--border-color, #E5D5C0);
-	border-radius: 8px;
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-	padding: 0.5rem 0.65rem;
-	font-size: 0.78rem;
-	pointer-events: none;
 	max-height: 70%;
 	overflow: hidden;
+	padding: var(--space-2) var(--space-3);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-overlay);
+	font-size: var(--font-xs);
+	line-height: 16px;
+	pointer-events: none;
 }
 
 .pc-tooltip-right {
@@ -131,167 +128,150 @@
 }
 
 .pc-tooltip-title {
-	font-weight: 700;
-	margin-bottom: 0.25rem;
+	font-weight: 600;
+	margin-bottom: var(--space-1);
+}
+
+.pc-tooltip-sub {
+	margin-left: var(--space-2);
+	font-weight: 400;
+	color: var(--text-muted);
 }
 
 .pc-tooltip-row {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.15rem 0.4rem;
 	align-items: baseline;
-	padding: 1px 0;
+	gap: 2px var(--space-2);
+	padding: 1px var(--space-1);
+	border-radius: var(--radius-sm);
 }
+
+	.pc-tooltip-row.near {
+		background: var(--surface-2);
+	}
 
 .pc-tooltip-label {
 	font-weight: 600;
+}
+
+.pc-tooltip-value {
+	margin-left: auto;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.pc-tooltip-more {
+	margin-top: var(--space-1);
+	color: var(--text-muted);
 }
 
 .swatch {
 	display: inline-block;
 	width: 10px;
 	height: 10px;
-	border-radius: 2px;
 	flex: none;
+	border-radius: var(--radius-pill);
+	background: currentColor;
 }
+
+/* --- фильтры линий --- */
 
 .filters {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.5rem 1.25rem;
 	align-items: center;
-	margin-top: 0.75rem;
+	gap: var(--space-2) var(--space-5);
+	margin-top: var(--space-3);
 }
 
 .filter-group {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.35rem;
+	gap: var(--space-1) var(--space-2);
 }
 
 .filter-title {
-	font-size: 0.8rem;
-	color: var(--text-secondary, #7A7A7A);
+	font-size: var(--font-sm);
+	color: var(--text-muted);
 }
 
-.chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	border: 1px solid var(--border-color, #E5D5C0);
-	background: #fff;
-	border-radius: 999px;
-	padding: 0.25rem 0.65rem;
-	font-size: 0.8rem;
-	cursor: pointer;
-}
-
-	.chip.off {
-		opacity: 0.4;
-		text-decoration: line-through;
-	}
-
-.chip-reset {
-	background: var(--bg-primary, #FFFBF5);
+.chip[aria-pressed="false"] {
+	opacity: 0.5;
+	text-decoration: line-through;
 }
 
 .line-sample {
 	display: inline-block;
 	width: 22px;
-	border-top: 2px solid #555;
+	border-top: 2px solid var(--text-muted);
 }
-
-	.line-sample.thick {
-		border-top-width: 3px;
-	}
-
-	.line-sample.thin {
-		border-top-width: 1px;
-	}
 
 	.line-sample.dashed {
 		border-top-style: dashed;
 	}
 
+/* --- легенда --- */
+
 .legend {
-	margin-top: 0.75rem;
-	font-size: 0.85rem;
+	margin-top: var(--space-3);
+	font-size: var(--font-sm);
 }
 
 	.legend summary {
 		cursor: pointer;
-		color: var(--text-secondary, #7A7A7A);
+		color: var(--text-muted);
 	}
 
 .legend-list {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-	gap: 0.25rem 0.75rem;
-	margin-top: 0.5rem;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+	gap: var(--space-1) var(--space-3);
+	margin-top: var(--space-2);
 }
 
 .legend-item {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.4rem;
+	gap: var(--space-2);
+	padding: var(--space-1);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--font-sm);
 	text-align: left;
-	border: none;
-	background: transparent;
-	padding: 0.2rem 0.25rem;
-	border-radius: 4px;
 	cursor: pointer;
-	font-size: 0.8rem;
 }
 
 	.legend-item:hover {
-		background: var(--bg-primary, #FFFBF5);
+		background: var(--surface-2);
 	}
 
 	.legend-item.off {
-		opacity: 0.4;
+		opacity: 0.5;
+	}
+
+	.legend-item svg {
+		flex: none;
 	}
 
 .legend-error {
-	color: #B3261E;
-	font-size: 0.75rem;
 	flex-basis: 100%;
+	color: var(--danger);
+	font-size: var(--font-xs);
 }
 
-.hover-line.pinned {
-	stroke: var(--color-primary, #8B7355);
-	stroke-dasharray: none;
-}
-
-.pc-tooltip-sub {
-	font-weight: 400;
-	color: var(--text-secondary, #7A7A7A);
-	margin-left: 0.4rem;
-}
-
-.pc-tooltip-row.near {
-	background: #FFF6D6;
-	border-radius: 4px;
-}
-
-.pc-tooltip-value {
-	margin-left: auto;
-	white-space: nowrap;
-}
-
-.pc-tooltip-more {
-	margin-top: 0.25rem;
-	color: var(--text-secondary, #7A7A7A);
-	font-size: 0.72rem;
-}
-
-@media (max-width: 600px) {
+@media (max-width: 767px) {
 	/* На телефоне карточка не закрывает график: встаёт под ним. */
 	.pc-tooltip {
 		position: static;
 		max-width: none;
 		max-height: none;
-		margin-top: 0.4rem;
+		margin-top: var(--space-2);
+		box-shadow: none;
 	}
 }

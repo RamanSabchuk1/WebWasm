@@ -1,748 +1,192 @@
-.page-header {
-	margin-bottom: 2rem;
-}
-
-.page-subtitle {
-	color: #666;
-	font-size: 0.9rem;
-}
-
-.content-card {
-	background: white;
-	border-radius: 8px;
-	padding: 1.5rem;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-	margin-bottom: 1.5rem;
-}
-
-	.content-card > .info-item {
-		margin-bottom: 1.5rem;
-	}
-
-.card-header {
-	margin-bottom: 1rem;
-	border-bottom: 1px solid #eee;
-	padding-bottom: 0.5rem;
-}
-
-	.card-header h3 {
-		margin: 0;
-		font-size: 1.2rem;
-	}
-
-.controls-row {
+/* Status hint and the accepted-delivery warning: icon on the left, text wraps next to it. */
+.notice {
 	display: flex;
-	gap: 1rem;
-	align-items: center;
+	align-items: flex-start;
+	gap: var(--space-2);
+}
+
+.card > .notice {
+	margin-bottom: var(--space-4);
+}
+
+.management-actions {
+	margin-top: var(--space-4);
+}
+
+/* Label above value, as many columns as fit. */
+.facts {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: var(--space-4);
+	margin: 0;
+}
+
+	.facts > div {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		min-width: 0;
+	}
+
+	.facts dt {
+		font-size: var(--font-xs);
+		line-height: 16px;
+		color: var(--text-muted);
+	}
+
+	.facts dd {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+
+.subsection {
+	margin-top: var(--space-5);
+}
+
+.with-photo {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-4);
 	flex-wrap: wrap;
 }
 
-.status-control {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-}
-
-.info-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-	gap: 1rem;
-}
-
-.info-item {
-	display: flex;
-	flex-direction: column;
-}
-
-	.info-item label {
-		font-weight: bold;
-		font-size: 0.8rem;
-		color: #888;
+	.with-photo > .facts {
+		flex: 1 1 300px;
 	}
 
-.table {
-	width: 100%;
-	border-collapse: collapse;
+.photo {
+	width: 150px;
+	height: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
 }
 
-	.table th, .table td {
-		padding: 0.5rem;
-		border-bottom: 1px solid #eee;
-		text-align: left;
-	}
-
-.accept-form {
-	display: flex;
-	gap: 0.5rem;
-}
-
-.form-control {
-	padding: 0.4rem;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-}
-
-.btn {
-	padding: 0.5rem 1rem;
-	border: none;
-	border-radius: 8px;
-	cursor: pointer;
-	font-size: 0.875rem;
-	font-weight: 500;
-	transition: all 0.2s;
-	white-space: nowrap;
-}
-
-	.btn:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
-	}
-
-	.btn:disabled {
-		background: rgba(139, 115, 85, 0.3);
-		cursor: not-allowed;
-		opacity: 0.6;
-	}
-
-.btn-primary {
-	background-color: #007bff;
-	color: white;
-}
-
-.btn-warning {
-	background-color: #ffc107;
-	color: black;
-}
-
-.btn-success {
-	background-color: #28a745;
-	color: white;
-}
-
-.btn-sm {
-	padding: 0.2rem 0.5rem;
-	font-size: 0.8rem;
-}
-
-select.form-control option:disabled {
-	color: #a0a0a0;
-	background-color: #f5f5f5;
-}
-
-.company-photo {
-	margin-top: 0.5rem;
-	border-radius: 8px;
-	overflow: hidden;
-	max-width: 150px;
-}
-
-	.company-photo img {
-		width: 100%;
-		height: auto;
-		display: block;
-		border-radius: 8px;
-	}
-
-.info-item {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-}
-
-	.info-item.full-width {
-		grid-column: 1 / -1;
-	}
-
-/* Выравнивание содержимого ячейки таблицы */
-.driver-td {
-	vertical-align: middle;
-}
-
-/* Главный контейнер: делит ячейку на Текст (слева) и Кнопку (справа) */
-.driver-cell-wrapper {
-	display: flex;
-	align-items: center;
-	justify-content: space-between; /* Толкает кнопку строго к правому краю */
-	gap: 1rem;
-	width: 100%;
-}
-
-/* Блок с текстом */
-.driver-info-block {
-	display: flex;
-	flex-direction: column;
-	gap: 0.2rem; /* Небольшой отступ между именем и машиной */
-	text-align: left;
-}
-
-/* Стили имени */
-.driver-name {
-	font-weight: 600;
-	color: #333333;
-	font-size: 0.95rem;
-}
-
-/* Блок автомобиля */
-.driver-vehicle {
-	display: flex;
-	align-items: center;
-	gap: 0.3rem;
-	font-size: 0.8rem;
-	color: #666666;
-}
-
-/* Госномера шрифтом monospace для лучшей читаемости */
-.vehicle-plate {
-	font-family: monospace;
-	background-color: rgba(0, 0, 0, 0.04); /* Легкая подложка, как у настоящих номеров */
-	padding: 1px 4px;
-	border-radius: 4px;
-	font-size: 0.85em;
-}
-
-/* Новая аккуратная кнопка View */
-.btn-view-driver {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
-	padding: 0.4rem 0.8rem;
-	font-size: 0.8rem;
-	font-weight: 500;
-	color: #4b5563; /* Спокойный темно-серый цвет текста */
-	background-color: #f3f4f6; /* Светлый нейтральный фон */
-	border: 1px solid #e5e7eb;
-	border-radius: 6px;
-	cursor: pointer;
-	white-space: nowrap;
-	transition: all 0.2s ease;
-}
-
-	/* Эффекты для кнопки */
-	.btn-view-driver:hover {
-		background-color: #e5e7eb; /* Чуть темнее при наведении */
-		color: #1f2937;
-		border-color: #d1d5db;
-	}
-
-	.btn-view-driver:active {
-		transform: scale(0.97);
-	}
-
-/* Иконка внутри кнопки */
-.btn-icon {
-	font-size: 0.9rem;
-}
-
-/* Стиль для пустой ячейки */
-.empty-cell {
-	color: #9ca3af;
-}
-
-
-.additional-info {
-	background-color: var(--bg-main);
-	border-radius: 8px;
-	padding: 1.5rem;
-	display: flex;
-	flex-direction: column;
-	gap: 1rem; /* Немного уменьшили отступ перед сеткой */
-	position: relative; /* Важно для абсолютного позиционирования кнопки */
-}
-
-/* Метка заголовка "Driver Details:" */
-.info-label {
-	font-weight: bold;
-	font-size: 0.9rem;
-	color: #555; /* Или переменная вашего цвета текста, например var(--text-color) */
-}
-
-.circle-btn {
-	position: absolute; /* Прижимаем к углу карточки */
-	top: 1rem;
-	right: 1rem;
-	width: 32px; /* Делаем аккуратной и миниатюрной */
-	height: 32px;
-	border-radius: 50%;
-	background-color: rgba(0, 0, 0, 0.05); /* Легкий нейтральный фон */
-	color: #666666; /* Серый крестик */
-	font-size: 14px;
-	border: none;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: all 0.2s ease;
-}
-
-	/* Эффект при наведении на крестик */
-	.circle-btn:hover {
-		background-color: #fee2e2; /* Мягкий пастельно-красный фон */
-		color: #ef4444; /* Спокойный красный крестик */
-		transform: scale(1.05);
-	}
-
-	.circle-btn:active {
-		transform: scale(0.95);
-	}
-
-.formatted-text {
-	font-size: 0.73rem;
-	line-height: 1.1;
-	text-transform: capitalize;
+.maps {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: var(--space-4);
 }
 
-	.formatted-text p {
-		margin: 0;
-		padding: 0;
-	}
-
-/* Печатная версия страницы заказа: текстовый документ (глобальные правила — в wwwroot/css/app.css) */
-.print-location {
-	display: none;
+.with-photo + .maps {
+	margin-top: var(--space-4);
 }
 
-@media (max-width: 768px) {
-	.status-control {
-		flex-direction: column;
-		align-items: stretch;
-		width: 100%;
-	}
-
-	.controls-row {
-		flex-direction: column;
-		align-items: stretch;
-	}
-
-	/* Table Responsive Card Pattern */
-	.table thead {
-		display: none;
-	}
-
-	.table, .table tbody, .table tr, .table td {
-		display: block;
-		width: 100%;
-	}
-
-		.table tr {
-			margin-bottom: 1rem;
-			border: 1px solid #ddd;
-			border-radius: 8px;
-			background: #fff;
-			padding: 0.5rem;
-		}
-
-		.table td {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			text-align: right;
-			padding: 0.5rem 0;
-			border-bottom: 1px solid #f0f0f0;
-		}
-
-			.table td:last-child {
-				border-bottom: none;
-			}
-
-			.table td::before {
-				content: attr(data-label);
-				font-weight: bold;
-				color: #555;
-				margin-right: 1rem;
-				text-align: left;
-			}
-			/* Adjust for cells that contain block elements or forms */
-			.table td[data-label="Action"], .table td[data-label="Driver"] {
-				flex-direction: column;
-				align-items: flex-start;
-				text-align: left;
-			}
-
-				.table td[data-label="Action"]::before, .table td[data-label="Driver"]::before {
-					margin-bottom: 0.5rem;
-				}
-
-	.accept-form {
-		flex-direction: column;
-		width: 100%;
-	}
-
-		.accept-form select, .accept-form button {
-			width: 100%;
-			margin-bottom: 0.25rem;
-		}
+.location {
+	min-width: 0;
 }
 
-@media print {
-	.no-print {
-		display: none !important;
-	}
-
-	/* Координаты вместо интерактивной карты */
-	.print-location {
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-
-	.page-header {
-		margin-bottom: 0.9rem;
-	}
-
-		.page-header h1 {
-			font-size: 1.3rem;
-			margin: 0;
-			color: #000;
-		}
-
-	.page-subtitle {
-		font-size: 0.72rem;
-		margin: 0.15rem 0 0;
-		color: #444;
-	}
-
-	.content-card {
-		background: #fff;
-		box-shadow: none;
-		border: 1px solid #bbb;
-		border-radius: 4px;
-		padding: 0.6rem 0.9rem;
-		margin-bottom: 0.7rem;
-	}
-
-	.card-header {
-		margin-bottom: 0.4rem;
-		padding-bottom: 0.25rem;
-		border-bottom: 1px solid #999;
-		break-after: avoid;
-	}
-
-		.card-header h3, .card-header h4 {
-			font-size: 0.95rem;
-			margin: 0;
-			color: #000;
-		}
-
-	.info-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.35rem 1rem;
-	}
-
-	.info-item {
-		gap: 0.05rem;
-		break-inside: avoid;
-	}
-
-		.info-item label {
-			font-size: 0.68rem;
-			color: #555;
-		}
-
-		.info-item span {
-			font-size: 0.8rem;
-			color: #000;
-		}
-
-	.info-label {
-		font-size: 0.75rem;
-	}
-
-	/* Таблицы: обычный табличный вид с заголовками вместо мобильных «карточек» */
-	.table {
-		display: table;
-		width: 100%;
-		table-layout: fixed;
-	}
-
-		.table thead {
-			display: table-header-group;
-		}
-
-		.table tbody {
-			display: table-row-group;
-		}
-
-		.table tr {
-			display: table-row;
-			border: none;
-			border-radius: 0;
-			margin: 0;
-			padding: 0;
-			break-inside: avoid;
-		}
-
-		.table th, .table td {
-			display: table-cell;
-			padding: 0.25rem 0.4rem;
-			font-size: 0.72rem;
-			text-align: left;
-			border-bottom: 1px solid #ccc;
-		}
-
-			.table td::before {
-				content: none;
-			}
-
-			/* Пустая колонка действий не печатается */
-			.table td[data-label="Action"],
-			.table th:last-child.no-print {
-				display: none !important;
-			}
-
-	/* Интерактивные элементы и изображения не печатаем — остаётся только текст */
-	button, select, input,
-	.accept-form, .status-control, .controls-row,
-	.circle-btn, .company-photo {
-		display: none !important;
-	}
-
-	/* Паспортные данные пользователя/водителя: сплошным текстом */
-	.formatted-text {
-		display: block;
-		font-size: 0.72rem;
-		line-height: 1.35;
-		text-transform: none;
-	}
-
-		.formatted-text p {
-			margin: 0.12rem 0;
-		}
-
-	.additional-info {
-		background: #fff;
-		border: 1px solid #ccc;
-		padding: 0.6rem 0.8rem;
-		gap: 0.3rem;
-	}
-
-	.driver-name {
-		font-size: 0.78rem;
-		color: #000;
-	}
-
-	.driver-vehicle {
-		font-size: 0.68rem;
-		color: #333;
-	}
-
-	.vehicle-plate {
-		background-color: transparent;
-		padding: 0;
-	}
-
-	.empty-cell {
-		color: #555;
-	}
-
-	/* Детали водителя по каждой доставке печатаются всегда (на экране — раскрываются кнопкой) */
-	.additional-info .circle-btn {
-		display: none !important;
-	}
-
-	.additional-info .user-details {
-		display: block !important;
-	}
-
-	/* Фото материала: печатается, если браузер успел загрузить его с CDN */
-	.company-photo.material-photo {
-		display: block !important;
-	}
-
-	.material-photo img {
-		display: block;
-		max-width: 220px;
-		height: auto;
-		break-inside: avoid;
-	}
+.details-panel {
+	margin-top: var(--space-4);
+	padding: var(--space-4);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
 }
 
-/* Видно только при печати (детали пользователя/водителя в документе) */
+.panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+	.panel-header .section-title {
+		margin-bottom: 0;
+	}
+
+.groups {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-6);
+}
+
+.driver {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	min-width: 240px;
+}
+
+.driver-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.vehicle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex-wrap: wrap;
+}
+
+.assign {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-3);
+	flex-wrap: wrap;
+}
+
+	.assign > .field {
+		flex: 1 1 260px;
+		max-width: 480px;
+	}
+
+.total-row td {
+	font-weight: 600;
+}
+
+/* Printed order: text document. Coordinates instead of maps, driver and buyer details always shown. */
+.print-location,
 .print-only {
 	display: none;
 }
 
 @media print {
+	.no-print,
+	button, select, input,
+	.photo {
+		display: none !important;
+	}
+
 	.print-only {
 		display: block !important;
 	}
 
-	.driver-print-details {
-		margin-top: 0.4rem;
-		border-top: 1px dashed #aaa;
-		padding-top: 0.3rem;
+	.print-location {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	/* Material photo is printed if the browser has already loaded it. */
+	.photo.material-photo {
+		display: block !important;
+		max-width: 220px;
+	}
+
+	/* A section moves to the next page whole instead of being cut; one taller than a page still breaks. */
+	.card {
+		padding: var(--space-3);
 		break-inside: avoid;
 	}
-}
 
-/* --- S5.2: модалки SA-правок (scoped-копии классов ConfirmDialog/CompanyModal) --- */
-
-.confirm-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem;
-	border-bottom: 1px solid var(--border-color, #E5D5C0);
-}
-
-	.confirm-header h2 {
-		margin: 0;
-		color: var(--text-primary, #3D2E1F);
-		font-size: 1.25rem;
+	.facts {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-1) var(--space-4);
 	}
 
-.btn-close {
-	background: none;
-	border: none;
-	font-size: 2rem;
-	line-height: 1;
-	color: var(--text-secondary, #7A7A7A);
-	cursor: pointer;
-	padding: 0;
-	width: 32px;
-	height: 32px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 8px;
-	transition: all 0.2s;
-}
+		.facts > div {
+			break-inside: avoid;
+		}
 
-	.btn-close:hover {
-		background: var(--bg-surface, #FAF7F2);
-		color: var(--text-primary, #3D2E1F);
+	.details-panel {
+		break-inside: avoid;
 	}
 
-.confirm-body {
-	padding: 1.5rem;
-	color: var(--text-primary, #3D2E1F);
-	line-height: 1.6;
-}
-
-	.confirm-body p {
-		margin: 0 0 0.75rem;
+	/* On screen the width keeps room for the «Details» button, which is not printed. */
+	.driver {
+		min-width: 0;
 	}
-
-.confirm-footer {
-	display: flex;
-	justify-content: flex-end;
-	gap: 0.75rem;
-	padding: 1.5rem;
-	border-top: 1px solid var(--border-color, #E5D5C0);
-}
-
-.btn-secondary {
-	padding: 0.75rem 1.5rem;
-	border: none;
-	border-radius: 8px;
-	cursor: pointer;
-	font-size: 1rem;
-	font-weight: 500;
-	transition: all 0.2s;
-	background: var(--bg-surface, #FAF7F2);
-	color: var(--text-primary, #3D2E1F);
-	border: 1px solid var(--border-color, #E5D5C0);
-}
-
-	.btn-secondary:hover {
-		background: var(--border-color, #E5D5C0);
-	}
-
-.btn-inline {
-	padding: 0.1rem 0.5rem;
-	font-size: 0.85rem;
-	margin-left: 0.5rem;
-}
-
-.form-group {
-	margin-bottom: 1rem;
-}
-
-	.form-group label {
-		display: block;
-		margin-bottom: 0.5rem;
-		font-weight: 500;
-		color: var(--text-primary, #3D2E1F);
-	}
-
-	.form-group input[type="number"],
-	.form-group input[type="datetime-local"] {
-		width: 100%;
-		padding: 0.6rem 0.75rem;
-		border: 1px solid var(--border-color, #E5D5C0);
-		border-radius: 8px;
-		font-size: 1rem;
-		background: var(--bg-primary, #FFFBF5);
-		color: var(--text-primary, #3D2E1F);
-		box-sizing: border-box;
-	}
-
-.validation-error {
-	color: #D32F2F;
-	font-size: 0.9rem;
-	margin: 0.5rem 0 0;
-}
-
-/* S5: предупреждение о побочном эффекте правки цены (не ошибка, но требует внимания) */
-.validation-warning {
-	color: #8A5A00;
-	background: #FFF7E6;
-	border: 1px solid #F0D9A8;
-	border-radius: 6px;
-	padding: 0.5rem 0.75rem;
-	font-size: 0.875rem;
-	margin: 0.75rem 0 0;
-}
-
-/* Пояснение под полем ввода */
-.field-hint {
-	color: var(--text-secondary, #7A7A7A);
-	font-size: 0.8rem;
-	margin: 0.35rem 0 0;
-}
-
-.page-subtitle {
-	color: var(--text-secondary, #7A7A7A);
-	margin: 0;
-	font-size: 0.9rem;
-}
-
-.header-actions {
-	display: flex;
-	gap: 0.5rem;
-}
-
-/* Модалки SA-правок не печатаются (S5.2; @media print в этом файле остаётся последним) */
-@media print {
-	.modal-overlay {
-		display: none !important;
-	}
-}
-
-/* Превью правки цены: итог и разбивка, которые сохранятся. */
-.price-preview {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 0.8rem;
-	margin-top: 0.5rem;
-	font-variant-numeric: tabular-nums;
-}
-
-.price-preview th,
-.price-preview td {
-	padding: 0.25rem 0.35rem;
-	text-align: right;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-	white-space: nowrap;
-}
-
-.price-preview th:first-child,
-.price-preview td:first-child {
-	text-align: left;
-}
-
-.price-preview-total td {
-	font-weight: 600;
-	border-bottom: none;
 }

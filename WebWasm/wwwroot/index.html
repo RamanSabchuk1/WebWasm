@@ -1,113 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>WebWasm</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+	<title>Kliffort Admin</title>
 	<base href="/" />
-	<link rel="preload" id="webassembly" />
-	<link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="css/app.css" />
-	<link rel="icon" type="image/png" href="favicon.png" />
-	<link href="WebWasm.styles.css" rel="stylesheet" />
-	<link href="manifest.webmanifest" rel="manifest" />
-	<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
-	<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-	<script type="importmap"></script>
+	<script>
+		// Language and theme before the first paint, so there is no flash of the wrong theme.
+		// Keys carry the app path (/WebWasm/, /ProdA/): the dev and prod admins share one origin.
+		(() => {
+			const prefix = new URL(document.baseURI).pathname;
+			const read = (key) => { try { return localStorage.getItem(prefix + key); } catch { return null; } };
+			const write = (key, value) => { try { localStorage.setItem(prefix + key, value); } catch { } };
+			const root = document.documentElement;
+			const systemDark = matchMedia('(prefers-color-scheme: dark)');
+			const russianFamily = ['ru', 'be', 'uk', 'kk'];
 
-	<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>-->
+			const browserLanguage = () => {
+				for (const tag of navigator.languages ?? [navigator.language]) {
+					const base = (tag || '').toLowerCase().split('-')[0];
+					if (russianFamily.includes(base)) return 'ru';
+					if (base === 'en') return 'en';
+				}
+				return 'en';
+			};
+
+			const language = () => { const saved = read('lang'); return saved === 'ru' || saved === 'en' ? saved : browserLanguage(); };
+			const theme = () => { const saved = read('theme'); return saved === 'light' || saved === 'dark' ? saved : 'system'; };
+
+			const applyTheme = () => {
+				const mode = theme();
+				const dark = mode === 'dark' || (mode === 'system' && systemDark.matches);
+				root.dataset.theme = dark ? 'dark' : 'light';
+				document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#171A1F' : '#FFFFFF');
+			};
+
+			window.appPreferences = {
+				language,
+				theme,
+				setLanguage: (value) => { write('lang', value); root.lang = value; },
+				setTheme: (value) => { write('theme', value); applyTheme(); }
+			};
+
+			root.lang = language();
+			systemDark.addEventListener('change', applyTheme);
+			document.addEventListener('DOMContentLoaded', applyTheme);
+			applyTheme();
+		})();
+	</script>
+	<meta name="theme-color" content="#FFFFFF" />
+	<link rel="preload" id="webassembly" />
+	<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+	<link rel="stylesheet" href="css/app.css" />
+	<link href="WebWasm.styles.css" rel="stylesheet" />
+	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+	<link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+	<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+	<link rel="manifest" href="manifest.webmanifest" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+	<!-- iPhone launch screens (portrait); iOS ignores the manifest for them. Files: Environments/<Dev|Prod>/splash. -->
+	<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)" href="splash/1320x2868.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="splash/1290x2796.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="splash/1284x2778.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3)" href="splash/1260x2736.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3)" href="splash/1206x2622.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="splash/1179x2556.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="splash/1170x2532.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="splash/1125x2436.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3)" href="splash/1080x2340.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" href="splash/828x1792.png" />
+	<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="splash/750x1334.png" />
+	<script type="importmap"></script>
 </head>
 
 <body>
 	<div id="app">
-		<svg class="loading-progress">
-			<circle r="40%" cx="50%" cy="50%" />
-			<circle r="40%" cx="50%" cy="50%" />
-		</svg>
-		<div class="loading-progress-text"></div>
+		<div class="boot" role="status" aria-label="Kliffort Admin">
+			<img class="boot-logo" src="logo.svg" alt="" />
+			<div class="boot-bar"></div>
+		</div>
 	</div>
 
 	<div id="blazor-error-ui">
-		An unhandled error has occurred.
-		<a href="." class="reload">Reload</a>
-		<span class="dismiss">🗙</span>
+		<span data-ru="Произошла ошибка." data-en="An error has occurred.">Произошла ошибка.</span>
+		<a href="." class="reload" data-ru="Перезагрузить" data-en="Reload">Перезагрузить</a>
+		<span class="dismiss" role="button" aria-label="×">×</span>
 	</div>
 
 	<script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 	<script src="js/notification-store.js"></script>
 	<script src="js/service-worker-interop.js"></script>
 	<script src="js/helpers.js"></script>
-	<script src="js/firebase-config.js"></script>
-	<!-- Firebase is not needed to render the app: defer so it does not delay Blazor start -->
-	<script defer src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-	<script defer src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
-
 	<script>
-		let messaging = null;
-		let swRegistration = null;
+		// The error bar is static HTML: its text follows the language chosen above.
+		document.querySelectorAll('#blazor-error-ui [data-ru]').forEach((el) => { el.textContent = el.dataset[document.documentElement.lang] ?? el.textContent; });
 
-		async function initializeFirebaseMessaging() {
-			try {
-				swRegistration = await navigator.serviceWorker.register('service-worker.js', {
-					updateViaCache: 'none',
-					scope: '/WebWasm/'
-				});
-
-				console.log('Service Worker registered successfully:', swRegistration);
-
-				await navigator.serviceWorker.ready;
-
-				messaging = firebase.messaging();
-
-				// The only foreground handler: save to history, show a toast in the app (UpdateNotification).
-				messaging.onMessage((payload) => {
-					notificationStore.save(payload);
-					window.onForegroundPush?.(payload);
-				});
-
-				return true;
-			} catch (error) {
-				console.error('Failed to initialize Firebase Messaging:', error);
-				return false;
-			}
+		// Relative to <base href>: the worker and its scope are the app path (/WebWasm/ or /ProdA/), no names in code.
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' })
+				.catch((error) => console.warn('Service worker registration failed', error));
 		}
-
-		async function getFcmToken() {
-			try {
-				if (!messaging) {
-					const initialized = await initializeFirebaseMessaging();
-					if (!initialized) {
-						console.error('Firebase messaging not initialized');
-						return null;
-					}
-				}
-
-				const registration = await navigator.serviceWorker.ready;
-				const vapidKey = 'BAOL6t3T-11IkD0zsIhvJd8cclIhh8VIvoKGtdgm2riQRiW9xoBFHvo4yH__os24AFiPItQDBKKn0_AS8-UK1vE';
-				const currentToken = await messaging.getToken({
-					vapidKey: vapidKey,
-					serviceWorkerRegistration: registration
-				});
-
-				if (currentToken) {
-					console.log('FCM Token:', currentToken);
-					return currentToken;
-				} else {
-					console.log('No registration token available. Request permission to generate one.');
-					return null;
-				}
-			} catch (err) {
-				console.error('An error occurred while retrieving token:', err);
-				return null;
-			}
-		}
-
-		window.addEventListener('DOMContentLoaded', () => {
-			firebase.initializeApp(firebaseConfig);
-			initializeFirebaseMessaging();
-		});
 	</script>
 </body>
 

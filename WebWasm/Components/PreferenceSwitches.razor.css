@@ -1,0 +1,25 @@
+.preferences {
+	display: grid;
+	grid-template-columns: max-content max-content;
+	align-items: center;
+	gap: var(--space-3) var(--space-4);
+}
+
+.preferences.compact {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+	/* Both switches fit the 240 px sidebar in one row. */
+	.preferences.compact .segmented > button {
+		padding: 0 var(--space-2);
+	}
+
+@media (max-width: 479px) {
+	.preferences:not(.compact) {
+		grid-template-columns: 1fr;
+		gap: var(--space-2);
+	}
+}

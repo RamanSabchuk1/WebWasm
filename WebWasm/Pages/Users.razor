@@ -1,729 +1,646 @@
 @page "/users"
-@using WebWasm.Helpers
-@using WebWasm.Models
 
-<PageTitle>Users</PageTitle>
+<AppTitle Text="@T.Shell.Users" />
 
-<div class="page-header">
-	<div>
-		<h1>👥 Users</h1>
-		<p class="page-subtitle">Manage user accounts and permissions</p>
-	</div>
-</div>
-
-<div class="stats-grid">
-	<div class="stat-card">
-		<span class="stat-icon">👤</span>
-		<div class="stat-content">
-			<span class="stat-value">@TotalUsers</span>
-			<span class="stat-label">Total Users</span>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Users</h1>
+			<p class="page-subtitle">@T.Users.Subtitle</p>
 		</div>
-	</div>
-	<div class="stat-card active">
-		<span class="stat-icon">✅</span>
-		<div class="stat-content">
-			<span class="stat-value">@ActiveUsers</span>
-			<span class="stat-label">Active</span>
-		</div>
-	</div>
-	<div class="stat-card">
-		<span class="stat-icon">🔒</span>
-		<div class="stat-content">
-			<span class="stat-value">@SuperAdminUsers</span>
-			<span class="stat-label">Admins</span>
-		</div>
-	</div>
-	<div class="stat-card">
-		<span class="stat-icon">🚚</span>
-		<div class="stat-content">
-			<span class="stat-value">@DriverCount</span>
-			<span class="stat-label">Drivers</span>
-		</div>
-	</div>
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>User List</h3>
-		<div class="header-actions">
-			<button class="btn-primary" @onclick="OpenCreateUserModal">+ Add User</button>
-			<button class="btn-secondary" @onclick="OpenCreateDriverModal">+ Add Driver</button>
+		<div class="page-actions">
+			<button type="button" class="btn" @onclick="OpenCreateDriverModal">
+				<Icon Name="IconName.Vehicles" />
+				@T.Users.AddDriver
+			</button>
+			<button type="button" class="btn btn-primary" @onclick="OpenCreateUserModal">
+				<Icon Name="IconName.Plus" />
+				@T.Users.AddUser
+			</button>
 		</div>
 	</div>
 
-	<div class="data-grid-toolbar">
-		<input type="text"
-			   placeholder="Search by name or phone..."
-			   value="@_searchText"
-			   @oninput="OnSearchTextChanged"
-			   class="search-input" />
-
-		<button class="filter-toggle-btn" @onclick="() => _showFilters = !_showFilters">
-			<span>🔍 Filters</span>
-			@if (ActiveFilterCount > 0)
-			{
-				<span class="filter-count-badge">@ActiveFilterCount</span>
-			}
-			<span class="filter-toggle-icon">@(_showFilters ? "▲" : "▼")</span>
-		</button>
+	<div class="stats">
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.Users" />@T.Users.TotalUsers</span>
+			<span class="stat-value">@FormatCount(TotalUsers)</span>
+		</div>
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.UserCheck" />@T.Users.ActiveUsers</span>
+			<span class="stat-value">@FormatCount(ActiveUsers)</span>
+		</div>
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.Shield" />@T.Users.SuperAdmins</span>
+			<span class="stat-value">@FormatCount(SuperAdminUsers)</span>
+		</div>
+		<div class="card stat">
+			<span class="stat-label"><Icon Name="IconName.Vehicles" />@T.Users.Drivers</span>
+			<span class="stat-value">@FormatCount(DriverCount)</span>
+		</div>
 	</div>
 
-	@if (_showFilters)
-	{
-		<div class="filters-panel">
-			<div class="filter-row">
-				<label class="filter-label">User Kind</label>
-				<div class="filter-control">
-					<div class="kind-switch">
-						<button type="button"
-								class="kind-switch-btn @(_userKindFilter == UserKindFilter.All ? "active" : "")"
-								@onclick="() => OnUserKindFilterChanged(UserKindFilter.All)">
-							All
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_userKindFilter == UserKindFilter.DriversOnly ? "active" : "")"
-								@onclick="() => OnUserKindFilterChanged(UserKindFilter.DriversOnly)">
-							🚚 Drivers
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_userKindFilter == UserKindFilter.UsersOnly ? "active" : "")"
-								@onclick="() => OnUserKindFilterChanged(UserKindFilter.UsersOnly)">
-							👤 Users
-						</button>
+	<div class="card">
+		<div class="toolbar">
+			<label class="search">
+				<Icon Name="IconName.Search" />
+				<input type="search" placeholder="@T.Users.SearchPlaceholder" aria-label="@T.Common.Search"
+					   value="@_searchText" @oninput="OnSearchTextChanged" />
+			</label>
+			<button type="button" class="btn" aria-expanded="@Aria.State(_showFilters)" @onclick="() => _showFilters = !_showFilters">
+				<Icon Name="IconName.Filter" />
+				@T.Users.Filters
+				@if (ActiveFilterCount > 0)
+				{
+					<span class="badge badge-neutral tabular" title="@T.Users.ActiveFilters(ActiveFilterCount)">@ActiveFilterCount</span>
+				}
+				<Icon Name="@(_showFilters ? IconName.ChevronUp : IconName.ChevronDown)" />
+			</button>
+		</div>
+
+		@if (_showFilters)
+		{
+			<div class="filters">
+				<div class="field">
+					<span class="field-label">@T.Users.Kind</span>
+					<div class="segmented" role="group" aria-label="@T.Users.Kind">
+						<button type="button" aria-pressed="@Aria.State(_userKindFilter == UserKindFilter.All)" @onclick="() => OnUserKindFilterChanged(UserKindFilter.All)">@T.Common.All</button>
+						<button type="button" aria-pressed="@Aria.State(_userKindFilter == UserKindFilter.DriversOnly)" @onclick="() => OnUserKindFilterChanged(UserKindFilter.DriversOnly)">@T.Users.Drivers</button>
+						<button type="button" aria-pressed="@Aria.State(_userKindFilter == UserKindFilter.UsersOnly)" @onclick="() => OnUserKindFilterChanged(UserKindFilter.UsersOnly)">@T.Users.NotDrivers</button>
 					</div>
 				</div>
-			</div>
 
-			<div class="filter-row">
-				<label class="filter-label">Roles</label>
-				<div class="filter-control">
-					<select @onchange="AddFilterRole" class="search-input filter-select" value="">
-						<option value="" disabled selected hidden>Select Role...</option>
+				<div class="field">
+					<span class="field-label">@T.Users.Activity</span>
+					<div class="segmented" role="group" aria-label="@T.Users.Activity">
+						<button type="button" aria-pressed="@Aria.State(_activeUserFilter == ActiveUserFilter.All)" @onclick="() => OnActiveFilterChanged(ActiveUserFilter.All)">@T.Common.All</button>
+						<button type="button" aria-pressed="@Aria.State(_activeUserFilter == ActiveUserFilter.ActiveOnly)" @onclick="() => OnActiveFilterChanged(ActiveUserFilter.ActiveOnly)">@T.Users.ActiveMany</button>
+						<button type="button" aria-pressed="@Aria.State(_activeUserFilter == ActiveUserFilter.InactiveOnly)" @onclick="() => OnActiveFilterChanged(ActiveUserFilter.InactiveOnly)">@T.Users.InactiveMany</button>
+					</div>
+				</div>
+
+				<div class="field">
+					<span class="field-label">@T.Users.Verification</span>
+					<div class="segmented" role="group" aria-label="@T.Users.Verification">
+						<button type="button" aria-pressed="@Aria.State(_verifiedFilter == VerifiedUserFilter.All)" @onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.All)">@T.Common.All</button>
+						<button type="button" aria-pressed="@Aria.State(_verifiedFilter == VerifiedUserFilter.VerifiedOnly)" @onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.VerifiedOnly)">@T.Users.VerifiedMany</button>
+						<button type="button" aria-pressed="@Aria.State(_verifiedFilter == VerifiedUserFilter.UnverifiedOnly)" @onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.UnverifiedOnly)">@T.Users.UnverifiedMany</button>
+					</div>
+				</div>
+
+				<div class="field">
+					<label for="users-filter-role">@T.Users.Roles</label>
+					<select id="users-filter-role" @onchange="AddFilterRole" value="">
+						<option value="" selected hidden>@T.Users.SelectRole</option>
 						@foreach (var role in _roleOptions.Where(r => !_filterRoles.Contains(r)))
 						{
-							<option value="@role">@role</option>
+							<option value="@role" @key="role">@T.Enums.Role(role)</option>
 						}
 					</select>
-
 					@if (_filterRoles.Count > 0)
 					{
-						<div class="selected-statuses">
+						<div class="cluster">
 							@foreach (var role in _filterRoles)
 							{
-								<span class="role-pill status-pill" @onclick="() => RemoveFilterRole(role)" title="Click to remove">
-									@role <span class="pill-remove">&times;</span>
-								</span>
+								var roleName = T.Enums.Role(role);
+								<button type="button" class="btn btn-sm" @key="role" @onclick="() => RemoveFilterRole(role)"
+										title="@T.Users.RemoveFilter(roleName)" aria-label="@T.Users.RemoveFilter(roleName)">
+									@roleName
+									<Icon Name="IconName.Close" />
+								</button>
 							}
 						</div>
 					}
 				</div>
-			</div>
 
-			<div class="filter-row">
-				<label class="filter-label">Company</label>
-				<div class="filter-control">
-					<select @onchange="AddFilterCompany" class="search-input filter-select" value="">
-						<option value="" disabled selected hidden>Select Company...</option>
+				<div class="field">
+					<label for="users-filter-company">@T.Common.Company</label>
+					<select id="users-filter-company" @onchange="AddFilterCompany" value="">
+						<option value="" selected hidden>@T.Users.SelectCompany</option>
 						@foreach (var company in _companies.Where(c => !_filterCompanyIds.Contains(c.Id)).OrderBy(c => c.Name))
 						{
-							<option value="@company.Id">@company.Name</option>
+							<option value="@company.Id" @key="company.Id">@company.Name</option>
 						}
 					</select>
-
 					@if (_filterCompanyIds.Count > 0)
 					{
-						<div class="selected-statuses">
+						<div class="cluster">
 							@foreach (var companyId in _filterCompanyIds)
 							{
-								<span class="role-pill status-pill" @onclick="() => RemoveFilterCompany(companyId)" title="Click to remove">
-									@GetCompanyName(companyId) <span class="pill-remove">&times;</span>
-								</span>
+								var companyName = GetCompanyName(companyId);
+								<button type="button" class="btn btn-sm" @key="companyId" @onclick="() => RemoveFilterCompany(companyId)"
+										title="@T.Users.RemoveFilter(companyName)" aria-label="@T.Users.RemoveFilter(companyName)">
+									@companyName
+									<Icon Name="IconName.Close" />
+								</button>
 							}
 						</div>
 					}
 				</div>
-			</div>
 
-			<div class="filter-row">
-				<label class="filter-label">Active Status</label>
-				<div class="filter-control">
-					<div class="kind-switch">
-						<button type="button"
-								class="kind-switch-btn @(_activeUserFilter == ActiveUserFilter.All ? "active" : "")"
-								@onclick="() => OnActiveFilterChanged(ActiveUserFilter.All)">
-							All
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_activeUserFilter == ActiveUserFilter.ActiveOnly ? "active" : "")"
-								@onclick="() => OnActiveFilterChanged(ActiveUserFilter.ActiveOnly)">
-							✅ Active
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_activeUserFilter == ActiveUserFilter.InactiveOnly ? "active" : "")"
-								@onclick="() => OnActiveFilterChanged(ActiveUserFilter.InactiveOnly)">
-							❌ Inactive
-						</button>
-					</div>
-				</div>
-			</div>
-
-			<div class="filter-row">
-				<label class="filter-label">Verification</label>
-				<div class="filter-control">
-					<div class="kind-switch">
-						<button type="button"
-								class="kind-switch-btn @(_verifiedFilter == VerifiedUserFilter.All ? "active" : "")"
-								@onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.All)">
-							All
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_verifiedFilter == VerifiedUserFilter.VerifiedOnly ? "active" : "")"
-								@onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.VerifiedOnly)">
-							✔️ Verified
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_verifiedFilter == VerifiedUserFilter.UnverifiedOnly ? "active" : "")"
-								@onclick="() => OnVerifiedFilterChanged(VerifiedUserFilter.UnverifiedOnly)">
-							❓ Unverified
-						</button>
-					</div>
-				</div>
-			</div>
-
-			<div class="filter-row">
-				<label class="filter-label">Customers</label>
-				<div class="filter-control">
+				<div class="field">
+					<span class="field-label">@T.Users.Customers</span>
 					<label class="checkbox">
 						<input type="checkbox" checked="@_showCustomersOnly" @onchange="OnShowCustomersChanged" />
-						<span>Show users without roles only</span>
+						@T.Users.WithoutRolesOnly
 					</label>
 				</div>
 			</div>
-		</div>
-	}
+		}
 
-	@if (_users is null)
-	{
-		<p class="empty-state"><em>Loading...</em></p>
-	}
-	else if (_users.Length == 0)
-	{
-		<p class="empty-state">No users registered yet.</p>
-	}
-	else
-	{
-		var filteredUsers = FilteredUsers;
-		<div class="table-container">
-			<table class="styled-table">
-				<thead>
-					<tr>
-						<th>Login</th>
-						<th>Phone</th>
-						<th>Company</th>
-						<th>Roles</th>
-						<th>Status</th>
-						<th>Security Level</th>
-						<th>Actions</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					@{
-						var itemsToShow = filteredUsers
-							.Skip(_pagination.CurrentPageIndex * _pagination.ItemsPerPage)
-							.Take(_pagination.ItemsPerPage)
-							.ToArray();
-					}
-					@foreach (var user in itemsToShow)
-					{
-						var driver = GetDriver(user);
-						var company = GetCompany(user, driver);
-						var hasCompany = company is not null;
-						var clearance = user.SecurityClearanceLevel;
-						<tr @key="user.Id">
-							<td>
-								<div class="user-cell">
-									<span>@user.Login</span>
-									@if(driver is not null)
-									{
-										<span>🚚</span>
-									}
-									else
-									{
-										var displayName = GetDisplayName(user.UserInfo);
-										<span>@displayName</span>
-									}
-								</div>
-							</td>
-							<td class="phone-cell">@user.UserInfo.MobilePhone</td>
-							<td>
-								@if (company is not null)
-								{
-									<span>@company.Name</span>
-								}
-								else
-								{
-									<span class="text-muted">—</span>
-								}
-							</td>
-							<td>
-								<div class="roles-list">
-									@foreach (var role in user.Roles.OrderBy(r => r))
-									{
-										<span class="role-pill">@role</span>
-									}
-								</div>
-							</td>
-							<td>
-								<div class="status-stack">
-									<span class="status-badge @(user.UserInfo.IsActive ? "active" : "inactive")">
-										@(user.UserInfo.IsActive ? "Active" : "Inactive")
-									</span>
-									<span>
-										@(user.UserVerified ? "✅" : "⚠️")
-									</span>
-								</div>
-							</td>
-							<td>
-								<span class="level-badge level-badge--@clearance.ToString().ToLowerInvariant()">@clearance</span>
-							</td>
-							<td class="actions-cell">
-								<ActionsDropdown Title="Действия" MenuHeight="380">
-									<button class="btn-action" @onclick="async () => await ToggleUserActive(user)">
-										@(user.UserInfo.IsActive ? "🚫 Deactivate" : "✅ Activate")
-									</button>
-									<button class="btn-action" @onclick="async () => await ToggleUserVerified(user)">
-										@(user.UserVerified ? "🔍 Unverify" : "✅ Verify")
-									</button>
-									<button class="btn-action" @onclick="() => OpenRolesModal(user)">
-										⚙️ Edit Roles
-									</button>
-									<button class="btn-action" @onclick="() => _securityLevelTarget = user" title="View or change data security level for this user">
-										🔐 Security
-									</button>
-									<button class="btn-action" @onclick="() => OpenPassportModal(user)" title="Set passport data (SuperAdmin only)">
-										🪪 Passport
-									</button>
-									<button class="btn-action" @onclick="() => RequestResetPassword(user)" title="Generate a new password and send it to the user via SMS (SuperAdmin only)">
-										🔑 Reset Password
-									</button>
-									@if (driver is not null && hasCompany)
-									{
-										<button class="btn-action" @onclick="() => OpenDriverSlotModal(user)">
-											➕ Slot
-										</button>
-									}
-									@if (driver is null)
-									{
-										<button class="btn-action" @onclick="() => RequestCreateDriver(user)" title="Create driver entity for this user">
-											👤 + Driver
-										</button>
-									}
-									else
-									{
-										<button class="btn-action" @onclick="() => RequestDeleteDriver(user, driver)" title="Soft delete driver (cascades to vehicles)">
-											🗑️ Driver
-										</button>
-									}
-									<button class="btn-action" @onclick="() => RequestDeleteUserInfo(user)" title="Soft delete user (cascades to driver and vehicles)">
-										🗑️ User
-									</button>
-									@if (user.UserInfo.Company is not null)
-									{
-										<button class="btn-action" @onclick="() => RequestUnassignCompany(user)" title="Unassign user from their company">
-											🚫 Company
-										</button>
-									}
-									else
-									{
-										<button class="btn-action" @onclick="() => OpenAssignCompanyModal(user)" title="Assign user to a company">
-											🏢 Company
-										</button>
-									}
-								</ActionsDropdown>
-							</td>
-							<td>
-								<button class="btn-expand" @onclick="() => ToggleExpanded(user.Id)">
-									@(IsExpanded(user.Id) ? "▼" : "▶")
-								</button>
-							</td>
-						</tr>
-						@if (IsExpanded(user.Id))
-						{
-							var displayName = GetDisplayName(user.UserInfo);
-							var passport = user.UserInfo.Passport;
-							<tr class="details-row">
-								<td colspan="8">
-									<div class="details-grid">
-										<div class="details-section">
-											<h4>User Info</h4>
-											<div class="detail-item">
-												<span class="detail-label">Name</span>
-												<span class="detail-value">@displayName</span>
-											</div>
-											<div class="detail-item">
-												<span class="detail-label">Phone</span>
-												<span class="detail-value">@user.UserInfo.MobilePhone</span>
-											</div>
-										</div>
-										@if (passport is { Count: > 0 })
-										{
-											<div class="details-section">
-												<h4>Passport</h4>
-												<div class="detail-item">
-													<span class="detail-label">Number</span>
-													<span class="detail-value">@GetPassportValue(passport, "passport.number")</span>
-												</div>
-												<div class="detail-item">
-													<span class="detail-label">Identification Number</span>
-													<span class="detail-value">@GetPassportValue(passport, "passport.identificationNumber")</span>
-												</div>
-												<div class="detail-item">
-													<span class="detail-label">Issued By</span>
-													<span class="detail-value">@GetPassportValue(passport, "passport.issuedBy")</span>
-												</div>
-												<div class="detail-item">
-													<span class="detail-label">Issued Date</span>
-													<span class="detail-value">@GetPassportValue(passport, "passport.issuedDate")</span>
-												</div>
-											</div>
-										}
-										@if (driver is not null)
-										{
-											var slots = GetDriverSlots(driver.Id).ToArray();
-											<div class="details-section">
-												<h4>Driver</h4>
-												<div class="driver-details">
-													<div class="driver-avatar-container">
-														@if (!string.IsNullOrWhiteSpace(driver.Photo))
-														{
-															<img src="@driver.Photo" alt="Driver" class="driver-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-															<div class="driver-avatar-fallback" style="display:none;">
-																<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-																	<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-																</svg>
-															</div>
-														}
-														else
-														{
-															<div class="driver-avatar-fallback">
-																<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-																	<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-																</svg>
-															</div>
-														}
-													</div>
-													<div>
-														<div class="driver-name">@GetDisplayName(driver.UserInfo)</div>
-														@if (company is not null)
-														{
-															<div class="driver-company">@company.Name</div>
-														}
-														else
-														{
-															<div class="driver-company text-muted">No company</div>
-														}
-													</div>
-												</div>
-											</div>
-											<div class="details-section">
-												<h4>Available Slots</h4>
-												@if (!hasCompany)
-												{
-													<span class="text-muted">No slots available</span>
-												}
-												else if (!slots.Any())
-												{
-													<span class="text-muted">No slots configured</span>
-												}
-												else
-												{
-													<div class="slot-list">
-														@foreach (var slot in slots)
-														{
-															<span class="slot-pill">@FormatSlot(slot)</span>
-														}
-													</div>
-												}
-											</div>
-										}
-									</div>
-								</td>
+		@if (_users is null)
+		{
+			<div class="empty">
+				<span class="spinner"></span>
+				<p class="empty-hint">@T.Common.Loading</p>
+			</div>
+		}
+		else if (_users.Length == 0)
+		{
+			<div class="empty">
+				<Icon Name="IconName.Users" />
+				<p class="empty-title">@T.Users.Empty</p>
+				<p class="empty-hint">@T.Users.EmptyHint</p>
+			</div>
+		}
+		else
+		{
+			var filteredUsers = FilteredUsers;
+			if (filteredUsers.Length == 0)
+			{
+				<div class="empty">
+					<Icon Name="IconName.Search" />
+					<p class="empty-title">@T.Common.NothingFound</p>
+					<p class="empty-hint">@T.Common.NothingFoundHint</p>
+				</div>
+			}
+			else
+			{
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>@T.Users.Login</th>
+								<th>@T.Common.Phone</th>
+								<th>@T.Common.Company</th>
+								<th>@T.Users.Roles</th>
+								<th>@T.Common.Status</th>
+								<th>@T.Security.Short</th>
+								<th><span class="visually-hidden">@T.Common.Actions</span></th>
+								<th><span class="visually-hidden">@T.Common.Details</span></th>
 							</tr>
-						}
-					}
-				</tbody>
-			</table>
-		</div>
-
-		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" TotalItems="@filteredUsers.Length" AfterNavigate="() => StateHasChanged()" />
-		</div>
-	}
+						</thead>
+						<tbody>
+							@foreach (var user in PageOf(filteredUsers))
+							{
+								var driver = GetDriver(user);
+								var company = GetCompany(user, driver);
+								var expanded = IsExpanded(user.Id);
+								<tr @key="user.Id">
+									<td>
+										<div class="user-cell">
+											<span class="strong">@user.Login</span>
+											@if (driver is not null)
+											{
+												<span class="muted" title="@T.Users.HasDriver">
+													<Icon Name="IconName.Vehicles" />
+													<span class="visually-hidden">@T.Users.HasDriver</span>
+												</span>
+											}
+											else
+											{
+												<span class="caption">@GetDisplayName(user.UserInfo)</span>
+											}
+										</div>
+									</td>
+									<td class="nowrap tabular">@user.UserInfo.MobilePhone</td>
+									<td>
+										@if (company is not null)
+										{
+											<span>@company.Name</span>
+										}
+										else
+										{
+											<span class="muted">@Texts.Dash</span>
+										}
+									</td>
+									<td>
+										<div class="cluster">
+											@foreach (var role in user.Roles.Distinct().OrderBy(r => r))
+											{
+												<span class="badge badge-neutral" @key="role">@T.Enums.Role(role)</span>
+											}
+										</div>
+									</td>
+									<td>
+										<div class="cluster">
+											<span class="@StatusTone.Of(user.UserInfo.IsActive).Badge()">@(user.UserInfo.IsActive ? T.Common.Active : T.Common.Inactive)</span>
+											<span class="@(user.UserVerified ? Tone.Success.Badge() : Tone.Warning.Badge())">@(user.UserVerified ? T.Users.Verified : T.Users.Unverified)</span>
+										</div>
+									</td>
+									<td>
+										<span class="badge badge-neutral">@T.Enums.SecurityLevel(user.SecurityClearanceLevel)</span>
+									</td>
+									<td>
+										<ActionsDropdown MenuHeight="400">
+											<button type="button" class="menu-item" @onclick="() => ToggleUserActive(user)">
+												<Icon Name="@(user.UserInfo.IsActive ? IconName.UserX : IconName.UserCheck)" />
+												@(user.UserInfo.IsActive ? T.Users.Deactivate : T.Users.Activate)
+											</button>
+											<button type="button" class="menu-item" @onclick="() => ToggleUserVerified(user)">
+												<Icon Name="@(user.UserVerified ? IconName.Undo : IconName.ShieldCheck)" />
+												@(user.UserVerified ? T.Users.Unverify : T.Users.Verify)
+											</button>
+											<button type="button" class="menu-item" @onclick="() => OpenRolesModal(user)">
+												<Icon Name="IconName.Edit" />
+												@T.Users.EditRoles
+											</button>
+											<button type="button" class="menu-item" @onclick="() => _securityLevelTarget = user">
+												<Icon Name="IconName.Shield" />
+												@T.Security.Short
+											</button>
+											<button type="button" class="menu-item" @onclick="() => OpenPassportModal(user)">
+												<Icon Name="IconName.File" />
+												@T.Users.PassportData
+											</button>
+											<button type="button" class="menu-item" @onclick="() => RequestResetPassword(user)">
+												<Icon Name="IconName.Lock" />
+												@T.Users.ResetPassword
+											</button>
+											@if (driver is not null && company is not null)
+											{
+												<button type="button" class="menu-item" @onclick="() => OpenDriverSlotModal(user)">
+													<Icon Name="IconName.Calendar" />
+													@T.Users.AddSlots
+												</button>
+											}
+											@if (driver is null)
+											{
+												<button type="button" class="menu-item" @onclick="() => RequestCreateDriver(user)">
+													<Icon Name="IconName.Vehicles" />
+													@T.Users.CreateDriver
+												</button>
+											}
+											@if (user.UserInfo.Company is not null)
+											{
+												<button type="button" class="menu-item" @onclick="() => RequestUnassignCompany(user)">
+													<Icon Name="IconName.Unlink" />
+													@T.Users.UnassignCompany
+												</button>
+											}
+											else
+											{
+												<button type="button" class="menu-item" @onclick="() => OpenAssignCompanyModal(user)">
+													<Icon Name="IconName.Companies" />
+													@T.Users.AssignCompany
+												</button>
+											}
+											<div class="menu-separator" role="separator"></div>
+											@if (driver is not null)
+											{
+												<button type="button" class="menu-item menu-item-danger" @onclick="() => RequestDeleteDriver(user, driver)">
+													<Icon Name="IconName.Delete" />
+													@T.Users.DeleteDriver
+												</button>
+											}
+											<button type="button" class="menu-item menu-item-danger" @onclick="() => RequestDeleteUserInfo(user)">
+												<Icon Name="IconName.Delete" />
+												@T.Users.DeleteUser
+											</button>
+										</ActionsDropdown>
+									</td>
+									<td>
+										<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="() => ToggleExpanded(user.Id)"
+												title="@(expanded ? T.Common.Collapse : T.Common.Expand)" aria-label="@(expanded ? T.Common.Collapse : T.Common.Expand)" aria-expanded="@Aria.State(expanded)">
+											<Icon Name="@(expanded ? IconName.ChevronDown : IconName.ChevronRight)" />
+										</button>
+									</td>
+								</tr>
+								@if (expanded)
+								{
+									var passport = user.UserInfo.Passport;
+									<tr class="details-row">
+										<td colspan="8">
+											<div class="details">
+												<section>
+													<h3 class="section-title">@T.Users.UserInfo</h3>
+													<dl class="kv">
+														<dt>@T.Users.FullName</dt>
+														<dd>@GetDisplayName(user.UserInfo)</dd>
+														<dt>@T.Common.Phone</dt>
+														<dd class="tabular">@user.UserInfo.MobilePhone</dd>
+													</dl>
+												</section>
+												@if (passport is { Count: > 0 })
+												{
+													<section>
+														<h3 class="section-title">@T.Users.Passport</h3>
+														<dl class="kv">
+															<dt>@T.Users.PassportNumber</dt>
+															<dd>@GetPassportValue(passport, "passport.number")</dd>
+															<dt>@T.Users.IdentificationNumber</dt>
+															<dd>@GetPassportValue(passport, "passport.identificationNumber")</dd>
+															<dt>@T.Users.IssuedBy</dt>
+															<dd>@GetPassportValue(passport, "passport.issuedBy")</dd>
+															<dt>@T.Users.IssuedDate</dt>
+															<dd>@GetPassportValue(passport, "passport.issuedDate")</dd>
+														</dl>
+													</section>
+												}
+												@if (driver is not null)
+												{
+													var slots = GetDriverSlots(driver.Id);
+													<section>
+														<h3 class="section-title">@T.Users.Driver</h3>
+														<div class="driver">
+															<div class="avatar">
+																<Icon Name="IconName.User" Size="20" />
+																@if (!string.IsNullOrWhiteSpace(driver.Photo))
+																{
+																	<img src="@driver.Photo" alt="" onerror="this.hidden = true" />
+																}
+															</div>
+															<div>
+																<div class="strong">@GetDisplayName(driver.UserInfo)</div>
+																<div class="caption">@(company?.Name ?? T.Users.NoCompany)</div>
+															</div>
+														</div>
+													</section>
+													<section>
+														<h3 class="section-title">@T.Users.Slots</h3>
+														@if (company is null)
+														{
+															<p class="muted small">@T.Users.NoSlotsWithoutCompany</p>
+														}
+														else if (slots.Count == 0)
+														{
+															<p class="muted small">@T.Users.NoSlots</p>
+														}
+														else
+														{
+															<div class="cluster">
+																@foreach (var slot in slots)
+																{
+																	<span class="badge badge-neutral tabular" @key="slot.Id">@FormatSlot(slot)</span>
+																}
+															</div>
+														}
+													</section>
+												}
+											</div>
+										</td>
+									</tr>
+								}
+							}
+						</tbody>
+					</table>
+				</div>
+				<CustomPaginator State="@_pagination" TotalItems="@filteredUsers.Length" AfterNavigate="StateHasChanged" />
+			}
+		}
+	</div>
 </div>
 
-<ModalShell IsOpen="_showCreateUserModal" OnClose="CloseCreateUserModal" OnSubmit="CreateUser">
-			<div class="modal-header">
-				<h2>Add User</h2>
-				<button class="btn-close" @onclick="CloseCreateUserModal">×</button>
-			</div>
-			<div class="modal-body">
-				<div class="form-group">
-					<label>Company *</label>
-					<select class="form-control" @bind="_selectedCompanyId">
-						<option value="">Select company</option>
-								@foreach (var company in _companies.OrderBy(c => c.Name))
-								{
-									<option value="@company.Id">@company.Name</option>
-								}
-							</select>
-						</div>
-						<div class="form-row">
-							<div class="form-group">
-								<label>First Name</label>
-								<input class="form-control" @bind="_userFirstName" />
-					</div>
-					<div class="form-group">
-						<label>Middle Name</label>
-						<input class="form-control" @bind="_userMiddleName" />
-					</div>
-				</div>
-				<div class="form-row">
-					<div class="form-group">
-						<label>Last Name</label>
-						<input class="form-control" @bind="_userLastName" />
-					</div>
-					<div class="form-group">
-						<label>Mobile Phone</label>
-						<input class="form-control" @bind="_userMobilePhone" />
-					</div>
-				</div>
-				<div class="form-group">
-					<label>Roles *</label>
-					<div class="roles-options">
-						@foreach (var role in _roleOptions)
-						{
-							<label class="checkbox">
-								<input type="checkbox" checked="@_selectedRoles.Contains(role)" @onchange="e => ToggleRole(role, e)" />
-								<span>@role</span>
-							</label>
-						}
-					</div>
-				</div>
-				@if (!string.IsNullOrWhiteSpace(_userErrorMessage))
+<ModalShell IsOpen="_showCreateUserModal" Title="@T.Users.NewUser" OnClose="CloseCreateUserModal" OnSubmit="CreateUser">
+	<ChildContent>
+		<div class="field">
+			<label for="user-company">@T.Common.Company</label>
+			<select id="user-company" @bind="_selectedCompanyId">
+				<option value="">@T.Users.SelectCompany</option>
+				@foreach (var company in _companies.OrderBy(c => c.Name))
 				{
-					<div class="error-message">⚠️ @_userErrorMessage</div>
+					<option value="@company.Id" @key="company.Id">@company.Name</option>
+				}
+			</select>
+		</div>
+		<div class="form-grid">
+			<div class="field">
+				<label for="user-first-name">@T.Users.FirstName</label>
+				<input id="user-first-name" @bind="_userFirstName" />
+			</div>
+			<div class="field">
+				<label for="user-middle-name">@T.Users.MiddleName</label>
+				<input id="user-middle-name" @bind="_userMiddleName" />
+			</div>
+			<div class="field">
+				<label for="user-last-name">@T.Users.LastName</label>
+				<input id="user-last-name" @bind="_userLastName" />
+			</div>
+			<div class="field">
+				<label for="user-phone">@T.Users.MobilePhone</label>
+				<input id="user-phone" type="tel" @bind="_userMobilePhone" />
+			</div>
+		</div>
+		<div class="field">
+			<span class="field-label">@T.Users.Roles</span>
+			<div class="cluster">
+				@foreach (var role in _roleOptions)
+				{
+					<label class="checkbox" @key="role">
+						<input type="checkbox" checked="@_selectedRoles.Contains(role)" @onchange="e => ToggleRole(role, e)" />
+						@T.Enums.Role(role)
+					</label>
 				}
 			</div>
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseCreateUserModal">Cancel</button>
-				<button class="btn-primary" @onclick="CreateUser">Create User</button>
-			</div>
+		</div>
+		@if (!string.IsNullOrWhiteSpace(_userErrorMessage))
+		{
+			<p class="field-error" role="alert">@_userErrorMessage</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseCreateUserModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="CreateUser">@T.Common.Create</button>
+	</Footer>
 </ModalShell>
 
-<ModalShell IsOpen="_showCreateDriverModal" OnClose="CloseCreateDriverModal" OnSubmit="CreateDriver">
-			<div class="modal-header">
-				<h2>Add Driver</h2>
-				<button class="btn-close" @onclick="CloseCreateDriverModal">×</button>
-			</div>
-			<div class="modal-body">
-				<div class="form-group">
-					<label>Company</label>
-					<select class="form-control" @bind="_selectedDriverCompanyId">
-						<option value="">No company</option>
-								@foreach (var company in _companies.OrderBy(c => c.Name))
-								{
-									<option value="@company.Id">@company.Name</option>
-								}
-							</select>
-						</div>
-						<div class="form-row">
-							<div class="form-group">
-								<label>First Name</label>
-								<input class="form-control" @bind="_driverFirstName" />
-					</div>
-					<div class="form-group">
-						<label>Middle Name</label>
-						<input class="form-control" @bind="_driverMiddleName" />
-					</div>
-				</div>
-				<div class="form-row">
-					<div class="form-group">
-						<label>Last Name</label>
-						<input class="form-control" @bind="_driverLastName" />
-					</div>
-					<div class="form-group">
-						<label>Mobile Phone</label>
-						<input class="form-control" @bind="_driverMobilePhone" />
-					</div>
-				</div>
-				<div class="form-group">
-					<label>Photo URL</label>
-					<input class="form-control" @bind="_driverPhoto" />
-				</div>
-				@if (!string.IsNullOrWhiteSpace(_driverErrorMessage))
+<ModalShell IsOpen="_showCreateDriverModal" Title="@T.Users.NewDriver" OnClose="CloseCreateDriverModal" OnSubmit="CreateDriver">
+	<ChildContent>
+		<div class="field">
+			<label for="driver-company">@T.Common.Company</label>
+			<select id="driver-company" @bind="_selectedDriverCompanyId">
+				<option value="">@T.Users.NoCompany</option>
+				@foreach (var company in _companies.OrderBy(c => c.Name))
 				{
-					<div class="error-message">⚠️ @_driverErrorMessage</div>
+					<option value="@company.Id" @key="company.Id">@company.Name</option>
 				}
+			</select>
+		</div>
+		<div class="form-grid">
+			<div class="field">
+				<label for="driver-first-name">@T.Users.FirstName</label>
+				<input id="driver-first-name" @bind="_driverFirstName" />
 			</div>
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseCreateDriverModal">Cancel</button>
-				<button class="btn-primary" @onclick="CreateDriver">Create Driver</button>
+			<div class="field">
+				<label for="driver-middle-name">@T.Users.MiddleName</label>
+				<input id="driver-middle-name" @bind="_driverMiddleName" />
 			</div>
+			<div class="field">
+				<label for="driver-last-name">@T.Users.LastName</label>
+				<input id="driver-last-name" @bind="_driverLastName" />
+			</div>
+			<div class="field">
+				<label for="driver-phone">@T.Users.MobilePhone</label>
+				<input id="driver-phone" type="tel" @bind="_driverMobilePhone" />
+			</div>
+		</div>
+		<div class="field">
+			<label for="driver-photo">@T.Users.PhotoUrl</label>
+			<input id="driver-photo" type="url" @bind="_driverPhoto" placeholder="@T.Users.PhotoUrlPlaceholder" />
+		</div>
+		@if (!string.IsNullOrWhiteSpace(_driverErrorMessage))
+		{
+			<p class="field-error" role="alert">@_driverErrorMessage</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseCreateDriverModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="CreateDriver">@T.Common.Create</button>
+	</Footer>
 </ModalShell>
 
-<ModalShell IsOpen="_showDriverSlotModal" OnClose="CloseDriverSlotModal" OnSubmit="CreateDriverSlot">
-			<div class="modal-header">
-				<h2>Add Driver Slot</h2>
-				<button class="btn-close" @onclick="CloseDriverSlotModal">×</button>
+<ModalShell IsOpen="_showDriverSlotModal" Title="@T.Users.AddSlots" OnClose="CloseDriverSlotModal" OnSubmit="CreateDriverSlot">
+	<ChildContent>
+		<div class="form-grid">
+			<div class="field">
+				<label for="slot-date">@T.Common.Date</label>
+				<input id="slot-date" type="date" @bind="_slotDate" />
 			</div>
-
-			<div class="modal-body">
-				<div class="form-row">
-					<div class="form-group">
-						<label>Date</label>
-						<input type="date" class="form-control" @bind="_slotDate" />
-					</div>
-					<div class="form-group">
-						<label>Start Time</label>
-						<input type="time" class="form-control" @bind="_slotStartTime" />
-					</div>
-					<div class="form-group">
-						<label>End Time</label>
-						<input type="time" class="form-control" @bind="_slotEndTime" />
-					</div>
-				</div>
-				@if (!string.IsNullOrWhiteSpace(_slotErrorMessage))
+			<div class="field">
+				<label for="slot-start">@T.Users.Start</label>
+				<input id="slot-start" type="time" @bind="_slotStartTime" />
+			</div>
+			<div class="field">
+				<label for="slot-end">@T.Users.End</label>
+				<input id="slot-end" type="time" @bind="_slotEndTime" />
+			</div>
+		</div>
+		@if (!string.IsNullOrWhiteSpace(_slotErrorMessage))
+		{
+			<p class="field-error" role="alert">@_slotErrorMessage</p>
+		}
+		@if (_newSlots.Count > 14)
+		{
+			<p class="field-error" role="alert">@T.Users.MaxSlots</p>
+		}
+		<div>
+			<button type="button" class="btn" @onclick="AddNewSlot">
+				<Icon Name="IconName.Plus" />
+				@T.Users.AddSlot
+			</button>
+		</div>
+		@if (_newSlots.Count > 0)
+		{
+			<div class="cluster">
+				@* Keyed by position: the same slot can be added twice. *@
+				@foreach (var entry in _newSlots.Index())
 				{
-					<div class="error-message">⚠️ @_slotErrorMessage</div>
-				}
-				@if (_newSlots.Count > 14)
-				{
-					<div class="error-message">⚠️ Maximum 15 slots</div>
-				}
-
-				<div class="action-buttons">
-					<button class="btn-action" @onclick="() => AddNewSlot()">
-						AddSlot 🎰
+					var slot = entry.Item;
+					var slotText = FormatSlot(slot);
+					<button type="button" class="btn btn-sm" @key="entry.Index" @onclick="() => RemoveNewSlot(slot)"
+							title="@T.Users.RemoveSlot(slotText)" aria-label="@T.Users.RemoveSlot(slotText)">
+						<span class="tabular">@slotText</span>
+						<Icon Name="IconName.Close" />
 					</button>
-				</div>
-
-				<div class="slot-list">
-					@foreach (var slot in _newSlots)
-					{
-						<button class="btn-close btn-slot" @onclick="() => RemoveNewSlot(slot)">
-							<span>Slot: @FormatSlot(slot)</span> ❌
-						</button>
-					}
-				</div>
-			</div>
-
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseDriverSlotModal">Cancel</button>
-				<button class="btn-primary" @onclick="CreateDriverSlot">Create Slot</button>
-			</div>
-</ModalShell>
-
-<ModalShell IsOpen="_showRolesModal" OnClose="CloseRolesModal" OnSubmit="UpdateRoles">
-			<div class="modal-header">
-				<h2>Edit Roles</h2>
-				<button class="btn-close" @onclick="CloseRolesModal">×</button>
-			</div>
-			<div class="modal-body">
-				<div class="form-group">
-					<label>Roles</label>
-					<div class="roles-options">
-						@foreach (var role in _roleOptions)
-						{
-							<label class="checkbox">
-								<input type="checkbox" checked="@_roleEditSelection.Contains(role)" @onchange="e => ToggleRoleEdit(role, e)" />
-								<span>@role</span>
-							</label>
-						}
-					</div>
-				</div>
-				@if (!string.IsNullOrWhiteSpace(_rolesErrorMessage))
-				{
-					<div class="error-message">⚠️ @_rolesErrorMessage</div>
 				}
 			</div>
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseRolesModal">Cancel</button>
-				<button class="btn-primary" @onclick="UpdateRoles">Save Roles</button>
-			</div>
+		}
+		<p class="hint">@T.Users.SlotsHint</p>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseDriverSlotModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="CreateDriverSlot">@T.Common.Save</button>
+	</Footer>
 </ModalShell>
 
-<ModalShell IsOpen="_showAssignCompanyModal" OnClose="CloseAssignCompanyModal" OnSubmit="ConfirmAssignCompany">
-			<div class="modal-header">
-				<h2>Assign Company</h2>
-				<button class="btn-close" @onclick="CloseAssignCompanyModal">×</button>
-			</div>
-			<div class="modal-body">
-				<div class="form-group">
-					<label>Company *</label>
-					<select class="search-input" @bind="_assignCompanyId">
-						<option value="@Guid.Empty">-- Select company --</option>
-						@foreach (var company in _companies)
-						{
-							<option value="@company.Id">@company.Name</option>
-						}
-					</select>
-				</div>
-				@if (!string.IsNullOrWhiteSpace(_assignCompanyError))
+<ModalShell IsOpen="_showRolesModal" Title="@T.Users.EditRoles" ContainerClass="modal-sm" OnClose="CloseRolesModal" OnSubmit="UpdateRoles">
+	<ChildContent>
+		<div class="field">
+			<span class="field-label">@T.Users.Roles</span>
+			<div class="stack">
+				@foreach (var role in _roleOptions)
 				{
-					<div class="error-message">⚠️ @_assignCompanyError</div>
+					<label class="checkbox" @key="role">
+						<input type="checkbox" checked="@_roleEditSelection.Contains(role)" @onchange="e => ToggleRoleEdit(role, e)" />
+						@T.Enums.Role(role)
+					</label>
 				}
 			</div>
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseAssignCompanyModal">Cancel</button>
-				<button class="btn-primary" @onclick="ConfirmAssignCompany" disabled="@(_assignCompanyId == Guid.Empty)">Assign</button>
-			</div>
+		</div>
+		@if (!string.IsNullOrWhiteSpace(_rolesErrorMessage))
+		{
+			<p class="field-error" role="alert">@_rolesErrorMessage</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseRolesModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="UpdateRoles">@T.Common.Save</button>
+	</Footer>
+</ModalShell>
+
+<ModalShell IsOpen="_showAssignCompanyModal" Title="@T.Users.AssignCompany" ContainerClass="modal-sm" OnClose="CloseAssignCompanyModal" OnSubmit="ConfirmAssignCompany">
+	<ChildContent>
+		<div class="field">
+			<label for="assign-company">@T.Common.Company</label>
+			<select id="assign-company" @bind="_assignCompanyId">
+				<option value="@Guid.Empty">@T.Users.SelectCompany</option>
+				@foreach (var company in _companies.OrderBy(c => c.Name))
+				{
+					<option value="@company.Id" @key="company.Id">@company.Name</option>
+				}
+			</select>
+		</div>
+		@if (!string.IsNullOrWhiteSpace(_assignCompanyError))
+		{
+			<p class="field-error" role="alert">@_assignCompanyError</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseAssignCompanyModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="ConfirmAssignCompany" disabled="@(_assignCompanyId == Guid.Empty)">@T.Users.Assign</button>
+	</Footer>
 </ModalShell>
 
 <SecurityLevelDialog IsOpen="_securityLevelTarget is not null"
-					 EntityLabel="@($"User: {(_securityLevelTarget is null ? string.Empty : GetDisplayName(_securityLevelTarget.UserInfo))}")"
+					 EntityLabel="@(_securityLevelTarget is null ? string.Empty : T.Security.UserLabel(GetDisplayName(_securityLevelTarget.UserInfo)))"
 					 Endpoint="@($"admin/security-levels/users/{_securityLevelTarget?.Id}")"
 					 OnClose="() => _securityLevelTarget = null"
 					 OnSaved="() => LoadData(false)" />
 
-<ModalShell IsOpen="_showPassportModal" OnClose="ClosePassportModal" OnSubmit="SubmitPassport">
-			<div class="modal-header">
-				<h2>Set Passport Data@(_passportTargetUser is null ? string.Empty : $": {GetDisplayName(_passportTargetUser.UserInfo)}")</h2>
-				<button class="btn-close" @onclick="ClosePassportModal">×</button>
+<ModalShell IsOpen="_showPassportModal" Title="@PassportTitle" OnClose="ClosePassportModal" OnSubmit="SubmitPassport">
+	<ChildContent>
+		<div class="form-grid">
+			<div class="field">
+				<label for="passport-number">@T.Users.PassportNumber</label>
+				<input id="passport-number" @bind="_passportNumber" />
 			</div>
-			<div class="modal-body">
-				<div class="form-group">
-					<label>Number</label>
-					<input class="form-control" @bind="_passportNumber" />
-				</div>
-				<div class="form-group">
-					<label>Identification Number</label>
-					<input class="form-control" @bind="_passportIdentificationNumber" />
-				</div>
-				<div class="form-group">
-					<label>Issued By</label>
-					<input class="form-control" @bind="_passportIssuedBy" />
-				</div>
-				<div class="form-group">
-					<label>Issued Date</label>
-					<input type="date" class="form-control" @bind="_passportIssuedDate" />
-				</div>
-				@if (!string.IsNullOrWhiteSpace(_passportErrorMessage))
-				{
-					<div class="error-message">⚠️ @_passportErrorMessage</div>
-				}
+			<div class="field">
+				<label for="passport-identification">@T.Users.IdentificationNumber</label>
+				<input id="passport-identification" @bind="_passportIdentificationNumber" />
 			</div>
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="ClosePassportModal">Cancel</button>
-				<button class="btn-primary" @onclick="SubmitPassport">Save</button>
+			<div class="field">
+				<label for="passport-issued-by">@T.Users.IssuedBy</label>
+				<input id="passport-issued-by" @bind="_passportIssuedBy" />
 			</div>
+			<div class="field">
+				<label for="passport-issued-date">@T.Users.IssuedDate</label>
+				<input id="passport-issued-date" type="date" @bind="_passportIssuedDate" />
+			</div>
+		</div>
+		@if (!string.IsNullOrWhiteSpace(_passportErrorMessage))
+		{
+			<p class="field-error" role="alert">@_passportErrorMessage</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="ClosePassportModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="SubmitPassport">@T.Common.Save</button>
+	</Footer>
 </ModalShell>
 
 <ConfirmDialog IsOpen="_confirm.IsOpen"
 			   Title="@_confirm.Title"
 			   Message="@_confirm.Message"
-			   ConfirmText="Confirm"
-			   CancelText="Cancel"
-			   IsDangerous="true"
+			   ConfirmText="@_confirmText"
+			   IsDangerous="_confirmDangerous"
 			   OnConfirm="_confirm.Confirm"
 			   OnCancel="_confirm.Cancel" />

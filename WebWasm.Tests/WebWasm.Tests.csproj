@@ -6,19 +6,15 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>preview</LangVersion>
 		<IsPackable>false</IsPackable>
+		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.v3" Version="4.0.3" />
 		<!-- Reference implementation: JwtReader must read claims exactly like the package the app used before -->
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
 		<!-- Reference implementation: StorageFormat must stay compatible with values saved by Blazored -->
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<!-- Pure logic from the app is linked as source: the app itself is browser-wasm and cannot be referenced -->
@@ -32,6 +28,8 @@
 		<Compile Include="..\WebWasm\Models\PricingSettingModels.cs" Link="Linked\PricingSettingModels.cs" />
 		<Compile Include="..\WebWasm\Models\SecurityModels.cs" Link="Linked\SecurityModels.cs" />
 		<Compile Include="..\WebWasm\Helpers\PriceChartMath.cs" Link="Linked\PriceChartMath.cs" />
+		<Compile Include="..\WebWasm\Localization\Texts.cs" Link="Linked\Texts.cs" />
+		<Compile Include="..\WebWasm\Localization\Texts.Pricing.cs" Link="Linked\Texts.Pricing.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -5,7 +5,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Regions : ComponentBase
+public partial class Regions
 {
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
@@ -76,18 +76,18 @@ public partial class Regions : ComponentBase
 			if (_editingRegion is not null)
 			{
 				await ApiClient.Put($"Regions/{_editingRegion.Id}", regionData);
-				ToastService.ShowSuccess("Region updated successfully!");
+				ToastService.ShowSuccess(T.Regions.Updated);
 			}
 			else
 			{
 				var createRegion = new CreateRegion(regionData.Name, regionData.TimeZone);
 				await ApiClient.Post("Regions", createRegion);
-				ToastService.ShowSuccess("Region created successfully!");
+				ToastService.ShowSuccess(T.Regions.Created);
 			}
 
 			await LoadRegions(false);
 			CloseRegionModal();
-		}, "Failed to save region: ");
+		}, T.Regions.SaveFailed);
 	}
 
 	private void HandleAddLevel(Region region)
@@ -117,7 +117,7 @@ public partial class Regions : ComponentBase
 		{
 			// Create-only path: edit goes through the split handlers below
 			await ApiClient.Post($"Regions/{_editingLevelRegion.Id}/level", levelData);
-			ToastService.ShowSuccess("Level created successfully!");
+			ToastService.ShowSuccess(T.Regions.LevelCreated);
 
 			await LoadRegions(false);
 			CloseLevelEditor();
@@ -126,7 +126,7 @@ public partial class Regions : ComponentBase
 			{
 				_viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
 			}
-		}, "Failed to save level: ");
+		}, T.Regions.LevelSaveFailed);
 	}
 
 	private async Task HandleLevelSubmitPrices(UpdateLevelPriceInfo priceInfo)
@@ -139,7 +139,7 @@ public partial class Regions : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/price-info", priceInfo);
-			ToastService.ShowSuccess("Prices updated successfully!");
+			ToastService.ShowSuccess(T.Regions.PricesUpdated);
 
 			await LoadRegions(false);
 
@@ -147,7 +147,7 @@ public partial class Regions : ComponentBase
 			{
 				_viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
 			}
-		}, "Failed to update prices: ");
+		}, T.Regions.PricesSaveFailed);
 	}
 
 	private async Task HandleLevelSubmitGeometry(UpdateLevelGeometry geometry)
@@ -160,7 +160,7 @@ public partial class Regions : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Patch($"Regions/{_editingLevelRegion.Id}/level/{_editingLevel.Id}/geometry", geometry);
-			ToastService.ShowSuccess("Geometry updated successfully!");
+			ToastService.ShowSuccess(T.Regions.BoundaryUpdated);
 
 			await LoadRegions(false);
 
@@ -168,12 +168,12 @@ public partial class Regions : ComponentBase
 			{
 				_viewingRegion = _regions.FirstOrDefault(r => r.Id == _editingLevelRegion.Id);
 			}
-		}, "Failed to update geometry: ");
+		}, T.Regions.BoundarySaveFailed);
 	}
 
 	private void HandleDeleteRegion(Region region)
 	{
-		_confirm.Ask("Delete Region", $"Are you sure you want to delete the region \"{region.Name}\"? This will also delete all its levels and associated data.", async () => await DeleteRegion(region.Id));
+		_confirm.Ask(T.Regions.DeleteTitle, T.Regions.DeleteMessage(region.Name), async () => await DeleteRegion(region.Id));
 	}
 
 	private async Task DeleteRegion(Guid regionId)
@@ -181,9 +181,9 @@ public partial class Regions : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Regions/{regionId}");
-			ToastService.ShowSuccess("Region deleted successfully!");
+			ToastService.ShowSuccess(T.Regions.DeletedToast);
 			await LoadRegions(false);
-		}, "Failed to delete region: ");
+		}, T.Regions.DeleteFailed);
 	}
 
 	private void HandleDeleteLevel((Region region, Guid levelId) data)
@@ -194,7 +194,8 @@ public partial class Regions : ComponentBase
 			return;
 		}
 
-		_confirm.Ask("Delete Level", $"Are you sure you want to delete the {level.Type} level? This will remove all {level.Triangles?.Count ?? 0} triangles in this level.", async () => await DeleteLevel(data.region.Id, data.levelId));
+		_confirm.Ask(T.Regions.DeleteLevelTitle, T.Regions.DeleteLevelMessage(T.Enums.LevelType(level.Type), level.Triangles?.Count ?? 0),
+			async () => await DeleteLevel(data.region.Id, data.levelId));
 	}
 
 	private async Task DeleteLevel(Guid regionId, Guid levelId)
@@ -202,7 +203,7 @@ public partial class Regions : ComponentBase
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Regions/{regionId}/level/{levelId}");
-			ToastService.ShowSuccess("Level deleted successfully!");
+			ToastService.ShowSuccess(T.Regions.LevelDeleted);
 			await LoadRegions(false);
 
 			// Refresh the details modal if open
@@ -210,6 +211,6 @@ public partial class Regions : ComponentBase
 			{
 				_viewingRegion = _regions.FirstOrDefault(r => r.Id == regionId);
 			}
-		}, "Failed to delete level: ");
+		}, T.Regions.LevelDeleteFailed);
 	}
 }

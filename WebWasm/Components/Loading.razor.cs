@@ -3,7 +3,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class Loading : ComponentBase, IDisposable
+public partial class Loading : IDisposable
 {
 	[Inject] private LoadingService LoadingSvc { get; set; } = default!;
 

@@ -4,7 +4,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class EncryptionKeys : ComponentBase
+public partial class EncryptionKeys
 {
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private ToastService ToastService { get; set; } = default!;
@@ -27,26 +27,23 @@ public partial class EncryptionKeys : ComponentBase
 		{
 			var keys = await ApiClient.Get<EncryptionKeyInfo[]>("Admin/secure-data/encryption-keys");
 			_keys = [.. keys.OrderBy(k => k.Purpose).ThenByDescending(k => k.Version)];
-		}, "Failed to load encryption keys: ");
+		}, T.Keys.LoadFailed);
 	}
 
 	private bool HasActiveKey(EncryptionPurpose purpose) => _keys.Any(k => k.Purpose == purpose && k.IsActive);
 
+	private string ActiveKeyLabel(EncryptionPurpose purpose) =>
+		_keys.FirstOrDefault(k => k.Purpose == purpose && k.IsActive) is { } key ? T.Keys.ActiveVersion(key.Version) : T.Keys.NoActiveKey;
+
 	private async Task CreateKey(EncryptionPurpose purpose)
 	{
-		await LoadingService.ExecuteWithLoading(async () =>
+		var name = T.Enums.EncryptionPurpose(purpose);
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Admin/secure-data/encryption-key?purpose={purpose}");
-				ToastService.ShowSuccess($"{purpose} encryption key created successfully.");
-				await LoadKeys();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to create {purpose} key: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Admin/secure-data/encryption-key?purpose={purpose}");
+			ToastService.ShowSuccess(T.Keys.Created(name));
+			await LoadKeys();
+		}, reason => T.Keys.CreateFailed(name, reason));
 	}
 
 	private void OpenRotateDialog(EncryptionPurpose purpose)
@@ -63,46 +60,29 @@ public partial class EncryptionKeys : ComponentBase
 	private async Task ConfirmRotate(bool force)
 	{
 		var purpose = _rotateTargetPurpose;
+		var name = T.Enums.EncryptionPurpose(purpose);
 		_showRotateDialog = false;
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				await ApiClient.Post($"Admin/secure-data/encryption-key/rotate?purpose={purpose}&force={(force ? "true" : "false")}");
-				ToastService.ShowSuccess($"{purpose} encryption key rotated successfully. Existing data will be re-encrypted gradually in the background.");
-				await LoadKeys();
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Failed to rotate {purpose} key: {ex.Message}");
-			}
-		});
+			await ApiClient.Post($"Admin/secure-data/encryption-key/rotate?purpose={purpose}&force={(force ? "true" : "false")}");
+			ToastService.ShowSuccess(T.Keys.Rotated(name));
+			await LoadKeys();
+		}, reason => T.Keys.RotateFailed(name, reason));
 	}
 
 	private async Task RunBackfill()
 	{
 		_backfillRunning = true;
 
-		await LoadingService.ExecuteWithLoading(async () =>
+		// Run catches the failure itself, so the flag is always reset after it.
+		await LoadingService.Run(ToastService, async () =>
 		{
-			try
-			{
-				_lastBackfillResult = await ApiClient.Post<BackfillResult>("Admin/secure-data/backfill");
-				ToastService.ShowSuccess(
-					$"Backfill complete: {_lastBackfillResult.UsersProcessed} users, " +
-					$"{_lastBackfillResult.CompaniesProcessed} companies (info), " +
-					$"{_lastBackfillResult.CompanyRootProcessed} companies (root), " +
-					$"{_lastBackfillResult.VehiclesProcessed} vehicles.");
-			}
-			catch (Exception ex)
-			{
-				ToastService.ShowError($"Backfill failed: {ex.Message}");
-			}
-			finally
-			{
-				_backfillRunning = false;
-			}
-		});
+			var result = await ApiClient.Post<BackfillResult>("Admin/secure-data/backfill");
+			_lastBackfillResult = result;
+			ToastService.ShowSuccess(T.Keys.BackfillDone(result.UsersProcessed, result.CompaniesProcessed, result.CompanyRootProcessed, result.VehiclesProcessed));
+		}, T.Keys.BackfillFailed);
+
+		_backfillRunning = false;
 	}
 }

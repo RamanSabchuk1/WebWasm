@@ -1,20 +1,20 @@
 @page "/companies"
-@using WebWasm.Components
 
-<PageTitle>Companies</PageTitle>
+<AppTitle Text="@T.Shell.Companies" />
 
-<div class="page-header">
-	<h1>🏢 Companies</h1>
-	<p class="page-subtitle">Manage registered companies</p>
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>Company List</h3>
-		<button class="btn-primary" @onclick="OpenAddCompanyModal">+ Add Company</button>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Companies</h1>
+			<p class="page-subtitle">@T.Companies.Subtitle</p>
+		</div>
+		<button type="button" class="btn btn-primary" @onclick="OpenAddCompanyModal">
+			<Icon Name="IconName.Plus" />
+			@T.Companies.Add
+		</button>
 	</div>
-	<CompaniesTable
-					Companies="@_companies"
+
+	<CompaniesTable Companies="@_companies"
 					OnToggleActive="@HandleToggleActive"
 					OnEditCompany="@HandleEditCompany"
 					OnDeleteCompany="@HandleDeleteCompany"
@@ -27,7 +27,7 @@
 			  OnSubmit="@HandleCompanySubmit" />
 
 <SecurityLevelDialog IsOpen="_securityLevelTarget is not null"
-					 EntityLabel="@($"Company: {_securityLevelTarget?.Name}")"
+					 EntityLabel="@T.Security.CompanyLabel(_securityLevelTarget?.Name ?? string.Empty)"
 					 Endpoint="@($"admin/security-levels/companies/{_securityLevelTarget?.Id}")"
 					 OnClose="() => _securityLevelTarget = null"
 					 OnSaved="() => LoadCompanies(false)" />
@@ -35,7 +35,7 @@
 <ConfirmDialog IsOpen="_confirm.IsOpen"
 			   Title="@_confirm.Title"
 			   Message="@_confirm.Message"
-			   ConfirmText="Confirm"
-			   CancelText="Cancel"
+			   ConfirmText="@_confirmText"
+			   IsDangerous="@_confirmDangerous"
 			   OnConfirm="_confirm.Confirm"
 			   OnCancel="_confirm.Cancel" />

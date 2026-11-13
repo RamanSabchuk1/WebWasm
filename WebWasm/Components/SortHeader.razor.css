@@ -1,0 +1,24 @@
+.sort-header {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+	.sort-header ::deep .icon {
+		opacity: 0.45;
+	}
+
+	.sort-header.is-sorted {
+		color: var(--text);
+	}
+
+		.sort-header.is-sorted ::deep .icon {
+			opacity: 1;
+		}

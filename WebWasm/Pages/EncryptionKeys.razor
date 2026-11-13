@@ -1,126 +1,151 @@
 @page "/encryption-keys"
-@using WebWasm.Components
-@using WebWasm.Models
 
-<PageTitle>Encryption Keys</PageTitle>
+<AppTitle Text="@T.Shell.EncryptionKeys" />
 
-<div class="page-header">
-	<h1>🔑 Encryption Keys</h1>
-	<p class="page-subtitle">Manage secure-data encryption key metadata (no key material is ever shown)</p>
-</div>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.EncryptionKeys</h1>
+			<p class="page-subtitle">@T.Keys.Subtitle</p>
+		</div>
+	</div>
 
-<div class="content-card">
-	<div class="card-header">
-		<h3>Secure-Data Backfill</h3>
-		<div class="header-actions">
-			<button class="btn-primary" @onclick="RunBackfill" disabled="@_backfillRunning">
-				@(_backfillRunning ? "Running…" : "▶ Run Backfill")
+	<div class="card">
+		<div class="card-header">
+			<h2 class="card-title">@T.Keys.BackfillTitle</h2>
+			<button type="button" class="btn" @onclick="RunBackfill" disabled="@_backfillRunning">
+				@if (_backfillRunning)
+				{
+					<span class="spinner" role="status"></span>
+					@T.Keys.BackfillRunning
+				}
+				else
+				{
+					<Icon Name="IconName.Lock" />
+					@T.Keys.RunBackfill
+				}
 			</button>
 		</div>
-	</div>
-	<p class="page-subtitle" style="margin: 0 0 0.5rem;">
-		Идемпотентный перенос plaintext → зашифрованный контейнер для существующих записей
-		(User/Company/Vehicle). Безопасно запускать повторно — уже перенесённые поля пропускаются.
-		Эта карточка временная: будет удалена вместе со старой backfill-логикой в следующих миграциях.
-	</p>
-	@if (_lastBackfillResult is not null)
-	{
-		<div style="overflow-x: auto;">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Users</th>
-						<th>Companies (CompanyInfo)</th>
-						<th>Companies (root: rebate/location)</th>
-						<th>Vehicles</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>@_lastBackfillResult.UsersProcessed</td>
-						<td>@_lastBackfillResult.CompaniesProcessed</td>
-						<td>@_lastBackfillResult.CompanyRootProcessed</td>
-						<td>@_lastBackfillResult.VehiclesProcessed</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	}
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>Data</h3>
-		<div class="header-actions">
-			<button class="btn-primary" @onclick="() => CreateKey(EncryptionPurpose.Data)" disabled="@HasActiveKey(EncryptionPurpose.Data)">+ Create Key</button>
-			<button class="btn-secondary" @onclick="() => OpenRotateDialog(EncryptionPurpose.Data)" disabled="@(!HasActiveKey(EncryptionPurpose.Data))">🔄 Rotate</button>
-		</div>
-	</div>
-
-	<div class="card-header">
-		<h3>Blind Index</h3>
-		<div class="header-actions">
-			<button class="btn-primary" @onclick="() => CreateKey(EncryptionPurpose.BlindIndex)" disabled="@HasActiveKey(EncryptionPurpose.BlindIndex)">+ Create Key</button>
-			<button class="btn-secondary" disabled title="Rotation isn't supported for Blind Index keys — it would break unique lookups (e.g. mobile phone uniqueness).">🔄 Rotate</button>
-		</div>
-	</div>
-
-	@if (_keys.Count == 0)
-	{
-		<div class="empty-state">
-			<p>No encryption keys yet. Use "Create Key" above to bootstrap the first key for a purpose.</p>
-		</div>
-	}
-	else
-	{
-		<div style="overflow-x: auto;">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Purpose</th>
-						<th>Version</th>
-						<th>Status</th>
-						<th>Created</th>
-						<th>Fully Migrated</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var key in _keys)
-					{
+		<p class="muted">@T.Keys.BackfillDescription</p>
+		@if (_lastBackfillResult is not null)
+		{
+			<div class="table-wrap backfill-result">
+				<table>
+					<thead>
 						<tr>
-							<td>@key.Purpose</td>
-							<td>@key.Version</td>
-							<td>
-								@if (key.IsActive)
-								{
-									<span class="status-badge active">Active</span>
-								}
-								else
-								{
-									<span class="status-badge inactive">Retired</span>
-								}
-							</td>
-							<td>@key.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-							<td>
-								@if (key.FullyMigratedAt is not null)
-								{
-									@key.FullyMigratedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-								}
-								else if (key.IsActive)
-								{
-									<span>—</span>
-								}
-								else
-								{
-									<span class="status-badge inactive">Migrating…</span>
-								}
-							</td>
+							<th class="num">@T.Shell.Users</th>
+							<th class="num">@T.Keys.CompaniesInfo</th>
+							<th class="num">@T.Keys.CompaniesRoot</th>
+							<th class="num">@T.Shell.Vehicles</th>
 						</tr>
-					}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						<tr>
+							<td class="num">@_lastBackfillResult.UsersProcessed</td>
+							<td class="num">@_lastBackfillResult.CompaniesProcessed</td>
+							<td class="num">@_lastBackfillResult.CompanyRootProcessed</td>
+							<td class="num">@_lastBackfillResult.VehiclesProcessed</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		}
+	</div>
+
+	<div class="card">
+		<div class="card-header">
+			<h2 class="card-title">@T.Keys.KeysTitle</h2>
 		</div>
-	}
+
+		<div class="purposes">
+			<div class="purpose">
+				<div class="purpose-main">
+					<span class="strong">@T.Enums.EncryptionPurpose(EncryptionPurpose.Data)</span>
+					<span class="caption">@ActiveKeyLabel(EncryptionPurpose.Data)</span>
+				</div>
+				<div class="cluster">
+					<button type="button" class="btn btn-sm" @onclick="() => CreateKey(EncryptionPurpose.Data)" disabled="@HasActiveKey(EncryptionPurpose.Data)">
+						<Icon Name="IconName.Plus" />
+						@T.Keys.CreateKey
+					</button>
+					<button type="button" class="btn btn-sm" @onclick="() => OpenRotateDialog(EncryptionPurpose.Data)" disabled="@(!HasActiveKey(EncryptionPurpose.Data))">
+						<Icon Name="IconName.Rotate" />
+						@T.Keys.RotateKey
+					</button>
+				</div>
+			</div>
+
+			<div class="purpose">
+				<div class="purpose-main">
+					<span class="strong">@T.Enums.EncryptionPurpose(EncryptionPurpose.BlindIndex)</span>
+					<span class="caption">@ActiveKeyLabel(EncryptionPurpose.BlindIndex)</span>
+					<span class="hint">@T.Keys.BlindIndexRotateHint</span>
+				</div>
+				<div class="cluster">
+					<button type="button" class="btn btn-sm" @onclick="() => CreateKey(EncryptionPurpose.BlindIndex)" disabled="@HasActiveKey(EncryptionPurpose.BlindIndex)">
+						<Icon Name="IconName.Plus" />
+						@T.Keys.CreateKey
+					</button>
+					<button type="button" class="btn btn-sm" disabled>
+						<Icon Name="IconName.Rotate" />
+						@T.Keys.RotateKey
+					</button>
+				</div>
+			</div>
+		</div>
+
+		@if (_keys.Count == 0)
+		{
+			<div class="empty">
+				<Icon Name="IconName.Keys" />
+				<p class="empty-title">@T.Keys.Empty</p>
+				<p class="empty-hint">@T.Keys.EmptyHint</p>
+			</div>
+		}
+		else
+		{
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>@T.Keys.Purpose</th>
+							<th class="num">@T.Keys.Version</th>
+							<th>@T.Common.Status</th>
+							<th>@T.Common.Created</th>
+							<th>@T.Keys.FullyMigrated</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var key in _keys)
+						{
+							<tr @key="key.Id">
+								<td>@T.Enums.EncryptionPurpose(key.Purpose)</td>
+								<td class="num">@key.Version</td>
+								<td>
+									<span class="@StatusTone.Of(key.IsActive).Badge()">@(key.IsActive ? T.Common.Active : T.Keys.Retired)</span>
+								</td>
+								<td class="tabular nowrap">@T.FormatDateTime(key.CreatedAt.ToLocalTime())</td>
+								<td class="tabular nowrap">
+									@if (key.FullyMigratedAt is { } migratedAt)
+									{
+										@T.FormatDateTime(migratedAt.ToLocalTime())
+									}
+									else if (key.IsActive)
+									{
+										<span class="muted">@Texts.Dash</span>
+									}
+									else
+									{
+										<span class="@Tone.Info.Badge()">@T.Keys.Migrating</span>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</div>
 </div>
 
 <RotateKeyDialog IsOpen="@_showRotateDialog"

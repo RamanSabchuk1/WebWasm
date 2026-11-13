@@ -1,146 +1,72 @@
 @page "/logs"
-@using WebWasm.Models
 
-<PageTitle>Logs</PageTitle>
+<AppTitle Text="@T.Shell.Logs" />
 
-<div class="content-card">
-	<div class="card-header">
-		<h3>System Logs</h3>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Logs</h1>
+			<p class="page-subtitle">@T.Logs.Subtitle</p>
+		</div>
 	</div>
-	<div style="overflow-x: auto;">
-		<table class="table logs-table">
-			<thead>
-				<tr>
-					<th style="width: 120px;">Time</th>
-					<th>Message</th>
-					<th style="width: 80px;">Tpl</th>
-				</tr>
-			</thead>
-			<tbody>
-				@foreach (var item in _logItems)
-				{
-					<tr class="@GetRowClass(item.Log.Level) @(HasException(item.Log) ? "expandable" : "")"
-						@onclick="() => ToggleExpand(item)">
-						<td style="white-space: nowrap;">
-							<span class="badg-level">@item.Log.Level[0]</span>
-							@item.Log.TimeStamp.ToLocalTime().ToString("MM/dd HH:mm")
-						</td>
-						<td>
-							@item.Log.Message
-						</td>
-						<td title="@item.Log.MessageTemplate" @onclick:stopPropagation>
-							<button class="btn-copy" @onclick="() => CopyToClipboard(item.Log.MessageTemplate)">📋</button>
-						</td>
-					</tr>
-					@if (item.IsExpanded && HasException(item.Log))
-					{
+
+	<div class="card">
+		@if (_logItems.Count > 0)
+		{
+			<div class="table-wrap">
+				<table>
+					<thead>
 						<tr>
-							<td colspan="3">
-								<div class="exception-details" @onclick:stopPropagation>
-									<pre>@item.Log.Exception</pre>
-								</div>
-							</td>
+							<th>@T.Logs.Time</th>
+							<th>@T.Logs.Level</th>
+							<th>@T.Logs.Message</th>
+							<th><span class="visually-hidden">@T.Common.Actions</span></th>
 						</tr>
-					}
-				}
-			</tbody>
-		</table>
+					</thead>
+					<tbody>
+						@foreach (var item in _logItems)
+						{
+							var hasException = HasException(item.Log);
+							<tr class="@(hasException ? "expandable" : null)" @onclick="() => ToggleExpand(item)" @key="item">
+								<td class="tabular nowrap">@T.FormatDateTime(item.Log.TimeStamp.ToLocalTime())</td>
+								<td><span class="@StatusTone.OfLogLevel(item.Log.Level).Badge()">@item.Log.Level</span></td>
+								<td class="message">@item.Log.Message</td>
+								<td class="row-actions" title="@item.Log.MessageTemplate" @onclick:stopPropagation>
+									<div class="cluster">
+										@if (hasException)
+										{
+											var label = item.IsExpanded ? T.Logs.HideException : T.Logs.ShowException;
+											<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="() => ToggleExpand(item)"
+													title="@label" aria-label="@label" aria-expanded="@Aria.State(item.IsExpanded)">
+												<Icon Name="@(item.IsExpanded ? IconName.ChevronUp : IconName.ChevronDown)" />
+											</button>
+										}
+										<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="() => CopyToClipboard(item.Log.MessageTemplate)"
+												title="@T.Logs.CopyTemplate" aria-label="@T.Logs.CopyTemplate">
+											<Icon Name="IconName.Copy" />
+										</button>
+									</div>
+								</td>
+							</tr>
+							@if (item.IsExpanded && hasException)
+							{
+								<tr class="exception-row" @key="(item, true)">
+									<td colspan="4">
+										<pre class="exception">@item.Log.Exception</pre>
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		else
+		{
+			<div class="empty">
+				<Icon Name="IconName.Logs" />
+				<p class="empty-title">@T.Logs.Empty</p>
+			</div>
+		}
 	</div>
 </div>
-
-<style>
-	.logs-table {
-		border-collapse: separate;
-		border-spacing: 0;
-	}
-
-		.logs-table tr {
-			transition: all 0.2s;
-		}
-
-	.log-row-error td:nth-child(1) {
-		border-left: 4px solid #dc3545;
-	}
-
-	.log-row-error td {
-		background-color: rgba(220, 53, 69, 0.1);
-	}
-
-	.log-row-warning td:nth-child(1) {
-		border-left: 4px solid #ffc107;
-	}
-
-	.log-row-warning td {
-		background-color: rgba(255, 193, 7, 0.1);
-	}
-
-	.log-row-info td:nth-child(1) {
-		border-left: 4px solid #0dcaf0;
-	}
-
-	.log-row-info td {
-		background-color: white;
-	}
-
-	.expandable {
-		cursor: pointer;
-	}
-
-		.expandable td {
-			border-top: 1px solid black;
-			border-bottom: 1px solid black !important;
-		}
-
-		.expandable:hover {
-			background-color: rgba(0,0,0,0.02);
-		}
-
-	.exception-details {
-		margin-top: 10px;
-		padding: 10px;
-		background: #1e1e1e;
-		color: #d4d4d4;
-		border-radius: 6px;
-		font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-		font-size: 0.9em;
-		overflow-x: auto;
-		white-space: pre-wrap;
-	}
-
-		.exception-details pre {
-			margin: 0;
-		}
-
-	.btn-copy {
-		background: none;
-		border: none;
-		cursor: pointer;
-		font-size: 1.1em;
-		opacity: 0.7;
-		padding: 4px;
-		transition: opacity 0.2s;
-	}
-
-		.btn-copy:hover {
-			opacity: 1;
-		}
-
-	.badg-level {
-		display: inline-block;
-		width: 18px;
-		height: 18px;
-		line-height: 18px;
-		text-align: center;
-		border-radius: 4px;
-		font-size: 0.75em;
-		font-weight: bold;
-		margin-right: 6px;
-		background: rgba(0,0,0,0.1);
-	}
-
-	@@media (max-width: 480px) {
-		.exception-details {
-			font-size: 0.6em;
-		}
-	}
-</style>

@@ -8,7 +8,7 @@ namespace WebWasm.Components;
 /// Views and changes the data security level of one entity. Loads the current level from <see cref="Endpoint"/>
 /// when opened and saves it back there; the page only says whose level it is and reloads on <see cref="OnSaved"/>.
 /// </summary>
-public partial class SecurityLevelDialog : ComponentBase
+public partial class SecurityLevelDialog
 {
 	private static readonly DataSecurityLevel[] _levels = Enum.GetValues<DataSecurityLevel>();
 
@@ -47,7 +47,7 @@ public partial class SecurityLevelDialog : ComponentBase
 			var response = await ApiClient.Get<SecurityLevelRequest>(Endpoint);
 			_currentLevel = _selectedLevel = response.Level;
 			_loaded = true;
-		}, "Failed to load security level: ");
+		}, T.Security.LoadFailed);
 
 		if (!_loaded)
 		{
@@ -76,23 +76,12 @@ public partial class SecurityLevelDialog : ComponentBase
 		{
 			await ApiClient.Put(endpoint, new SecurityLevelRequest(newLevel));
 			await OnSaved.InvokeAsync();
-			ToastService.ShowSuccess("Security level updated successfully");
-		}, "Failed to update security level: ");
+			ToastService.ShowSuccess(T.Security.Saved);
+		}, T.Security.SaveFailed);
 	}
 
 	private async Task CloseModal()
 	{
 		await OnClose.InvokeAsync();
 	}
-
-	private static string GetDescription(DataSecurityLevel level) => level switch
-	{
-		DataSecurityLevel.Public => "Public data — no restrictions.",
-		DataSecurityLevel.Internal => "Internal company data (e.g. corporate email).",
-		DataSecurityLevel.CompanyOperational => "Company operational data (e.g. mobile phone, registration number).",
-		DataSecurityLevel.Restricted => "Restricted access (e.g. address, UNP, BIC).",
-		DataSecurityLevel.Sensitive => "Sensitive data — passport fields, bank number.",
-		DataSecurityLevel.SystemOnly => "System-only access — reserved.",
-		_ => string.Empty
-	};
 }

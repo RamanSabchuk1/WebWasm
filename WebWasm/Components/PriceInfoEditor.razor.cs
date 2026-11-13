@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Components;
+using WebWasm.Localization;
 using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class PriceInfoEditor : ComponentBase
+public partial class PriceInfoEditor
 {
 	[Parameter] public Dictionary<uint, PriceInfo>? ExistingPrices { get; set; }
 
@@ -19,23 +20,23 @@ public partial class PriceInfoEditor : ComponentBase
 		public decimal MaxPrice { get; set; }
 		public string Error { get; set; } = string.Empty;
 
-		public bool IsValid()
+		public bool IsValid(RegionsTexts texts)
 		{
 			if (Key == 0)
 			{
-				Error = "Key cannot be 0";
+				Error = texts.WeightZero;
 				return false;
 			}
 
 			if (MinPrice < 0 || MaxPrice < 0)
 			{
-				Error = "All prices must be >= 0";
+				Error = texts.NegativePrice;
 				return false;
 			}
 
 			if (MinPrice > MaxPrice && MaxPrice > 0)
 			{
-				Error = "Min Price cannot exceed Max Price";
+				Error = texts.MinAboveMax;
 				return false;
 			}
 
@@ -131,21 +132,21 @@ public partial class PriceInfoEditor : ComponentBase
 
 			if (_entries.Count == 0)
 			{
-				_globalError = "At least one price entry is required";
+				_globalError = T.Regions.NeedOnePrice;
 				return false;
 			}
 
 			var keys = new HashSet<uint>();
 			foreach (var entry in _entries)
 			{
-				if (!entry.IsValid())
+				if (!entry.IsValid(T.Regions))
 				{
 					return false;
 				}
 
 				if (keys.Contains(entry.Key))
 				{
-					_globalError = "Duplicate keys are not allowed";
+					_globalError = T.Regions.DuplicateWeight;
 					return false;
 				}
 				keys.Add(entry.Key);

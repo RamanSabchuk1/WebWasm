@@ -3,7 +3,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class RotateKeyDialog : ComponentBase
+public partial class RotateKeyDialog
 {
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public EncryptionPurpose Purpose { get; set; }

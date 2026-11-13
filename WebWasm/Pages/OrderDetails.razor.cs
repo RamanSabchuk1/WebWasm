@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using WebWasm.Components;
 using WebWasm.Helpers;
+using WebWasm.Localization;
 using WebWasm.Models;
 using WebWasm.Services;
 
@@ -23,7 +24,6 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private (Company, Driver)[] _driversWithCompany = [];
 	private readonly Dictionary<double, Guid> _selectedDriverIds = [];
 	private bool _userDetailsOpen;
-	private string _userDetailsButtonName = "Show Details";
 
 	private Driver? _driverInfo;
 
@@ -31,8 +31,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private OrderStatus _newStatus;
 	private string _newState = string.Empty;
 
-	// Confirmation Dialog
+	// Confirmation Dialog: the action verb and its danger differ per question.
 	private readonly ConfirmState _confirm = new();
+	private string? _confirmText;
+	private bool _confirmDangerous = true;
 
 	// S5.2: SA-правка цены (S4.2) и PreferredDeliveryTime (S4.3)
 	private bool _showPriceEdit;
@@ -50,6 +52,8 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	private bool _showTimeEdit;
 	private DateTime _editPreferredDeliveryTime;
 	private string? _timeEditError;
+
+	private string TabTitle => _order is null ? T.Orders.Order : T.Orders.OrderTitle(_order.Name);
 
 	private void OpenPriceEdit()
 	{
@@ -81,7 +85,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	{
 		if (_editMaterialCost < 0m || _editCommission < 0m || _editDeliveryCost < 0m)
 		{
-			_priceEditError = "Values cannot be negative.";
+			_priceEditError = T.Orders.NegativeValues;
 			return;
 		}
 
@@ -92,7 +96,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		}
 		catch (Exception ex)
 		{
-			_priceEditError = ex.Message;
+			_priceEditError = T.Orders.PreviewFailed(ex.Message);
 		}
 	}
 
@@ -100,19 +104,19 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 	{
 		if (_editMaterialCost is null && _editCommission is null && _editDeliveryCost is null)
 		{
-			_priceEditError = "At least one of Material Cost / Commission / Deliveries Total must be set.";
+			_priceEditError = T.Orders.NothingToSave;
 			return;
 		}
 
 		if (_editMaterialCost < 0m || _editCommission < 0m || _editDeliveryCost < 0m)
 		{
-			_priceEditError = "Values cannot be negative.";
+			_priceEditError = T.Orders.NegativeValues;
 			return;
 		}
 
 		if (_editDeliveryCost is not null && _deliveryCount == 0)
 		{
-			_priceEditError = "Order has no deliveries, Deliveries Total cannot be applied.";
+			_priceEditError = T.Orders.NoDeliveriesToApply;
 			return;
 		}
 
@@ -121,7 +125,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			try
 			{
 				await apiClient.Put($"admin/orders/{Id}/calculation", PriceEditRequest());
-				toastService.ShowSuccess("Order price updated (audit logged).");
+				toastService.ShowSuccess(T.Orders.PriceUpdated);
 				_showPriceEdit = false;
 				cashService.Invalidate<Order>();
 				// Кэш CalculationInfo (TTL 7 мин) — принудительно свежая выборка после правки.
@@ -130,7 +134,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			}
 			catch (Exception ex)
 			{
-				_priceEditError = ex.Message;
+				_priceEditError = T.Orders.PriceSaveFailed(ex.Message);
 			}
 		});
 	}
@@ -156,7 +160,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			try
 			{
 				await apiClient.Put($"admin/orders/{Id}/preferred-delivery-time", new SetPreferredDeliveryTimeRequest(_editPreferredDeliveryTime));
-				toastService.ShowSuccess("Preferred delivery time updated.");
+				toastService.ShowSuccess(T.Orders.TimeUpdated);
 				_showTimeEdit = false;
 				// Слоты водителей изменились на backend (restore+reserve): их кэш устарел.
 				cashService.Invalidate<Order>();
@@ -166,7 +170,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			catch (Exception ex)
 			{
 				// 409 от backend (нет слота у назначенного водителя) — текст приходит в теле ответа.
-				_timeEditError = ex.Message;
+				_timeEditError = T.Orders.TimeSaveFailed(ex.Message);
 			}
 		});
 	}
@@ -186,7 +190,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 				_order = await apiClient.Get<Order>($"Orders/{Id}");
 				if (_order is null)
 				{
-					toastService.ShowError("Order NotFound");
+					toastService.ShowError(T.Orders.NotFound);
 					return;
 				}
 
@@ -196,7 +200,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 			}
 			catch (Exception ex)
 			{
-				toastService.ShowError($"Error loading order: {ex.Message}");
+				toastService.ShowError(T.Orders.LoadFailed(ex.Message));
 			}
 		});
 	}
@@ -233,7 +237,7 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		}
 		catch (Exception ex)
 		{
-			toastService.ShowError($"Slot settings not loaded, defaults used: {ex.Message}");
+			toastService.ShowError(T.Orders.SlotSettingsFailed(ex.Message));
 			return SlotTimeParams.Default;
 		}
 	}
@@ -244,9 +248,16 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		_driverSlots = await cashService.GetSlots(drivers, users, companies, useCash: false);
 	}
 
+	private void Ask(string title, string message, string confirmText, bool dangerous, Func<Task> action)
+	{
+		_confirmText = confirmText;
+		_confirmDangerous = dangerous;
+		_confirm.Ask(title, message, action);
+	}
+
 	private void RequestResetPayments()
 	{
-		_confirm.Ask("Reset Payments", "Are you sure you want to reset all payments for this order? This action cannot be undone.", ResetPayments);
+		Ask(T.Orders.ResetPaymentsTitle, T.Orders.ResetPaymentsMessage, T.Orders.ResetPayments, dangerous: true, ResetPayments);
 	}
 
 	private async Task ResetPayments()
@@ -254,10 +265,10 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		await loadingService.Run(toastService, async () =>
 		{
 			await apiClient.Post($"Orders/{Id}/payments/reset");
-			toastService.ShowSuccess("Payments reset successfully");
+			toastService.ShowSuccess(T.Orders.PaymentsReset);
 			cashService.Invalidate<Order>();
 			await LoadOrder(); // Refresh
-		}, "Error resetting payments: ");
+		}, T.Orders.ResetPaymentsFailed);
 	}
 
 	private void RequestAcceptDelivery(double weight)
@@ -267,17 +278,18 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		var companyId = _driversWithCompany.CompanyOf(selectedDriverId)?.Id ?? Guid.Empty;
 		if (selectedDriverId == Guid.Empty)
 		{
-			toastService.ShowError("Please select a driver.");
+			toastService.ShowError(T.Orders.SelectDriver);
 			return;
 		}
 
 		if (companyId == Guid.Empty)
 		{
-			toastService.ShowError("Please select a company.");
+			toastService.ShowError(T.Orders.DriverWithoutCompany);
 			return;
 		}
 
-		_confirm.Ask("Accept Delivery", $"Are you sure you want to assign this delivery with weight {weight} to the selected driver?", async () => await AcceptDelivery(weight, companyId, selectedDriverId));
+		Ask(T.Orders.AssignTitle, T.Orders.AssignMessage(FormatWeight(weight)), T.Orders.Assign, dangerous: false,
+			async () => await AcceptDelivery(weight, companyId, selectedDriverId));
 	}
 
 	private async Task AcceptDelivery(double weight, Guid companyId, Guid driverId)
@@ -285,19 +297,19 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		await loadingService.Run(toastService, async () =>
 		{
 			await apiClient.Post($"Orders/{Id}/accept?companyId={companyId}&weight={weight}&driverId={driverId}");
-			toastService.ShowSuccess("Delivery accepted successfully");
+			toastService.ShowSuccess(T.Orders.DriverAssigned);
 			_selectedDriverIds.Remove(weight);
 			// Принятие вырезает окно из слотов водителя и меняет цену заказа (цена перевозчика).
 			cashService.Invalidate<Order>();
 			_allCalculationInfo = await cashService.GetData<CalculationInfo>(useCash: false);
 			await RefreshSlots();
 			await LoadOrder();
-		}, "Error accepting delivery: ");
+		}, T.Orders.AssignFailed);
 	}
 
 	private void RequestUpdateStatus()
 	{
-		_confirm.Ask("Update Status", $"Are you sure you want to update the status to {_newStatus}?", UpdateStatus);
+		Ask(T.Orders.UpdateStatusTitle, T.Orders.UpdateStatusMessage(T.Enums.OrderStatus(_newStatus)), T.Orders.UpdateStatus, dangerous: false, UpdateStatus);
 	}
 
 	private async Task UpdateStatus()
@@ -305,41 +317,33 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		await loadingService.Run(toastService, async () =>
 		{
 			await apiClient.Post($"Orders/{Id}/status?status={_newStatus}&state={Uri.EscapeDataString(_newState)}");
-			toastService.ShowSuccess("Status updated successfully");
+			toastService.ShowSuccess(T.Orders.StatusUpdated);
 			cashService.Invalidate<Order>();
 			await LoadOrder();
-		}, "Error updating status: ");
+		}, T.Orders.StatusUpdateFailed);
 	}
 
-	private string GetAdminState()
+	/// <summary>What the current status means for the admin; urgent when the order needs action right now.</summary>
+	private (string Text, bool Urgent) StatusHint()
 	{
 		if (_order is null)
 		{
-			return string.Empty;
+			return (string.Empty, false);
 		}
 
-		return _order.Status switch
+		var deliveryToday = _order.PreferredDeliveryTime.Date == DateTime.Now.Date;
+		var waitingLong = _order.Created < DateTime.Now.AddHours(-2);
+		var urgent = _order.Status switch
 		{
-			OrderStatus.Draft => "Заказ почемуто в мусорном статусе 🗑️",
-			OrderStatus.WaitingApprove => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ПРИНЯТ похоже это мусор" : _order.Created < DateTime.Now.AddHours(-2) ? "Заказ всё еще не принимают 🧲" : "Новый заказ создан ✒️",
-			OrderStatus.PaymentPending => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? "⚠️ Заказ нужно выполнить уже сегодня а он еще не ОПЛАЧЕН похоже это мусор" : "Заказ всё еще не оплачен 💸",
-			OrderStatus.Active => _order.PreferredDeliveryTime.Date == DateTime.Now.Date ? " Сегодня выполнение заказа 📦" : " Active order 📝",
-			OrderStatus.Weighted => "Заказ взвешен ⚖️ осталось довезти и завершить 🚛",
-			OrderStatus.Completed => "Считаем наши денюзки 🤑, не забываем оплатить Перевозчикам/Поставщикам",
-			OrderStatus.CorruptedPayment => "💀 надо чтото сделать с этим ⏰",
-			OrderStatus.Cancelled => "Увы но отмена 😢",
-			OrderStatus.Archived => "Уже и не вспомнить что с ним было 😅",
-			OrderStatus.Deleted => "👷 уже нет",
-			OrderStatus.PaymentInProgress => "📣 обрабатываем платёж надеюсь всё ок 🤞 статус поменяется быстро",
-			_ => "There is no state 🗽"
+			OrderStatus.WaitingApprove or OrderStatus.PaymentPending => deliveryToday,
+			OrderStatus.CorruptedPayment => true,
+			_ => false,
 		};
+
+		return (T.Orders.StatusHint(_order.Status, deliveryToday, waitingLong), urgent);
 	}
 
-	private void ShowUserDetails()
-	{
-		_userDetailsOpen = !_userDetailsOpen;
-		_userDetailsButtonName = _userDetailsOpen ? "Hide Details" : "Show Details";
-	}
+	private void ToggleUserDetails() => _userDetailsOpen = !_userDetailsOpen;
 
 	private void SetDriverToView(Guid? driverId)
 	{
@@ -375,4 +379,24 @@ public partial class OrderDetails(ApiClient apiClient, CashService cashService, 
 		return key.FormatJsonKey();
 	}
 
+	/// <summary>Weight as it comes from the API; decimals only when the value has them.</summary>
+	private string FormatWeight(double value) => T.FormatNumber(value, value % 1 == 0 ? 0 : 2);
+
+	/// <summary>Delivery weight in kilograms shown in tonnes: 20 т, 7,5 т.</summary>
+	private string Tonnes(uint kilograms) => T.Orders.Tonnes(Trimmed(kilograms / 1000m));
+
+	// D-po-21/25: VAT of material + deliveries + commission; null parts = order created before the split.
+	private static decimal TotalVat(CalculationInfo info) =>
+		(info.MaterialVatAmount ?? 0) + info.DeliveryInfo.Sum(x => x.VatAmount) + (info.CommissionVatAmount ?? 0);
+
+	private string Percent(decimal value) => T.FormatPercent(value, Decimals(value));
+
+	private string Trimmed(decimal value) => T.FormatNumber(value, Decimals(value));
+
+	private static int Decimals(decimal value) => value % 1 == 0 ? 0 : value * 10 % 1 == 0 ? 1 : 2;
+
+	private static string FullName(UserInfo? userInfo) =>
+		OrDash(userInfo is null ? null : string.Join(' ', new[] { userInfo.FirstName, userInfo.MiddleName, userInfo.LastName }.Where(n => !string.IsNullOrWhiteSpace(n))));
+
+	private static string OrDash(string? value) => string.IsNullOrWhiteSpace(value) ? Texts.Dash : value;
 }

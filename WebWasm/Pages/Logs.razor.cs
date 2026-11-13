@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using WebWasm.Helpers;
 using WebWasm.Models;
 using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Logs : ComponentBase
+public partial class Logs
 {
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
 	[Inject] private LoadingService LoadingService { get; set; } = default!;
@@ -22,13 +23,6 @@ public partial class Logs : ComponentBase
 
 	private static bool HasException(Log log) => !string.IsNullOrEmpty(log.Exception);
 
-	private static string GetRowClass(string level) => level?.ToLower() switch
-	{
-		"error" or "fatal" => "log-row-error",
-		"warning" => "log-row-warning",
-		_ => "log-row-info"
-	};
-
 	private static void ToggleExpand(LogItem item)
 	{
 		if (HasException(item.Log))
@@ -37,7 +31,7 @@ public partial class Logs : ComponentBase
 		}
 	}
 
-	private Task CopyToClipboard(string text) => JSRuntime.CopyToClipboard(ToastService, text, "Template copied");
+	private Task CopyToClipboard(string text) => JSRuntime.CopyToClipboard(ToastService, text, T.Common.Copied, T.Common.CopyFailed);
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -45,7 +39,7 @@ public partial class Logs : ComponentBase
 		{
 			var logs = await ApiClient.Get<Log[]>("Counts/logs");
 			_logItems = [.. logs.Select(l => new LogItem { Log = l })];
-			ToastService.ShowSuccess("Logs loaded successfully");
-		}, "Failed to load logs: ");
+			ToastService.ShowSuccess(T.Logs.Loaded);
+		}, T.Logs.LoadFailed);
 	}
 }

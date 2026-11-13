@@ -1,487 +1,580 @@
 @page "/orders/{Id:guid}"
-@using WebWasm.Models
-@using WebWasm.Components
 
-<PageTitle>Order Details</PageTitle>
+<AppTitle Text="@TabTitle" />
 
 <ConfirmDialog IsOpen="_confirm.IsOpen"
 			   Title="@_confirm.Title"
 			   Message="@_confirm.Message"
+			   ConfirmText="@_confirmText"
+			   IsDangerous="_confirmDangerous"
 			   OnConfirm="_confirm.Confirm"
 			   OnCancel="_confirm.Cancel" />
 
 @* S5.2: SA-правка цены заказа (S4.2) — audit пишется на backend (pricingAudit) *@
-<ModalShell IsOpen="@_showPriceEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@ClosePriceEdit" OnSubmit="SubmitPriceEdit">
-	<div class="confirm-header">
-		<h2>Edit Order Price</h2>
-		<button class="btn-close" @onclick="ClosePriceEdit">×</button>
-	</div>
-	<div class="confirm-body">
-		<div class="form-group">
-			<label>Material Cost (BYN)</label>
-			<input type="number" min="0" step="0.01" @bind="_editMaterialCost" @bind:after="RefreshPricePreview" />
+<ModalShell IsOpen="@_showPriceEdit" TopLayer="true" Title="@T.Orders.PriceEditTitle" OnClose="@ClosePriceEdit" OnSubmit="SubmitPriceEdit">
+	<ChildContent>
+		<div class="form-grid">
+			<div class="field">
+				<label for="price-material">@T.Orders.MaterialCost</label>
+				<input id="price-material" type="number" min="0" step="0.01" @bind="_editMaterialCost" @bind:after="RefreshPricePreview" />
+			</div>
+			<div class="field">
+				<label for="price-commission">@T.Orders.CommissionBYN</label>
+				<input id="price-commission" type="number" min="0" step="0.01" @bind="_editCommission" @bind:after="RefreshPricePreview" />
+			</div>
+			@* S5: суммарная стоимость доставок — бэкенд распределит её пропорционально по доставкам *@
+			<div class="field span-all">
+				<label for="price-deliveries">@T.Orders.DeliveriesTotalBYN</label>
+				<input id="price-deliveries" type="number" min="0" step="0.01" @bind="_editDeliveryCost" @bind:after="RefreshPricePreview" disabled="@(_deliveryCount == 0)" />
+				@if (_deliveryCount == 0)
+				{
+					<span class="hint">@T.Orders.NoDeliveriesHint</span>
+				}
+				else if (_deliveryCount > 1)
+				{
+					<span class="hint">@T.Orders.SplitHint(_deliveryCount)</span>
+				}
+			</div>
 		</div>
-		<div class="form-group">
-			<label>Commission (BYN)</label>
-			<input type="number" min="0" step="0.01" @bind="_editCommission" @bind:after="RefreshPricePreview" />
-		</div>
-		@* S5: суммарная стоимость доставок — бэкенд распределит её пропорционально по доставкам *@
-		<div class="form-group">
-			<label>Deliveries Total (BYN, с НДС)</label>
-			<input type="number" min="0" step="0.01" @bind="_editDeliveryCost" @bind:after="RefreshPricePreview" disabled="@(_deliveryCount == 0)" />
-			@if (_deliveryCount == 0)
-			{
-				<p class="field-hint">У заказа нет доставок — стоимость доставки менять нельзя.</p>
-			}
-			else if (_deliveryCount > 1)
-			{
-				<p class="field-hint">Сумма распределится между @_deliveryCount доставками пропорционально текущим ценам.</p>
-			}
-		</div>
-		<p class="page-subtitle">Все суммы — итоги с НДС и Fee. Netto и НДС пересчитаются на сервере по формуле заказа; ниже — ровно то, что сохранится. Каждая правка пишется в audit-лог.</p>
+		<p class="hint">@T.Orders.PriceEditNote</p>
 		@if (_pricePreview is { } preview)
 		{
-			<table class="price-preview">
-				<thead><tr><th></th><th>Итог</th><th>Netto</th><th>НДС</th><th>Fee</th></tr></thead>
-				<tbody>
-					<tr><td>Material</td><td>@Money(preview.MaterialCost)</td><td>@Money(preview.MaterialNetto)</td><td>@Money(preview.MaterialVatAmount)</td><td>@Money(preview.MaterialFeeAmount)</td></tr>
-					@foreach (var d in preview.DeliveryInfo)
-					{
-						<tr><td>Delivery @((d.Weight / 1000m).ToString("0.##")) t</td><td>@Money(d.TotalPrice)</td><td>@Money(d.Cost)</td><td>@Money(d.VatAmount)</td><td>@Money(d.FeeAmount)</td></tr>
-					}
-					<tr><td>Commission</td><td>@Money(preview.Commission)</td><td>—</td><td>@Money(preview.CommissionVatAmount)</td><td>@Money(preview.CommissionFeeAmount)</td></tr>
-					<tr class="price-preview-total"><td>Total</td><td>@Money(preview.TotalCost)</td><td></td><td>@Money((preview.MaterialVatAmount ?? 0) + preview.DeliveryInfo.Sum(x => x.VatAmount) + (preview.CommissionVatAmount ?? 0))</td><td></td></tr>
-				</tbody>
-			</table>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th><span class="visually-hidden">@T.Orders.Component</span></th>
+							<th class="num">@T.Orders.Amount</th>
+							<th class="num">@T.Orders.Net</th>
+							<th class="num">@T.Orders.Vat</th>
+							<th class="num">@T.Orders.Fee</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>@T.Orders.Material</td>
+							<td class="num nowrap">@T.FormatMoney(preview.MaterialCost)</td>
+							<td class="num nowrap">@T.FormatMoney(preview.MaterialNetto)</td>
+							<td class="num nowrap">@T.FormatMoney(preview.MaterialVatAmount)</td>
+							<td class="num nowrap">@T.FormatMoney(preview.MaterialFeeAmount)</td>
+						</tr>
+						@foreach (var d in preview.DeliveryInfo)
+						{
+							<tr @key="d.DeliveryId">
+								<td class="nowrap">@T.Orders.DeliveryOf(Tonnes(d.Weight))</td>
+								<td class="num nowrap">@T.FormatMoney(d.TotalPrice)</td>
+								<td class="num nowrap">@T.FormatMoney(d.Cost)</td>
+								<td class="num nowrap">@T.FormatMoney(d.VatAmount)</td>
+								<td class="num nowrap">@T.FormatMoney(d.FeeAmount)</td>
+							</tr>
+						}
+						<tr>
+							<td>@T.Orders.Commission</td>
+							<td class="num nowrap">@T.FormatMoney(preview.Commission)</td>
+							<td class="num muted">@Texts.Dash</td>
+							<td class="num nowrap">@T.FormatMoney(preview.CommissionVatAmount)</td>
+							<td class="num nowrap">@T.FormatMoney(preview.CommissionFeeAmount)</td>
+						</tr>
+						<tr class="total-row">
+							<td>@T.Common.Total</td>
+							<td class="num nowrap">@T.FormatMoney(preview.TotalCost)</td>
+							<td></td>
+							<td class="num nowrap">@T.FormatMoney(TotalVat(preview))</td>
+							<td></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		}
 		@if (_hasAcceptedDelivery)
 		{
-			<p class="validation-warning">⚠️ По заказу уже есть принятые доставки: правка стоимости доставки изменит вознаграждение перевозчика.</p>
+			<p class="notice warning-text">
+				<Icon Name="IconName.Warning" />
+				<span>@T.Orders.AcceptedDeliveryWarning</span>
+			</p>
 		}
 		@if (!string.IsNullOrEmpty(_priceEditError))
 		{
-			<p class="validation-error">@_priceEditError</p>
+			<p class="field-error" role="alert">@_priceEditError</p>
 		}
-	</div>
-	<div class="confirm-footer">
-		<button class="btn-secondary" @onclick="ClosePriceEdit">Cancel</button>
-		<button class="btn-primary" @onclick="SubmitPriceEdit">Save</button>
-	</div>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="ClosePriceEdit">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="SubmitPriceEdit">@T.Common.Save</button>
+	</Footer>
 </ModalShell>
 
 @* S5.2: SA-правка PreferredDeliveryTime (S4.3) — 409 при отсутствии слота у водителя *@
-<ModalShell IsOpen="@_showTimeEdit" ContainerClass="modal-sm" TopLayer="true" OnClose="@CloseTimeEdit" OnSubmit="SubmitTimeEdit">
-	<div class="confirm-header">
-		<h2>Edit Preferred Delivery Time</h2>
-		<button class="btn-close" @onclick="CloseTimeEdit">×</button>
-	</div>
-	<div class="confirm-body">
-		<div class="form-group">
-			<label>Preferred Delivery Time (локальное время региона)</label>
-			<input type="datetime-local" @bind="_editPreferredDeliveryTime" />
+<ModalShell IsOpen="@_showTimeEdit" ContainerClass="modal-sm" TopLayer="true" Title="@T.Orders.EditDeliveryTime" OnClose="@CloseTimeEdit" OnSubmit="SubmitTimeEdit">
+	<ChildContent>
+		<div class="field">
+			<label for="delivery-time">@T.Orders.DeliveryTimeLocal</label>
+			<input id="delivery-time" type="datetime-local" @bind="_editPreferredDeliveryTime" />
 		</div>
-		<p class="page-subtitle">Старое окно вернётся в слоты назначенных водителей, новое будет зарезервировано. Если слота нет — backend вернёт 409.</p>
+		<p class="hint">@T.Orders.TimeEditNote</p>
 		@if (!string.IsNullOrEmpty(_timeEditError))
 		{
-			<p class="validation-error">@_timeEditError</p>
+			<p class="field-error" role="alert">@_timeEditError</p>
 		}
-	</div>
-	<div class="confirm-footer">
-		<button class="btn-secondary" @onclick="CloseTimeEdit">Cancel</button>
-		<button class="btn-primary" @onclick="SubmitTimeEdit">Save</button>
-	</div>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseTimeEdit">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="SubmitTimeEdit">@T.Common.Save</button>
+	</Footer>
 </ModalShell>
 
 @if (_order == null)
 {
-	<p>Loading details...</p>
+	<div class="empty">
+		<span class="spinner spinner-lg"></span>
+		<p class="empty-title">@T.Common.Loading</p>
+	</div>
 }
 else
 {
-	<div class="page-header">
-		<h1>Order @_order.Name</h1>
-		<p class="page-subtitle">@_order.Id</p>
-	</div>
-
-	<!-- Actions -->
-	<div class="content-card no-print">
-		<div class="card-header">
-			<h3>Management</h3>
-		</div>
-		<div class="info-item">
-			@GetAdminState()
-		</div>
-		<div class="controls-row">
-			<button class="btn btn-warning" @onclick="RequestResetPayments">Reset Payments</button>
-
-			<div class="status-control">
-				<select @bind="_newStatus" class="form-control">
-					@foreach (var status in _allStatuses)
-					{
-						<option value="@status">@status</option>
-					}
-				</select>
-				<input @bind="_newState" class="form-control" placeholder="State message (optional)" />
-				<button class="btn btn-primary" @onclick="RequestUpdateStatus">Update Status</button>
+	var hint = StatusHint();
+	<div class="page">
+		<div class="page-header">
+			<div>
+				<h1>@T.Orders.OrderTitle(_order.Name)</h1>
+				<p class="page-subtitle cluster">
+					<span class="@StatusTone.Of(_order.Status).Badge()">@T.Enums.OrderStatus(_order.Status)</span>
+					<span class="tabular">@_order.Id</span>
+				</p>
 			</div>
 		</div>
-	</div>
 
-	<!-- Main Info -->
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Order Information</h3>
-		</div>
-		<div class="info-grid">
-			<div class="info-item"><label>State</label><span>@_order.State</span></div>
-			<div class="info-item"><label>Status</label><span>@_order.Status</span></div>
-			<div class="info-item"><label>Address</label><span>@_order.Address</span></div>
-			<div class="info-item"><label>Cost</label><span>@_order.Cost.ToString("F2") BYN</span></div>
-			<div class="info-item"><label>Created</label><span>@_order.Created</span></div>
-			<div class="info-item"><label>Preferred Delivery</label><span>@_order.PreferredDeliveryTime <button class="btn-secondary btn-inline no-print" @onclick="OpenTimeEdit">✏️</button></span></div>
-			<div class="info-item"><label>Duration</label><span>@_order.Duration</span></div>
-			<div class="info-item"><label>Total Weight</label><span>@_order.TotalWeight</span></div>
-			<div class="info-item"><label>Total Km</label><span>@_order.TotalKm</span></div>
-			<div class="info-item"><label>Region Level</label><span>@_order.RegionLevelId</span></div>
-			<div class="info-item"><label>Loading Place</label><span>@(_order.LoadingPlace?.Name ?? "-")</span></div>
-			<div class="info-item">
-				<label>User</label>
-				<span>
-					@(_order.UserInfo?.FirstName ?? "") @(_order.UserInfo?.MiddleName ?? "") @(_order.UserInfo?.LastName ?? "")
-					<button class="btn-view-driver" @onclick="ShowUserDetails">@_userDetailsButtonName <span class="btn-icon">👤</span></button>
-				</span>
+		<section class="card no-print">
+			<div class="card-header">
+				<h2 class="card-title">@T.Orders.Management</h2>
 			</div>
+			<p class="notice @(hint.Urgent ? "warning-text" : "muted")">
+				<Icon Name="@(hint.Urgent ? IconName.Warning : IconName.Info)" />
+				<span>@hint.Text</span>
+			</p>
+			<div class="form-grid">
+				<div class="field">
+					<label for="order-new-status">@T.Orders.NewStatus</label>
+					<select id="order-new-status" @bind="_newStatus">
+						@foreach (var status in _allStatuses)
+						{
+							<option value="@status" @key="status">@T.Enums.OrderStatus(status)</option>
+						}
+					</select>
+				</div>
+				<div class="field">
+					<label for="order-state">@T.Orders.StateMessage</label>
+					<input id="order-state" @bind="_newState" placeholder="@T.Orders.Optional" />
+				</div>
+			</div>
+			<div class="cluster management-actions">
+				<button type="button" class="btn btn-primary" @onclick="RequestUpdateStatus">
+					<Icon Name="IconName.Check" />
+					@T.Orders.UpdateStatus
+				</button>
+				<button type="button" class="btn" @onclick="RequestResetPayments">
+					<Icon Name="IconName.Undo" />
+					@T.Orders.ResetPayments
+				</button>
+			</div>
+		</section>
+
+		<section class="card">
+			<div class="card-header">
+				<h2 class="card-title">@T.Orders.OrderInfo</h2>
+			</div>
+			<dl class="facts">
+				<div><dt>@T.Orders.StateMessage</dt><dd>@OrDash(_order.State)</dd></div>
+				<div><dt>@T.Common.Address</dt><dd>@_order.Address</dd></div>
+				<div><dt>@T.Orders.Cost</dt><dd class="tabular">@T.FormatMoney(_order.Cost)</dd></div>
+				<div><dt>@T.Common.Created</dt><dd class="tabular">@T.FormatDateTime(_order.Created)</dd></div>
+				<div>
+					<dt>@T.Orders.DeliveryTime</dt>
+					<dd class="cluster">
+						<span class="tabular">@T.FormatDateTime(_order.PreferredDeliveryTime)</span>
+						<button type="button" class="btn btn-ghost btn-icon btn-sm no-print" @onclick="OpenTimeEdit"
+								title="@T.Orders.EditDeliveryTime" aria-label="@T.Orders.EditDeliveryTime">
+							<Icon Name="IconName.Edit" />
+						</button>
+					</dd>
+				</div>
+				<div><dt>@T.Orders.Duration</dt><dd class="tabular">@T.Orders.DurationValue(_order.Duration)</dd></div>
+				<div><dt>@T.Orders.TotalWeight</dt><dd class="tabular">@FormatWeight(_order.TotalWeight)</dd></div>
+				<div><dt>@T.Orders.Distance</dt><dd class="tabular">@T.Orders.Km(T.FormatNumber(_order.TotalKm, 1))</dd></div>
+				<div><dt>@T.Orders.RegionLevel</dt><dd class="tabular">@_order.RegionLevelId</dd></div>
+				<div><dt>@T.Orders.LoadingPlace</dt><dd>@(_order.LoadingPlace?.Name ?? Texts.Dash)</dd></div>
+				<div>
+					<dt>@T.Orders.Buyer</dt>
+					<dd class="cluster">
+						<span>@FullName(_order.UserInfo)</span>
+						@if (_order.UserInfo != null)
+						{
+							<button type="button" class="btn btn-sm no-print" @onclick="ToggleUserDetails" aria-expanded="@Aria.State(_userDetailsOpen)">
+								<Icon Name="@(_userDetailsOpen ? IconName.EyeOff : IconName.Eye)" />
+								@(_userDetailsOpen ? T.Orders.HideDetails : T.Orders.ShowDetails)
+							</button>
+						}
+					</dd>
+				</div>
+			</dl>
 			@if (_order.UserInfo != null)
 			{
-				<div class="info-item full-width additional-info">
-					<span class="info-label">User Details:</span>
-					@RenderUserDetails(_order.UserInfo, extraClass: _userDetailsOpen ? "" : "print-only")
+				<div class="details-panel @(_userDetailsOpen ? null : "print-only")">
+					<h3 class="section-title">@T.Orders.BuyerDetails</h3>
+					@RenderUserDetails(_order.UserInfo)
 				</div>
 			}
-		</div>
-	</div>
+		</section>
 
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Location</h3>
-		</div>
-		<div class="info-grid">
-			@RenderLocation(_order.Location, "Order location")
-			<div class="info-item no-print">
+		<section class="card">
+			<div class="card-header">
+				<h2 class="card-title">@T.Orders.Location</h2>
+			</div>
+			<div class="maps">
+				@RenderLocation(_order.Location, T.Orders.DeliveryPoint)
 				@{
 					var level = _levels.FirstOrDefault(l => l.Id == _order.RegionLevelId);
-					if (level is not null)
-					{
+				}
+				@if (level is not null)
+				{
+					<div class="no-print">
 						<TriangleMap Triangles="@level.Triangles"
 									 LevelType="@level.Type"
 									 ShowTitle="true"
 									 MapHeight="240px" />
-					}
+					</div>
 				}
 			</div>
-		</div>
-	</div>
+		</section>
 
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Material Information</h3>
-		</div>
-		@if (_order.LoadingPlace?.MaterialType is not null)
-		{
-			var type = _order.LoadingPlace.MaterialType;
-			@if (!string.IsNullOrEmpty(type.Photo))
-			{
-				<div class="info-item full-width">
-					<span class="info-label">Photo:</span>
-					<div class="company-photo material-photo">
-						<img src="@type.Photo" alt="@type.Name" />
-					</div>
-				</div>
-			}
-			<div class="info-grid">
-				<div class="info-item"><label>Name</label><span>@type.Name</span></div>
-				<div class="info-item"><label>Description</label><span>@type.Description</span></div>
-				<div class="info-item"><label>Solidity</label><span>@type.Solidity</span></div>
-			</div>
-		}
-	</div>
-
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Provider Information</h3>
-		</div>
-		@if (_order.LoadingPlace?.Producer?.Company?.CompanyInfo is not null)
-		{
-			@if (!string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo))
-			{
-				<div class="info-item full-width">
-					<span class="info-label">Photo:</span>
-					<div class="company-photo">
-						<img src="@_order.LoadingPlace.Producer.Company.CompanyInfo!.Photo" alt="@_order.LoadingPlace.Producer.Company.Name" />
-					</div>
-				</div>
-			}
-			<div class="info-grid">
-				<div class="info-item"><label>Legal Type</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.LegalType</span></div>
-				<div class="info-item"><label>Name</label><span>@_order.LoadingPlace.Producer.Company.Name</span></div>
-				<div class="info-item"><label>Account</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo!.BankAccount.BankNumber @_order.LoadingPlace.Producer.Company.CompanyInfo?.BankAccount.BIC</span></div>
-				<div class="info-item"><label>Email</label><span>@(string.IsNullOrEmpty(_order.LoadingPlace.Producer.Company.CompanyInfo?.CorporateEmail) ? "-" : _order.LoadingPlace.Producer.Company.CompanyInfo?.CorporateEmail)</span></div>
-				<div class="info-item"><label>Address</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo?.Address</span></div>
-				<div class="info-item"><label>Unp</label><span>@_order.LoadingPlace.Producer.Company.CompanyInfo?.UNP</span></div>
-				<div class="info-item"><label>Producer Name</label><span>@_order.LoadingPlace.Producer.Name</span></div>
-				<div class="info-item"><label>Loading Place</label><span>@_order.LoadingPlace.Name</span></div>
-				<div class="info-item"><label>Cost</label><span>@_order.LoadingPlace.Cost.ToString("F2")</span></div>
-				<div class="info-item"><label>Volume</label><span>@_order.LoadingPlace.Volume</span></div>
-				@RenderLocation(_order.LoadingPlace.Producer.Company.Location, "Provider company Location")
-				@RenderLocation(_order.LoadingPlace.Location, "Loading Place Location")
-			</div>
-		}
-	</div>
-
-	<!-- Calculation Info -->
-	@if (_calculationInfo != null)
-	{
-		<div class="content-card">
+		<section class="card">
 			<div class="card-header">
-				<h3>Cost Calculation</h3>
-				<div class="header-actions">
-					@* Единый стиль с кнопкой Accept (.btn-view-driver), а не крупный .btn-secondary из футера модалки *@
-					<button class="btn-view-driver" @onclick="OpenPriceEdit">
-						Edit Price <span class="btn-icon">✏️</span>
+				<h2 class="card-title">@T.Orders.Material</h2>
+			</div>
+			@if (_order.LoadingPlace?.MaterialType is { } type)
+			{
+				<div class="with-photo">
+					@if (!string.IsNullOrEmpty(type.Photo))
+					{
+						<img class="photo material-photo" src="@type.Photo" alt="@type.Name" />
+					}
+					<dl class="facts">
+						<div><dt>@T.Common.Name</dt><dd>@type.Name</dd></div>
+						<div><dt>@T.Common.Description</dt><dd>@type.Description</dd></div>
+						<div><dt>@T.Materials.Solidity</dt><dd class="tabular">@T.FormatNumber(type.Solidity)</dd></div>
+					</dl>
+				</div>
+			}
+			else
+			{
+				<p class="muted">@T.Orders.NoMaterial</p>
+			}
+		</section>
+
+		<section class="card">
+			<div class="card-header">
+				<h2 class="card-title">@T.Orders.Supplier</h2>
+			</div>
+			@if (_order.LoadingPlace is { Producer: { Company: { CompanyInfo: { } supplierInfo } supplier } producer } place)
+			{
+				<div class="with-photo">
+					@if (!string.IsNullOrEmpty(supplierInfo.Photo))
+					{
+						<img class="photo" src="@supplierInfo.Photo" alt="@supplier.Name" />
+					}
+					<dl class="facts">
+						<div><dt>@T.Common.Company</dt><dd>@supplier.Name</dd></div>
+						<div><dt>@T.Orders.LegalForm</dt><dd>@supplierInfo.LegalType</dd></div>
+						<div><dt>@T.Orders.Unp</dt><dd class="tabular">@supplierInfo.UNP</dd></div>
+						<div><dt>@T.Orders.BankAccount</dt><dd class="tabular">@supplierInfo.BankAccount.BankNumber @supplierInfo.BankAccount.BIC</dd></div>
+						<div><dt>@T.Common.Email</dt><dd>@OrDash(supplierInfo.CorporateEmail)</dd></div>
+						<div><dt>@T.Common.Address</dt><dd>@supplierInfo.Address</dd></div>
+						<div><dt>@T.Orders.Producer</dt><dd>@producer.Name</dd></div>
+						<div><dt>@T.Orders.LoadingPlace</dt><dd>@place.Name</dd></div>
+						<div><dt>@T.Orders.MaterialPrice</dt><dd class="tabular">@T.FormatMoney(place.Cost)</dd></div>
+						<div><dt>@T.Orders.Volume</dt><dd class="tabular">@T.FormatNumber((decimal)place.Volume, 0)</dd></div>
+					</dl>
+				</div>
+				<div class="maps">
+					@RenderLocation(supplier.Location, T.Orders.SupplierCompany)
+					@RenderLocation(place.Location, T.Orders.LoadingPlace)
+				</div>
+			}
+			else
+			{
+				<p class="muted">@T.Orders.NoSupplier</p>
+			}
+		</section>
+
+		@if (_calculationInfo is { } calc)
+		{
+			<section class="card">
+				<div class="card-header">
+					<h2 class="card-title">@T.Orders.Calculation</h2>
+					<button type="button" class="btn btn-sm no-print" @onclick="OpenPriceEdit">
+						<Icon Name="IconName.Edit" />
+						@T.Orders.EditPrice
 					</button>
 				</div>
-			</div>
-			@* D-po-21/25: инвариант по каждой составляющей: netto + НДС + fee = итог. «—» = заказ создан до разбивки. *@
-			<div class="info-grid">
-				<div class="info-item"><label>Total Cost</label><span>@Money(_calculationInfo.TotalCost)</span></div>
-				<div class="info-item"><label>Deliveries Total</label><span>@Money(_calculationInfo.TotalCost - _calculationInfo.MaterialCost - _calculationInfo.Commission)</span></div>
-				<div class="info-item"><label>Total VAT</label><span>@Money((_calculationInfo.MaterialVatAmount ?? 0) + _calculationInfo.DeliveryInfo.Sum(x => x.VatAmount) + (_calculationInfo.CommissionVatAmount ?? 0))</span></div>
-			</div>
-			<div class="card-header" style="padding-top: 1.5rem;">
-				<h3>Material</h3>
-			</div>
-			<div class="info-grid">
-				<div class="info-item"><label>Total</label><span>@Money(_calculationInfo.MaterialCost)</span></div>
-				<div class="info-item"><label>Netto</label><span>@Money(_calculationInfo.MaterialNetto)</span></div>
-				<div class="info-item"><label>VAT</label><span>@Money(_calculationInfo.MaterialVatAmount)</span></div>
-				<div class="info-item"><label>Fee</label><span>@Money(_calculationInfo.MaterialFeeAmount)</span></div>
-			</div>
-			<div class="card-header" style="padding-top: 1.5rem;">
-				<h3>Commission</h3>
-			</div>
-			<div class="info-grid">
-				<div class="info-item"><label>Total</label><span>@Money(_calculationInfo.Commission)</span></div>
-				<div class="info-item"><label>VAT</label><span>@Money(_calculationInfo.CommissionVatAmount)</span></div>
-				<div class="info-item"><label>Fee</label><span>@Money(_calculationInfo.CommissionFeeAmount)</span></div>
-			</div>
-			<div class="card-header" style="padding-top: 1.5rem;">
-				<h3>Deliveries</h3>
-			</div>
-			@foreach (var d in _calculationInfo.DeliveryInfo)
-			{
-				<div class="info-grid">
-					<div class="info-item"><label>Weight</label><span>@((d.Weight / 1000m).ToString("0.##")) t</span></div>
-					<div class="info-item"><label>Total</label><span>@Money(d.TotalPrice)</span></div>
-					<div class="info-item"><label>Netto</label><span>@Money(d.Cost)</span></div>
-					<div class="info-item"><label>VAT (@((d.Vat * 100).ToString("0.##"))%)</label><span>@Money(d.VatAmount)</span></div>
-					<div class="info-item"><label>Fee</label><span>@Money(d.FeeAmount)</span></div>
-				</div>
-			}
-		</div>
-	}
+				@* D-po-21/25: инвариант по каждой составляющей: netto + НДС + fee = итог. «—» = заказ создан до разбивки. *@
+				<dl class="facts">
+					<div><dt>@T.Orders.TotalCost</dt><dd class="tabular strong">@T.FormatMoney(calc.TotalCost)</dd></div>
+					<div><dt>@T.Orders.DeliveriesTotal</dt><dd class="tabular">@T.FormatMoney(calc.TotalCost - calc.MaterialCost - calc.Commission)</dd></div>
+					<div><dt>@T.Orders.TotalVat</dt><dd class="tabular">@T.FormatMoney(TotalVat(calc))</dd></div>
+				</dl>
 
-	<!-- Deliveries ();-->
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Deliveries</h3>
-		</div>
-		@if (_order.Deliveries != null && _order.Deliveries.Any())
-		{
-			@foreach (var deliveryGroup in _order.Deliveries.GroupBy(d => d.NetoWeight))
+				<h3 class="section-title subsection">@T.Orders.Material</h3>
+				<dl class="facts">
+					<div><dt>@T.Orders.Amount</dt><dd class="tabular">@T.FormatMoney(calc.MaterialCost)</dd></div>
+					<div><dt>@T.Orders.Net</dt><dd class="tabular">@T.FormatMoney(calc.MaterialNetto)</dd></div>
+					<div><dt>@T.Orders.Vat</dt><dd class="tabular">@T.FormatMoney(calc.MaterialVatAmount)</dd></div>
+					<div><dt>@T.Orders.Fee</dt><dd class="tabular">@T.FormatMoney(calc.MaterialFeeAmount)</dd></div>
+				</dl>
+
+				<h3 class="section-title subsection">@T.Orders.Commission</h3>
+				<dl class="facts">
+					<div><dt>@T.Orders.Amount</dt><dd class="tabular">@T.FormatMoney(calc.Commission)</dd></div>
+					<div><dt>@T.Orders.Vat</dt><dd class="tabular">@T.FormatMoney(calc.CommissionVatAmount)</dd></div>
+					<div><dt>@T.Orders.Fee</dt><dd class="tabular">@T.FormatMoney(calc.CommissionFeeAmount)</dd></div>
+				</dl>
+
+				<h3 class="section-title subsection">@T.Orders.Deliveries</h3>
+				@if (calc.DeliveryInfo.Length > 0)
+				{
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>@T.Orders.Weight</th>
+									<th class="num">@T.Orders.Amount</th>
+									<th class="num">@T.Orders.Net</th>
+									<th class="num">@T.Orders.VatRate</th>
+									<th class="num">@T.Orders.Vat</th>
+									<th class="num">@T.Orders.Fee</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var d in calc.DeliveryInfo)
+								{
+									<tr @key="d.DeliveryId">
+										<td class="tabular nowrap">@Tonnes(d.Weight)</td>
+										<td class="num nowrap">@T.FormatMoney(d.TotalPrice)</td>
+										<td class="num nowrap">@T.FormatMoney(d.Cost)</td>
+										<td class="num nowrap">@Percent(d.Vat * 100)</td>
+										<td class="num nowrap">@T.FormatMoney(d.VatAmount)</td>
+										<td class="num nowrap">@T.FormatMoney(d.FeeAmount)</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+				else
+				{
+					<p class="muted">@T.Orders.NoDeliveries</p>
+				}
+			</section>
+		}
+
+		<section class="card">
+			<div class="card-header">
+				<h2 class="card-title">@T.Orders.Deliveries</h2>
+			</div>
+			@if (_order.Deliveries != null && _order.Deliveries.Any())
 			{
-				<div class="card-header" style="background-color: #f8f9fa;">
-					<h4>Weight: @deliveryGroup.Key</h4>
+				<div class="groups">
+					@foreach (var deliveryGroup in _order.Deliveries.GroupBy(d => d.NetoWeight))
+					{
+						<div class="stack" @key="deliveryGroup.Key">
+							<h3 class="section-title">@T.Orders.WeightGroup(FormatWeight(deliveryGroup.Key))</h3>
+							<div class="table-wrap">
+								<table>
+									<thead>
+										<tr>
+											<th>@T.Orders.DeliveryState</th>
+											<th>@T.Orders.BatchNumber</th>
+											<th class="num">@T.Orders.Cost</th>
+											<th class="num">@T.Orders.Weights</th>
+											<th>@T.Orders.Driver</th>
+										</tr>
+									</thead>
+									<tbody>
+										@foreach (var d in deliveryGroup)
+										{
+											<tr @key="d.Id">
+												<td>@d.State</td>
+												<td class="tabular">@OrDash(d.BatchNumber)</td>
+												<td class="num nowrap">@T.FormatMoney(d.DeliveryCost)</td>
+												<td class="num nowrap">@FormatWeight(d.NetoWeight) / @FormatWeight(d.GrossWeight) / @FormatWeight(d.AppliedWeight)</td>
+												<td>
+													@if (d.Driver is { } assigned)
+													{
+														<div class="driver">
+															<div class="driver-info">
+																<span class="strong">@assigned.UserInfo?.FirstName @assigned.UserInfo?.LastName</span>
+																@if (assigned.Vehicles?.FirstOrDefault() is { } vehicle)
+																{
+																	<span class="caption vehicle">
+																		<Icon Name="IconName.Vehicles" />
+																		@vehicle.Model
+																		<span class="tabular">(@vehicle.RegistrationNumber)</span>
+																	</span>
+																}
+															</div>
+															<button type="button" class="btn btn-sm no-print" @onclick="() => SetDriverToView(assigned.Id)">
+																<Icon Name="IconName.User" />
+																@T.Common.Details
+															</button>
+														</div>
+													}
+													else
+													{
+														<span class="muted">@Texts.Dash</span>
+													}
+												</td>
+											</tr>
+										}
+									</tbody>
+								</table>
+							</div>
+
+							@if (deliveryGroup.Any(d => d.Driver == null))
+							{
+								<div class="assign no-print">
+									<div class="field">
+										<label for="@($"assign-driver-{deliveryGroup.Key}")">@T.Orders.AssignDriverFor(FormatWeight(deliveryGroup.Key))</label>
+										<select id="@($"assign-driver-{deliveryGroup.Key}")"
+												@bind:get="_selectedDriverIds.GetValueOrDefault(deliveryGroup.Key)"
+												@bind:set="(val) => _selectedDriverIds[deliveryGroup.Key] = val">
+											<option value="@Guid.Empty">@T.Orders.SelectDriverOption</option>
+											@foreach (var (company, driver, hasSlot) in GetDrivers(_order.Duration.TotalMinutes, deliveryGroup.Key, _order.PreferredDeliveryTime))
+											{
+												<option value="@driver.Id" disabled="@(!hasSlot)" @key="driver.Id">
+													@company.Name @(driver.UserInfo?.MobilePhone) @(string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? T.Orders.NoName : driver.UserInfo?.FirstName)@(hasSlot ? null : " · " + T.Orders.NoSlot)
+												</option>
+											}
+										</select>
+									</div>
+									<button type="button" class="btn" @onclick="() => RequestAcceptDelivery(deliveryGroup.Key)">
+										<Icon Name="IconName.UserCheck" />
+										@T.Orders.Assign
+									</button>
+								</div>
+							}
+						</div>
+					}
 				</div>
-				<div style="overflow-x: auto;">
-					<table class="table">
+
+				@* Printout: every driver's details below the tables, as if «Details» were opened for each of them. *@
+				<div class="print-only">
+					@foreach (var driver in _order.Deliveries.Select(d => d.Driver).OfType<Driver>().DistinctBy(d => d.Id))
+					{
+						<div class="details-panel" @key="driver.Id">
+							<h3 class="section-title">@T.Orders.DriverDetailsOf(FullName(driver.UserInfo))</h3>
+							@RenderUserDetails(driver.UserInfo, GetDriverCompany(driver.Id))
+						</div>
+					}
+				</div>
+
+				@* Not printed: the printout has every driver's details in the block above. *@
+				@if (_driverInfo?.UserInfo != null)
+				{
+					<div class="details-panel no-print">
+						<div class="panel-header">
+							<h3 class="section-title">@T.Orders.DriverDetails</h3>
+							<button type="button" class="btn btn-ghost btn-icon" @onclick="_ => SetDriverToView(null)"
+									title="@T.Common.Close" aria-label="@T.Common.Close">
+								<Icon Name="IconName.Close" Size="20" />
+							</button>
+						</div>
+						@RenderUserDetails(_driverInfo.UserInfo)
+					</div>
+				}
+			}
+			else
+			{
+				<p class="muted">@T.Orders.NoDeliveries</p>
+			}
+		</section>
+
+		<section class="card">
+			<div class="card-header">
+				<h2 class="card-title">@T.Orders.Transactions</h2>
+			</div>
+			@if (_order.Transactions != null && _order.Transactions.Any())
+			{
+				<div class="table-wrap">
+					<table>
 						<thead>
 							<tr>
-								<th>State</th>
-								<th>Batch Number</th>
-								<th>Cost</th>
-								<th>Weight (Net/Gross/Applied)</th>
-								<th>Driver</th>
-								<th class="no-print">Action</th>
+								<th>@T.Common.Date</th>
+								<th class="num">@T.Orders.Amount</th>
+								<th>@T.Common.Status</th>
+								<th>@T.Orders.PaymentMethod</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach (var d in deliveryGroup)
+							@foreach (var transaction in _order.Transactions)
 							{
-								<tr>
-									<td data-label="State">@d.State</td>
-									<td data-label="Batch Number">@(string.IsNullOrEmpty(d.BatchNumber) ? "-" : d.BatchNumber)</td>
-									<td data-label="Cost">@d.DeliveryCost.ToString("F2") BYN</td>
-									<td data-label="Weight">@d.NetoWeight / @d.GrossWeight / @d.AppliedWeight </td>
-									<td data-label="Driver" class="driver-td">
-										@if (d.Driver != null)
-										{
-											<div class="driver-cell-wrapper">
-												<!-- Левая часть: информация о водителе -->
-												<div class="driver-info-block">
-													<div class="driver-name">
-														@d.Driver.UserInfo?.FirstName @d.Driver.UserInfo?.LastName
-													</div>
-
-													@{
-														var driverVehicle = d.Driver.Vehicles?.FirstOrDefault();
-													}
-													@if (driverVehicle != null)
-													{
-														<div class="driver-vehicle">
-															<span class="vehicle-icon">🚗</span>
-															<span class="vehicle-model">@driverVehicle.Model</span>
-															<span class="vehicle-plate">(@driverVehicle.RegistrationNumber)</span>
-														</div>
-													}
-												</div>
-
-												<!-- Правая часть: кнопка действия -->
-												<div class="driver-action-block">
-													<button class="btn-view-driver" @onclick="_ => SetDriverToView(d.Driver.Id)">
-														View <span class="btn-icon">🧑‍✈️</span>
-													</button>
-												</div>
-											</div>
-
-											<!-- Печатная версия: детали водителя для каждой доставки -->
-											<div class="driver-print-details print-only">
-												@RenderUserDetails(d.Driver.UserInfo, GetDriverCompany(d.Driver.Id))
-											</div>
-										}
-										else
-										{
-											<span class="empty-cell">-</span>
-										}
-									</td>
-									<td data-label="Action"></td>
+								<tr @key="transaction.Id">
+									<td class="tabular nowrap">@T.FormatDateTime(transaction.Date)</td>
+									<td class="num nowrap">@T.FormatMoney(transaction.Amount)</td>
+									<td><span class="@StatusTone.Of(transaction.Status).Badge()">@T.Enums.PaymentTransaction(transaction.Status)</span></td>
+									<td>@T.Enums.PaymentMethod(transaction.PaymentMethod)</td>
 								</tr>
 							}
 						</tbody>
 					</table>
 				</div>
-
-				@if (deliveryGroup.Any(d => d.Driver == null))
-				{
-					<div class="accept-form" style="margin: 10px; padding: 10px; border: 1px solid #dee2e6;">
-						<p><strong>Assign driver to an available delivery with Weight @deliveryGroup.Key:</strong></p>
-						<select @bind:get="_selectedDriverIds.GetValueOrDefault(deliveryGroup.Key)"
-								@bind:set="(val) => _selectedDriverIds[deliveryGroup.Key] = val"
-								class="form-control" style="margin-bottom: 10px; display: inline-block; width: auto;">
-							<option value="@Guid.Empty">Select a driver...</option>
-							@foreach (var (company, driver, hasSlot) in GetDrivers(_order.Duration.TotalMinutes, deliveryGroup.Key, _order.PreferredDeliveryTime))
-							{
-								<option value="@driver.Id" disabled="@(!hasSlot)">
-									@company.Name @(driver.UserInfo?.MobilePhone) @(string.IsNullOrWhiteSpace(driver.UserInfo?.FirstName) ? "Unknown" : driver.UserInfo?.FirstName)
-								</option>
-							}
-						</select>
-
-						<button class="btn-view-driver" @onclick="() => RequestAcceptDelivery(deliveryGroup.Key)">
-							Accept <span class="btn-icon">📑</span>
-						</button>
-					</div>
-				}
 			}
-
-			@if (_driverInfo?.UserInfo != null)
+			else
 			{
-				<div class="info-item full-width additional-info">
-					<span class="info-label">Driver Details:</span>
-					<button class="circle-btn" @onclick="_ => SetDriverToView(null)">❌</button>
-					@RenderUserDetails(_driverInfo.UserInfo)
-				</div>
+				<p class="muted">@T.Orders.NoTransactions</p>
 			}
-		}
-		else
-		{
-			<p>No deliveries found.</p>
-		}
-	</div>
-
-	<!-- Transactions -->
-	<div class="content-card">
-		<div class="card-header">
-			<h3>Transactions</h3>
-		</div>
-		@if (_order.Transactions != null && _order.Transactions.Any())
-		{
-			<div style="overflow-x: auto;">
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Date</th>
-							<th>Amount</th>
-							<th>Status</th>
-							<th>Method</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach (var t in _order.Transactions)
-						{
-							<tr>
-								<td data-label="Date">@t.Date</td>
-								<td data-label="Amount">@t.Amount.ToString("F2")</td>
-								<td data-label="Status">@t.Status</td>
-								<td data-label="Method">@t.PaymentMethod</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
-		}
-		else
-		{
-			<p>No transactions found.</p>
-		}
+		</section>
 	</div>
 }
 
 @code {
-	private static string Money(decimal? value) => value is { } v ? $"{v:F2} BYN" : "—";
-
 	// Паспорт/компания пользователя: заказчик, выбранный водитель и печатные детали водителей по доставкам.
 	// company передаётся отдельно: у водителей связь с компанией живёт в _driversWithCompany, а не в UserInfo.
-	private RenderFragment RenderUserDetails(UserInfo? userInfo, Company? company = null, string extraClass = "") => __builder =>
+	private RenderFragment RenderUserDetails(UserInfo? userInfo, Company? company = null) => __builder =>
 	{
 		@if (userInfo != null)
 		{
 			var c = company ?? userInfo.Company;
-			<div class="user-details formatted-text @extraClass">
+			<dl class="kv user-details">
 				@if (userInfo.Passport != null)
 				{
 					foreach (var (key, value) in userInfo.Passport)
 					{
-						<p><strong>@PrintKey(key):</strong> @value</p>
+						<dt @key="key">@PrintKey(key)</dt>
+						<dd>@value</dd>
 					}
 				}
 				@if (c?.CompanyInfo != null)
 				{
-					<p><strong>Company Name:</strong> @c.Name</p>
-					<p><strong>Company Address:</strong> @c.CompanyInfo.Address</p>
-					<p><strong>Company Unp:</strong> @c.CompanyInfo.UNP</p>
-					<p><strong>Company Legal Type:</strong> @c.CompanyInfo.LegalType</p>
-					<p><strong>Company Bank Account (Number | Bic):</strong> @c.CompanyInfo.BankAccount.BankNumber | @c.CompanyInfo.BankAccount.BIC</p>
+					<dt>@T.Common.Company</dt>
+					<dd>@c.Name</dd>
+					<dt>@T.Orders.CompanyAddress</dt>
+					<dd>@c.CompanyInfo.Address</dd>
+					<dt>@T.Orders.Unp</dt>
+					<dd class="tabular">@c.CompanyInfo.UNP</dd>
+					<dt>@T.Orders.LegalForm</dt>
+					<dd>@c.CompanyInfo.LegalType</dd>
+					<dt>@T.Orders.BankAccount</dt>
+					<dd class="tabular">@c.CompanyInfo.BankAccount.BankNumber @c.CompanyInfo.BankAccount.BIC</dd>
 				}
-			</div>
+			</dl>
 		}
 	};
 
 	private RenderFragment RenderLocation(Location location, string title) => __builder =>
 	{
-		<div class="info-item">
+		<div class="location">
 			<div class="print-location">
-				<span class="info-label">@title</span>
-				<span>Lat: @location.Latitude.ToString("F6"), Lng: @location.Longitude.ToString("F6")</span>
+				<span class="caption">@title</span>
+				<span class="tabular">@T.Orders.Coordinates(T.FormatNumber(location.Latitude, 6), T.FormatNumber(location.Longitude, 6))</span>
 			</div>
 			<div class="no-print">
 				<LocationMapPicker InitialLocation="@location"

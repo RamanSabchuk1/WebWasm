@@ -1,8 +1,31 @@
+@* Modal window (design code, section 6 «Окна»). With Title: standard header with the close button, body, Footer.
+   Without Title: ChildContent is rendered as is (it brings its own .modal-header/.modal-body/.modal-footer). *@
 @if (IsOpen)
 {
-	<div class="modal-overlay @(TopLayer ? "modal-overlay-top" : "")" tabindex="-1" @ref="_overlayRef" @onkeydown="HandleKeyDown">
-		<div class="modal-container @ContainerClass" @onclick:stopPropagation="true">
-			@ChildContent
+	<div class="modal-overlay @(TopLayer ? "modal-overlay-top" : null)" tabindex="-1" @ref="_overlayRef" @onkeydown="HandleKeyDown">
+		<div class="modal-container @ContainerClass" role="dialog" aria-modal="true" aria-label="@Title" @onclick:stopPropagation="true">
+			@if (Title is not null)
+			{
+				<div class="modal-header">
+					<h2>@Title</h2>
+					<button type="button" class="btn btn-ghost btn-icon" @onclick="() => OnClose.InvokeAsync()" title="@T.Common.Close" aria-label="@T.Common.Close">
+						<Icon Name="IconName.Close" Size="20" />
+					</button>
+				</div>
+				<div class="modal-body">
+					@ChildContent
+				</div>
+				@if (Footer is not null)
+				{
+					<div class="modal-footer">
+						@Footer
+					</div>
+				}
+			}
+			else
+			{
+				@ChildContent
+			}
 		</div>
 	</div>
 }

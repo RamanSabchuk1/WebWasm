@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.QuickGrid;
 
 namespace WebWasm.Components;
 
-public partial class CustomPaginator : ComponentBase, IDisposable
+public partial class CustomPaginator : IDisposable
 {
 	[Parameter] public PaginationState? State { get; set; }
 	[Parameter] public int? TotalItems { get; set; }

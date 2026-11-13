@@ -26,11 +26,8 @@ public class PriceChartMathTests
 	}
 
 	[Fact]
-	public void Formatting_IsCultureIndependent()
+	public void Svg_IsCultureIndependent()
 	{
-		Assert.Equal("12 346", PriceChartMath.Money(12345.67m));
-		Assert.Equal("99.5", PriceChartMath.Money(99.5m));
-		Assert.Equal("2.5 т", PriceChartMath.Tons(2500));
 		Assert.Equal("10.5", PriceChartMath.Svg(10.46));
 	}
 
@@ -43,17 +40,6 @@ public class PriceChartMathTests
 	public void SlotWindow_RoundsEdgesToQuarterHour(double preparation, double slot, int expected)
 	{
 		Assert.Equal(expected, PriceChartMath.SlotWindowMinutes(preparation, slot));
-	}
-
-	// VolumePriceProgression: y — коэффициент применения, изменение = значение × (1 − y). Пример владельца: y = 0.3, −0.3 → −21 %.
-	[Theory]
-	[InlineData(1, 1.0, 1.0, "одна доставка, ключ не действует")]
-	[InlineData(2, 0.3, 1.0, "y 0.30, применяется на 70 %, цены не меняются")]
-	[InlineData(2, 0.3, 0.79, "y 0.30, применяется на 70 %, доставка и комиссия −21 %")]
-	[InlineData(3, 0.92, 1.08, "y 0.92, применяется на 8 %, доставка и комиссия +8 %")]
-	public void VolumeEffect_ShowsApplicationAndChange(int deliveries, double y, double multiplier, string expected)
-	{
-		Assert.Equal(expected, PriceChartMath.VolumeEffect(deliveries, y, (decimal)multiplier));
 	}
 
 	[Fact]

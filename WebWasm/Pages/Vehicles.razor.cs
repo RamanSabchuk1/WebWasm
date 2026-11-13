@@ -43,21 +43,21 @@ public partial class Vehicles
 			var (companyId, createVehicle) = data;
 			if (companyId == Guid.Empty)
 			{
-				ToastService.ShowError("Cannot retreve a company ID");
+				ToastService.ShowError(T.Vehicles.NoCompany);
 				return;
 			}
 
 			await ApiClient.Post<CreateVehicle, Vehicle>($"Companies/vehicle?companyId={companyId}", createVehicle);
-			ToastService.ShowSuccess("Vehicle created successfully");
+			ToastService.ShowSuccess(T.Vehicles.Created);
 			CloseCreateModal();
 			await LoadData(false);
-		}, "Failed to create vehicle: ");
+		}, T.Vehicles.CreateFailed);
 	}
 
 	private void ShowDeleteConfirmation(Vehicle vehicle)
 	{
 		_vehicleToDelete = vehicle;
-		_deleteConfirmMessage = $"Are you sure you want to delete the vehicle '{vehicle.Model}' ({vehicle.RegistrationNumber})?";
+		_deleteConfirmMessage = T.Vehicles.DeleteMessage(vehicle.Model, vehicle.RegistrationNumber);
 		_showDeleteConfirm = true;
 	}
 
@@ -71,10 +71,10 @@ public partial class Vehicles
 		await LoadingService.Run(ToastService, async () =>
 		{
 			await ApiClient.Delete($"Companies/vehicle?vehicleId={_vehicleToDelete.Id}");
-			ToastService.ShowSuccess("Vehicle deleted successfully");
+			ToastService.ShowSuccess(T.Vehicles.DeletedToast);
 			CancelDelete();
 			await LoadData(false);
-		}, "Failed to delete vehicle: ");
+		}, T.Vehicles.DeleteFailed);
 	}
 
 	private void CancelDelete()

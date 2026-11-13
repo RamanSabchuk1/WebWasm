@@ -1,20 +1,20 @@
 @page "/providers"
-@using WebWasm.Components
 
-<PageTitle>Providers</PageTitle>
+<AppTitle Text="@T.Shell.Providers" />
 
-<div class="page-header">
-	<h1>📦 Providers</h1>
-	<p class="page-subtitle">Manage service providers and loading places</p>
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>Producer List</h3>
-		<button class="btn-primary" @onclick="OpenAddProducerModal">+ Add Producer</button>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Providers</h1>
+			<p class="page-subtitle">@T.Providers.Subtitle</p>
+		</div>
+		<button type="button" class="btn btn-primary" @onclick="OpenAddProducerModal">
+			<Icon Name="IconName.Plus" />
+			@T.Providers.Add
+		</button>
 	</div>
-	<ProducersTable
-					Producers="@_producers"
+
+	<ProducersTable Producers="@_producers"
 					OnEditProducer="@HandleEditProducer"
 					OnDeleteProducer="@HandleDeleteProducer"
 					OnAddLoadingPlace="@HandleAddLoadingPlace"
@@ -37,7 +37,5 @@
 <ConfirmDialog IsOpen="_confirm.IsOpen"
 			   Title="@_confirm.Title"
 			   Message="@_confirm.Message"
-			   ConfirmText="Delete"
-			   CancelText="Cancel"
 			   OnConfirm="_confirm.Confirm"
 			   OnCancel="_confirm.Cancel" />

@@ -1,4 +1,3 @@
-@using WebWasm.Helpers
 @using static WebWasm.Helpers.PriceChartMath
 
 @if (Result is null)
@@ -7,72 +6,83 @@
 }
 
 <div class="chart-toolbar">
-	<div class="mode-switch" role="tablist">
-		<button class="mode-btn @(_mode == ViewMode.Total ? "active" : "")" @onclick="() => SetMode(ViewMode.Total)">Итоговая цена</button>
-		<button class="mode-btn @(_mode == ViewMode.Parts ? "active" : "")" @onclick="() => SetMode(ViewMode.Parts)">Материал · доставка · комиссия</button>
+	<div class="segmented mode-switch" role="group" aria-label="@T.PriceChart.ModeLabel">
+		<button type="button" aria-pressed="@Aria.State(_mode == ViewMode.Total)" @onclick="() => SetMode(ViewMode.Total)">@T.PriceChart.ModeTotal</button>
+		<button type="button" aria-pressed="@Aria.State(_mode == ViewMode.Parts)" @onclick="() => SetMode(ViewMode.Parts)">@T.PriceChart.ModeParts</button>
 	</div>
-	<label class="toggle" title="Итог, делённый на вес заказа линии: так видно, какой тоннаж выгоднее"><input type="checkbox" checked="@_perTon" @onchange="OnPerTonChanged" /> цена за тонну</label>
+	<label class="checkbox" title="@T.PriceChart.PerTonTitle">
+		<input type="checkbox" checked="@_perTon" @onchange="OnPerTonChanged" />
+		@T.PriceChart.PerTon
+	</label>
 	@if (_mode == ViewMode.Total)
 	{
-		<label class="toggle" title="Полоса от самой короткой поездки (минимальные цены таблиц) до самой длинной (максимальные)"><input type="checkbox" checked="@_bands" @onchange="OnBandsChanged" /> коридор min…max</label>
+		<label class="checkbox" title="@T.PriceChart.BandsTitle">
+			<input type="checkbox" checked="@_bands" @onchange="OnBandsChanged" />
+			@T.PriceChart.Bands
+		</label>
 	}
 	@if (_mode == ViewMode.Parts && HasCarrierData)
 	{
-		<label class="toggle" title="Все доставки возят машины выбранного перевозчика: доставка — сколько получит он, комиссия — сколько останется платформе. Итог покупателя тот же.">
-			<input type="checkbox" checked="@CarrierView" @onchange="OnCarrierViewChanged" /> после принятия перевозчиком
+		<label class="checkbox" title="@T.PriceChart.CarrierViewTitle">
+			<input type="checkbox" checked="@CarrierView" @onchange="OnCarrierViewChanged" />
+			@T.PriceChart.CarrierView
 		</label>
 	}
 </div>
 
 @if (_mode == ViewMode.Parts)
 {
-	<p class="hint">
-		Бледная тонкая — итог; точки — материал (М); штрихи — доставки (Д); сплошная — комиссия (К).
+	<p class="hint chart-hint">
+		@T.PriceChart.PartsHint
 		@if (CarrierView && HasCarrierData)
 		{
-			<text>Сейчас Д — сколько получит перевозчик (его настройки и rebate), К — что останется платформе.</text>
+			@(" " + T.PriceChart.CarrierPartsHint)
 		}
 	</p>
 }
 
 <div class="chart-wrap" @ref="_container">
-	<svg viewBox="0 0 @Svg(_width) @Svg(Height)" width="100%" height="@Svg(Height)" role="img" aria-label="Цена заказа по доле пути в городе">
+	<svg viewBox="0 0 @Svg(_width) @Svg(Height)" width="100%" height="@Svg(Height)" role="img" aria-label="@T.PriceChart.AriaLabel">
 		@foreach (var t in _yTicks)
 		{
-			<line class="grid" x1="@Svg(Ml)" x2="@Svg(Ml + PlotWidth)" y1="@Svg(Y((decimal)t))" y2="@Svg(Y((decimal)t))" />
-			<g><text class="tick" x="@Svg(Ml - 6)" y="@Svg(Y((decimal)t) + 4)" text-anchor="end">@Tick(t)</text></g>
+			<g @key="t">
+				<line class="grid" x1="@Svg(Ml)" x2="@Svg(Ml + PlotWidth)" y1="@Svg(Y((decimal)t))" y2="@Svg(Y((decimal)t))" />
+				<text class="tick" x="@Svg(Ml - 6)" y="@Svg(Y((decimal)t) + 4)" text-anchor="end">@T.Pricing.Number(t, 2)</text>
+			</g>
 		}
 		@for (var i = 0; i < XTicks.Length; i++)
 		{
 			var t = XTicks[i];
-			<line class="grid" x1="@Svg(X(t))" x2="@Svg(X(t))" y1="@Svg(Mt)" y2="@Svg(Mt + PlotHeight)" />
-			@if (!Narrow || i % 2 == 0)
-			{
-				<g><text class="tick" x="@Svg(X(t))" y="@Svg(Mt + PlotHeight + 16)" text-anchor="middle">@Percent(t)</text></g>
-			}
+			<g @key="i">
+				<line class="grid" x1="@Svg(X(t))" x2="@Svg(X(t))" y1="@Svg(Mt)" y2="@Svg(Mt + PlotHeight)" />
+				@if (!Narrow || i % 2 == 0)
+				{
+					<g><text class="tick" x="@Svg(X(t))" y="@Svg(Mt + PlotHeight + 16)" text-anchor="middle">@T.Pricing.Share(t)</text></g>
+				}
+			</g>
 		}
-		<text class="axis-title" x="@Svg(Ml + PlotWidth)" y="@Svg(Height - 6)" text-anchor="end">@(Narrow ? "доля пути по городу →" : "доля пути по городу (цена по времени) →")</text>
+		<text class="axis-title" x="@Svg(Ml + PlotWidth)" y="@Svg(Height - 6)" text-anchor="end">@(Narrow ? T.PriceChart.XAxisShort : T.PriceChart.XAxis)</text>
 		@if (!Narrow)
 		{
-			<g><text class="axis-title" x="@Svg(Ml)" y="@Svg(Height - 6)" text-anchor="start">← весь путь за городом (цена по км)</text></g>
+			<g><text class="axis-title" x="@Svg(Ml)" y="@Svg(Height - 6)" text-anchor="start">@T.PriceChart.XAxisLeft</text></g>
 		}
-		<text class="axis-title" x="@Svg(Ml)" y="@Svg(Mt - 4)" text-anchor="start">@(_perTon ? "цена за тонну" : "цена заказа")</text>
+		<text class="axis-title" x="@Svg(Ml)" y="@Svg(Mt - 4)" text-anchor="start">@(_perTon ? T.PriceChart.YAxisPerTon : T.PriceChart.YAxisOrder)</text>
 
 		@for (var i = 0; i < _bandPolygons.Count; i++)
 		{
-			<polygon points="@_bandPolygons[i]" fill="@_bandColors[i]" fill-opacity="0.08" stroke="none" />
+			<polygon @key="BandKey(i)" class="band @_bandColors[i]" points="@_bandPolygons[i]" />
 		}
 		@foreach (var p in _paths)
 		{
-			<path d="@p.D" fill="none" stroke="@p.Color" stroke-width="@Svg(p.Width)" stroke-dasharray="@p.Dash" stroke-opacity="@Svg(p.Opacity)" stroke-linejoin="round" />
+			<path @key="p.Key" class="series @p.Color" d="@p.D" stroke-width="@Svg(p.Width)" stroke-dasharray="@p.Dash" stroke-opacity="@Svg(p.Opacity)" />
 		}
 		@foreach (var l in _labels)
 		{
-			<g><text class="series-label" x="@Svg(l.X)" y="@Svg(l.Y + 4)" fill="@l.Color" text-anchor="@l.Anchor">@l.Text</text></g>
+			<g @key="l.Key" class="@l.Color"><text class="series-label" x="@Svg(l.X)" y="@Svg(l.Y + 4)" text-anchor="@l.Anchor">@l.Text</text></g>
 		}
 		@foreach (var s in _stars)
 		{
-			<path d="@StarPath(s.X, s.Y)" class="star" />
+			<path @key="s.Key" d="@StarPath(s.X, s.Y)" class="star @CustomColor" />
 		}
 
 		@if (ActiveIndex is { } index)
@@ -80,10 +90,10 @@
 			<line class="hover-line @(_hoverIndex is null ? "pinned" : "")" x1="@Svg(X(TModeAt(index)))" x2="@Svg(X(TModeAt(index)))" y1="@Svg(Mt)" y2="@Svg(Mt + PlotHeight)" />
 			@foreach (var row in _tipRows.Where(r => r.Highlight))
 			{
-				<circle cx="@Svg(X(TModeAt(index)))" cy="@Svg(row.Y)" r="4" fill="#fff" stroke="@row.Color" stroke-width="2" />
+				<circle @key="row.Key" class="hover-dot @row.Color" cx="@Svg(X(TModeAt(index)))" cy="@Svg(row.Y)" r="4" />
 			}
 		}
-		<rect x="@Svg(Ml)" y="@Svg(Mt)" width="@Svg(PlotWidth)" height="@Svg(PlotHeight)" fill="transparent"
+		<rect class="hit" x="@Svg(Ml)" y="@Svg(Mt)" width="@Svg(PlotWidth)" height="@Svg(PlotHeight)"
 			  @onpointerenter="OnPointerEnter" @onpointermove="OnPointerMove" @onpointerdown="OnPointerDown" @onpointerleave="OnPointerLeave" />
 	</svg>
 
@@ -91,27 +101,27 @@
 	{
 		<div class="pc-tooltip pc-tooltip-@TooltipSide(tipIndex)">
 			<div class="pc-tooltip-title">
-				@Percent(TModeAt(tipIndex)) пути по городу
+				@T.PriceChart.TipTitle(T.Pricing.Share(TModeAt(tipIndex)))
 				@if (PointAt(tipIndex) is { } any)
 				{
-					<span class="pc-tooltip-sub">@Num(any.Km) км · @Num(any.Minutes) мин</span>
+					<span class="pc-tooltip-sub">@T.Pricing.Km(any.Km) · @T.Pricing.Minutes(any.Minutes)</span>
 				}
 			</div>
 			@foreach (var row in _tipRows.Take(MaxTipRows))
 			{
-				<div class="pc-tooltip-row @(row.Highlight ? "near" : "")">
-					<span class="swatch" style="background:@row.Color"></span>
+				<div @key="row.Key" class="pc-tooltip-row @(row.Highlight ? "near" : "")">
+					<span class="swatch @row.Color"></span>
 					<span class="pc-tooltip-label">@row.Label</span>
 					<span class="pc-tooltip-value">@row.Text</span>
 				</div>
 			}
 			@if (_tipRows.Count > MaxTipRows)
 			{
-				<div class="pc-tooltip-more">ещё @(_tipRows.Count - MaxTipRows): отфильтруйте линии ниже</div>
+				<div class="pc-tooltip-more">@T.PriceChart.MoreRows(_tipRows.Count - MaxTipRows)</div>
 			}
 			@if (_hoverIndex is null)
 			{
-				<div class="pc-tooltip-more">закреплено касанием; коснитесь ещё раз, чтобы снять</div>
+				<div class="pc-tooltip-more">@T.PriceChart.Pinned</div>
 			}
 		</div>
 	}
@@ -119,37 +129,40 @@
 
 <div class="filters">
 	<div class="filter-group">
-		<span class="filter-title">Тоннаж</span>
+		<span class="filter-title">@T.Capacities.Weight</span>
 		@foreach (var w in Weights)
 		{
-			<button class="chip @(_hiddenWeights.Contains(w) ? "off" : "")" @onclick="() => Toggle(_hiddenWeights, w)">
-				<span class="swatch" style="background:@WeightColor(w)"></span>@WeightName(w)
+			<button type="button" @key="w" class="btn btn-sm chip" aria-pressed="@Aria.State(!_hiddenWeights.Contains(w))" @onclick="() => Toggle(_hiddenWeights, w)">
+				<span class="swatch @WeightColor(w)"></span>@WeightName(w)
 			</button>
 		}
 	</div>
 	<div class="filter-group">
-		<span class="filter-title">Покупатель</span>
+		<span class="filter-title">@T.PriceChart.FilterBuyer</span>
 		@foreach (var hasCompany in new[] { true, false })
 		{
-			<button class="chip @(_hiddenBuyers.Contains(hasCompany) ? "off" : "")" @onclick="() => Toggle(_hiddenBuyers, hasCompany)">
-				<span class="line-sample @(hasCompany ? "solid" : "dashed")"></span>@BuyerName(hasCompany)
+			<button type="button" @key="hasCompany" class="btn btn-sm chip" aria-pressed="@Aria.State(!_hiddenBuyers.Contains(hasCompany))" @onclick="() => Toggle(_hiddenBuyers, hasCompany)">
+				<span class="line-sample @(hasCompany ? "solid" : "dashed")"></span>@T.Pricing.Buyer(hasCompany)
 			</button>
 		}
 	</div>
-	<button class="chip chip-reset" @onclick="ShowAll">показать все</button>
+	<button type="button" class="btn btn-ghost btn-sm" @onclick="ShowAll">
+		<Icon Name="IconName.Eye" />
+		@T.PriceChart.ShowAll
+	</button>
 </div>
 
 <details class="legend">
-	<summary>Все линии (@_series.Count(s => s.Visible) из @_series.Count). Клик по линии оставляет только её, повторный возвращает все.</summary>
+	<summary>@T.PriceChart.LegendSummary(_series.Count(s => s.Visible), _series.Count)</summary>
 	<div class="legend-list">
 		@foreach (var s in _series)
 		{
-			<button class="legend-item @(s.Visible ? "" : "off")" @key="s.Key" @onclick="() => Isolate(s)" title="@s.Series.Error">
-				<svg width="28" height="10"><line x1="0" x2="28" y1="5" y2="5" stroke="@s.Color" stroke-width="@Svg(s.StrokeWidth)" stroke-dasharray="@s.Dash" /></svg>
+			<button type="button" class="legend-item @(s.Visible ? "" : "off")" @key="s.Key" @onclick="() => Isolate(s)" aria-pressed="@Aria.State(s.Visible)" title="@s.Series.Error">
+				<svg class="@s.Color" width="28" height="10" aria-hidden="true"><line class="series" x1="0" x2="28" y1="5" y2="5" stroke-width="@Svg(s.StrokeWidth)" stroke-dasharray="@s.Dash" /></svg>
 				@s.Label
 				@if (s.Series.Error is not null)
 				{
-					<span class="legend-error">нет цены: вес не задан ни в таблицах региона, ни в дефолтах тоннажа</span>
+					<span class="legend-error">@T.Pricing.NoPrice</span>
 				}
 			</button>
 		}

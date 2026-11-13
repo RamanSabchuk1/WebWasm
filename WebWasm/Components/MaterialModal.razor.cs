@@ -3,7 +3,7 @@ using WebWasm.Models;
 
 namespace WebWasm.Components;
 
-public partial class MaterialModal : ComponentBase
+public partial class MaterialModal
 {
 	[Parameter] public bool IsOpen { get; set; }
 	[Parameter] public MaterialType? EditingMaterial { get; set; }
@@ -16,13 +16,12 @@ public partial class MaterialModal : ComponentBase
 	private double _solidity;
 	private string _photo = string.Empty;
 	private string _parentId = string.Empty;
-	private string _errorMessage = string.Empty;
+	private bool _showErrors;
 
 	private bool IsEditMode => EditingMaterial is not null;
 	private bool IsValid => !string.IsNullOrWhiteSpace(_name)
 		&& !string.IsNullOrWhiteSpace(_description);
 
-	// Simplified logic for v0/v1:
 	// - New materials: can only select root materials as parent
 	// - Editing with parent: can only select root materials as parent
 	// - Editing root material: cannot set parent
@@ -33,29 +32,32 @@ public partial class MaterialModal : ComponentBase
 
 	protected override void OnParametersSet()
 	{
-		if (IsOpen)
+		if (!IsOpen)
 		{
-			if (IsEditMode && EditingMaterial is not null)
-			{
-				_name = EditingMaterial.Name;
-				_description = EditingMaterial.Description;
-				_solidity = EditingMaterial.Solidity;
-				_photo = EditingMaterial.Photo ?? string.Empty;
-				_parentId = EditingMaterial.ParentId?.ToString() ?? string.Empty;
-			}
-			else
-			{
-				ResetForm();
-			}
-			_errorMessage = string.Empty;
+			return;
 		}
+
+		if (EditingMaterial is not null)
+		{
+			_name = EditingMaterial.Name;
+			_description = EditingMaterial.Description;
+			_solidity = EditingMaterial.Solidity;
+			_photo = EditingMaterial.Photo ?? string.Empty;
+			_parentId = EditingMaterial.ParentId?.ToString() ?? string.Empty;
+		}
+		else
+		{
+			ResetForm();
+		}
+
+		_showErrors = false;
 	}
 
 	private async Task HandleSubmit()
 	{
 		if (!IsValid)
 		{
-			_errorMessage = "Please fill in all required fields.";
+			_showErrors = true;
 			return;
 		}
 
@@ -85,6 +87,6 @@ public partial class MaterialModal : ComponentBase
 		_solidity = 0;
 		_photo = string.Empty;
 		_parentId = string.Empty;
-		_errorMessage = string.Empty;
+		_showErrors = false;
 	}
 }

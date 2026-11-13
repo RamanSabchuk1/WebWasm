@@ -1,101 +1,84 @@
-@using WebWasm.Models
-
-<div class="price-editor-container">
-	<div class="price-entries">
-		<div class="price-entries-header">
-			<h4>Price Entries (@_entries.Count)</h4>
-			<button class="btn-add-entry" @onclick="AddNewEntry" type="button">+ Add Entry</button>
-		</div>
-
-		@if (_entries.Count > 0)
-		{
-			<div class="entries-accordion">
-				@for (int i = 0; i < _entries.Count; i++)
-				{
-					var entry = _entries[i];
-					var index = i;
-					var isExpanded = _expandedIndex == index;
-
-					<div class="entry-panel" @key="index">
-						<button class="entry-toggle"
-								@onclick="() => ToggleExpand(index)"
-								type="button">
-							<span class="toggle-icon">@(isExpanded ? "▼" : "▶")</span>
-							<span class="entry-title">
-								Entry @(index + 1) - Key: @entry.Key
-								@if (!string.IsNullOrEmpty(entry.Error))
-								{
-									<span class="entry-status-error">⚠️</span>
-								}
-								else if (entry.MinPrice > 0 || entry.MaxPrice > 0)
-								{
-									<span class="entry-status-ok">✓</span>
-								}
-							</span>
-						</button>
-
-						@if (isExpanded)
-						{
-							<div class="entry-content">
-								<div class="entry-header">
-									<div class="entry-key-input">
-										<label>Neto KG</label>
-										<input type="number"
-											   class="form-control"
-											   @bind="entry.Key"
-											   @bind:event="onchange"
-											   min="0"
-											   placeholder="e.g., 1" />
-									</div>
-									<button class="btn-delete-entry" @onclick="() => RemoveEntry(index)" type="button" title="Delete entry">🗑️</button>
-								</div>
-
-								<div class="entry-prices">
-									<div class="price-field">
-										<label>Min Price *</label>
-										<input type="number"
-											   class="form-control"
-											   @bind="entry.MinPrice"
-											   @bind:event="onchange"
-											   step="0.01"
-											   min="0"
-											   placeholder="0.00" />
-									</div>
-
-									<div class="price-field">
-										<label>Max Price *</label>
-										<input type="number"
-											   class="form-control"
-											   @bind="entry.MaxPrice"
-											   @bind:event="onchange"
-											   step="0.01"
-											   min="0"
-											   placeholder="0.00" />
-									</div>
-								</div>
-
-								@if (!string.IsNullOrEmpty(entry.Error))
-								{
-									<div class="entry-error">⚠️ @entry.Error</div>
-								}
-							</div>
-						}
-					</div>
-				}
-			</div>
-		}
-		else
-		{
-			<div class="no-entries">
-				<p>No price entries yet. Click "Add Entry" to create one.</p>
-			</div>
-		}
+<div class="stack">
+	<div class="cluster entries-header">
+		<span class="field-label">@T.Regions.PricesCount(_entries.Count)</span>
+		<button type="button" class="btn btn-sm" @onclick="AddNewEntry">
+			<Icon Name="IconName.Plus" />
+			@T.Regions.AddPrice
+		</button>
 	</div>
+
+	@if (_entries.Count > 0)
+	{
+		<div class="entries">
+			@for (int i = 0; i < _entries.Count; i++)
+			{
+				var entry = _entries[i];
+				var index = i;
+				var isExpanded = _expandedIndex == index;
+
+				<div class="entry" @key="entry">
+					<button type="button" class="entry-toggle" @onclick="() => ToggleExpand(index)" aria-expanded="@Aria.State(isExpanded)">
+						<Icon Name="@(isExpanded ? IconName.ChevronDown : IconName.ChevronRight)" />
+						<span class="entry-title">@T.Regions.PriceTitle(index + 1, entry.Key)</span>
+						@if (!string.IsNullOrEmpty(entry.Error))
+						{
+							<span class="danger-text" title="@T.Regions.PriceHasError">
+								<Icon Name="IconName.Warning" />
+							</span>
+						}
+						else if (entry.MinPrice > 0 || entry.MaxPrice > 0)
+						{
+							<span class="success-text" title="@T.Regions.PriceFilled">
+								<Icon Name="IconName.Check" />
+							</span>
+						}
+					</button>
+
+					@if (isExpanded)
+					{
+						<div class="entry-content">
+							<div class="entry-key">
+								<div class="field">
+									<label for="price-weight-@index">@T.Regions.NetWeight</label>
+									<input id="price-weight-@index" type="number" min="0" placeholder="@T.Regions.NetWeightPlaceholder"
+										   @bind="entry.Key" @bind:event="onchange" />
+								</div>
+								<button type="button" class="btn btn-ghost btn-icon" @onclick="() => RemoveEntry(index)"
+										title="@T.Regions.DeletePrice" aria-label="@T.Regions.DeletePrice">
+									<Icon Name="IconName.Delete" Size="20" />
+								</button>
+							</div>
+
+							<div class="entry-prices">
+								<div class="field">
+									<label for="price-min-@index">@T.Regions.MinPrice</label>
+									<input id="price-min-@index" type="number" step="0.01" min="0"
+										   @bind="entry.MinPrice" @bind:event="onchange" />
+								</div>
+								<div class="field">
+									<label for="price-max-@index">@T.Regions.MaxPrice</label>
+									<input id="price-max-@index" type="number" step="0.01" min="0"
+										   @bind="entry.MaxPrice" @bind:event="onchange" />
+								</div>
+							</div>
+
+							@if (!string.IsNullOrEmpty(entry.Error))
+							{
+								<p class="field-error" role="alert">@entry.Error</p>
+							}
+						</div>
+					}
+				</div>
+			}
+		</div>
+	}
+	else
+	{
+		<p class="hint">@T.Regions.NoPrices</p>
+	}
 
 	@if (!string.IsNullOrEmpty(_globalError))
 	{
-		<div class="error-message">
-			⚠️ @_globalError
-		</div>
+		<p class="field-error" role="alert">@_globalError</p>
 	}
 </div>

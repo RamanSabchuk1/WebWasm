@@ -1,9 +1,12 @@
 import { loadLeaflet } from './leaflet-loader.js';
 
-export async function initDrawingMap(mapElement, initialPoints, dotnetHelper) {
+// colorVar: design token of the polygon and markers (e.g. '--accent'), read from the page so the map follows the theme.
+export async function initDrawingMap(mapElement, initialPoints, dotnetHelper, colorVar) {
 	await loadLeaflet();
 
 	const L = window.L;
+	const color = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim();
+	const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
 	
 	// Calculate bounds
 	let bounds = null;
@@ -56,8 +59,8 @@ export async function initDrawingMap(mapElement, initialPoints, dotnetHelper) {
 	function addMarker(lat, lng, index) {
 		const marker = L.circleMarker([lat, lng], {
 			radius: 6,
-			fillColor: '#8B7355',
-			color: '#6D5A44',
+			fillColor: color,
+			color: surface,
 			weight: 2,
 			opacity: 1,
 			fillOpacity: 0.8
@@ -109,7 +112,7 @@ export async function initDrawingMap(mapElement, initialPoints, dotnetHelper) {
 		// Draw polyline
 		const polylinePoints = state.points.map(p => [p.lat, p.lng]);
 		state.polyline = L.polyline(polylinePoints, {
-			color: '#8B7355',
+			color: color,
 			weight: 2,
 			opacity: 0.7,
 			dashArray: '5, 5'
@@ -118,11 +121,11 @@ export async function initDrawingMap(mapElement, initialPoints, dotnetHelper) {
 		// Draw polygon if 3+ points
 		if (state.points.length >= 3) {
 			state.polygon = L.polygon(polylinePoints, {
-				color: '#8B7355',
+				color: color,
 				weight: 2,
 				opacity: 0.8,
 				fillOpacity: 0.2,
-				fillColor: '#8B7355'
+				fillColor: color
 			}).addTo(map);
 
 			// Fit map to polygon

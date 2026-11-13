@@ -1,233 +1,176 @@
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using WebWasm.Models
-
-<div class="data-grid-container">
-	<div class="data-grid-toolbar">
-		<input type="text"
-			   placeholder="Search companies by name, UNP, email, or address..."
-			   @bind="_searchText"
-			   @bind:after="SaveSearch"
-			   @bind:event="oninput"
-			   class="search-input" />
-
-		<button class="filter-toggle-btn" @onclick="() => _showFilters = !_showFilters">
-			<span>🔍 Filters</span>
-			@if (_companyTypeFilter != null)
+<div class="card">
+	<div class="toolbar">
+		<label class="search">
+			<Icon Name="IconName.Search" />
+			<input type="search" placeholder="@T.Companies.SearchPlaceholder" aria-label="@T.Common.Search"
+				   @bind="_searchText" @bind:event="oninput" @bind:after="SaveSearch" />
+		</label>
+		<div class="segmented type-filter" role="group" aria-label="@T.Companies.TypeFilter">
+			<button type="button" aria-pressed="@Aria.State(_companyTypeFilter is null)" @onclick="() => SetTypeFilter(null)">@T.Common.All</button>
+			@foreach (var type in FilterTypes)
 			{
-				<span class="filter-count-badge">1</span>
+				<button type="button" aria-pressed="@Aria.State(_companyTypeFilter == type)" @onclick="() => SetTypeFilter(type)" @key="type">
+					@T.Enums.CompanyRole(type)
+				</button>
 			}
-			<span class="filter-toggle-icon">@(_showFilters ? "▲" : "▼")</span>
-		</button>
-	</div>
-
-	@if (_showFilters)
-	{
-		<div class="filters-panel">
-			<div class="filter-row">
-				<label class="filter-label">Company Type</label>
-				<div class="filter-control">
-					<div class="kind-switch">
-						<button type="button"
-								class="kind-switch-btn @(_companyTypeFilter == null ? "active" : "")"
-								@onclick="() => SetTypeFilter(null)">
-							All
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_companyTypeFilter == CompanyType.Buyer ? "active" : "")"
-								@onclick="() => SetTypeFilter(CompanyType.Buyer)">
-							Buyer
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_companyTypeFilter == CompanyType.Cargo ? "active" : "")"
-								@onclick="() => SetTypeFilter(CompanyType.Cargo)">
-							Cargo
-						</button>
-						<button type="button"
-								class="kind-switch-btn @(_companyTypeFilter == CompanyType.Provider ? "active" : "")"
-								@onclick="() => SetTypeFilter(CompanyType.Provider)">
-							Provider
-						</button>
-					</div>
-				</div>
-			</div>
 		</div>
-	}
+	</div>
 
 	@{ var filteredRows = FilteredCompanies; }
 	@if (filteredRows.Length > 0)
 	{
-		<div class="data-grid-scroll">
-			<QuickGrid ItemsProvider="@GridItems.From(filteredRows)" Pagination="@_pagination" class="data-grid">
-				<TemplateColumn Title="Company" Sortable="false">
-					<div class="company-cell">
-						<button class="btn-expand" @onclick="() => ToggleExpand(context.Id)">
-							@(IsExpanded(context.Id) ? "▼" : "▶")
+		<div class="table-wrap">
+			<QuickGrid ItemsProvider="@GridItems.From(filteredRows)" Pagination="@_pagination" ItemKey="company => company.Id">
+				<TemplateColumn Title="@T.Common.Company">
+					@{ var expanded = IsExpanded(context.Id); }
+					<div class="name-cell">
+						<button type="button" class="btn btn-ghost btn-icon btn-sm" @onclick="() => ToggleExpand(context.Id)"
+								title="@(expanded ? T.Common.Collapse : T.Common.Expand)" aria-label="@(expanded ? T.Common.Collapse : T.Common.Expand)"
+								aria-expanded="@Aria.State(expanded)">
+							<Icon Name="@(expanded ? IconName.ChevronDown : IconName.ChevronRight)" />
 						</button>
-						<div class="company-info">
-							<div class="company-name">@context.Name</div>
-							<div class="company-unp">UNP: @context.CompanyInfo?.UNP</div>
+						<div class="name-main">
+							<span class="strong">@context.Name</span>
+							@if (!string.IsNullOrEmpty(context.CompanyInfo?.UNP))
+							{
+								<span class="caption tabular">@T.Companies.UnpValue(context.CompanyInfo.UNP)</span>
+							}
 						</div>
 					</div>
 
-					@if (IsExpanded(context.Id))
+					@if (expanded)
 					{
-						<div class="company-expanded">
-							<!-- Basic Info Section -->
-							<div class="info-section">
-								<h4>Company Information</h4>
-								<div class="info-grid">
-									<div class="info-item">
-										<span class="info-label">Address:</span>
-										<span class="info-value">@context.CompanyInfo?.Address</span>
-									</div>
-									<div class="info-item">
-										<span class="info-label">Corporate Email:</span>
-										<span class="info-value">@context.CompanyInfo?.CorporateEmail</span>
-									</div>
-									<div class="info-item">
-										<span class="info-label">Status:</span>
-										<span class="info-value">
-											@if (context.IsActive)
-											{
-												<span class="badge badge-active">Active</span>
-											}
-											else
-											{
-												<span class="badge badge-inactive">Inactive</span>
-											}
-										</span>
-									</div>
-									<div class="info-item">
-										<span class="info-label">Rebate:</span>
-										<span class="info-value">@context.Rebate</span>
-									</div>
-								</div>
-							</div>
-
-							<!-- Company Info Section -->
-							@if (context.CompanyInfo is not null)
-							{
-								<div class="info-section">
-									<h4>Operational Details</h4>
-									<div class="info-grid">
-										<div class="info-item">
-											<span class="info-label">Legal Type:</span>
-											<span class="info-value">@context.CompanyInfo.LegalType</span>
-										</div>
-										<div class="info-item">
-											<span class="info-label">Location:</span>
-											<span class="info-value location">
-												📍 @context.Location.Latitude.ToString("F6"), @context.Location.Longitude.ToString("F6")
-											</span>
-										</div>
+						<div class="details">
+							<div>
+								<h3 class="section-title">@T.Companies.Details</h3>
+								<dl class="kv">
+									<dt>@T.Common.Address</dt>
+									<dd>@OrDash(context.CompanyInfo?.Address)</dd>
+									<dt>@T.Companies.CorporateEmail</dt>
+									<dd>@OrDash(context.CompanyInfo?.CorporateEmail)</dd>
+									<dt>@T.Common.Status</dt>
+									<dd><span class="@StatusTone.Of(context.IsActive).Badge()">@(context.IsActive ? T.Companies.Active : T.Companies.Inactive)</span></dd>
+									<dt>@T.Companies.Rebate</dt>
+									<dd class="tabular">@T.FormatNumber(context.Rebate)</dd>
+									@if (context.CompanyInfo is not null)
+									{
+										<dt>@T.Companies.LegalType</dt>
+										<dd>@OrDash(context.CompanyInfo.LegalType)</dd>
+										<dt>@T.Companies.Location</dt>
+										<dd class="tabular">@T.Companies.Coordinates(T.FormatNumber(context.Location.Latitude, 6), T.FormatNumber(context.Location.Longitude, 6))</dd>
 										@if (!string.IsNullOrEmpty(context.CompanyInfo.Photo))
 										{
-											<div class="info-item full-width">
-												<span class="info-label">Photo:</span>
-												<div class="company-photo">
-													<img src="@context.CompanyInfo.Photo" alt="@context.Name" />
-												</div>
-											</div>
+											<dt>@T.Common.Photo</dt>
+											<dd><img class="company-photo" src="@context.CompanyInfo.Photo" alt="@context.Name" loading="lazy" /></dd>
 										}
-									</div>
-								</div>
+									}
+								</dl>
+							</div>
 
-								<!-- Bank Account Section -->
-								@if (context.CompanyInfo.BankAccount is not null)
-								{
-									<div class="info-section">
-										<h4>Bank Account</h4>
-										<div class="info-grid">
-											<div class="info-item">
-												<span class="info-label">Bank Number:</span>
-												<span class="info-value bank-number">@context.CompanyInfo.BankAccount.BankNumber</span>
-											</div>
-											<div class="info-item">
-												<span class="info-label">BIC:</span>
-												<span class="info-value">@context.CompanyInfo.BankAccount.BIC</span>
-											</div>
-										</div>
-									</div>
-								}
+							@if (context.CompanyInfo?.BankAccount is { } bankAccount)
+							{
+								<div>
+									<h3 class="section-title">@T.Companies.BankAccount</h3>
+									<dl class="kv">
+										<dt>@T.Companies.BankNumber</dt>
+										<dd class="tabular">@bankAccount.BankNumber</dd>
+										<dt>@T.Companies.Bic</dt>
+										<dd>@bankAccount.BIC</dd>
+									</dl>
+								</div>
 							}
 						</div>
 					}
 				</TemplateColumn>
 
-				<TemplateColumn Title="Email" Sortable="false">
+				<TemplateColumn Title="@T.Common.Email">
 					<HeaderTemplate>
-						<button class="@SortHelper.GetHeaderClass(_sortState, "email")" @onclick='() => CycleSort("email")'>
-							Email <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "email")</span>
-						</button>
+						<SortHeader Title="@T.Common.Email" Key="email" State="_sortState" OnSort="CycleSort" />
 					</HeaderTemplate>
 					<ChildContent>
-						@(context.CompanyInfo?.CorporateEmail ?? "")
+						@if (string.IsNullOrEmpty(context.CompanyInfo?.CorporateEmail))
+						{
+							<span class="muted">@Texts.Dash</span>
+						}
+						else
+						{
+							@context.CompanyInfo.CorporateEmail
+						}
 					</ChildContent>
 				</TemplateColumn>
 
-				<TemplateColumn Title="Type" Sortable="false">
-					@foreach (var flag in GetTypeFlags(context.CompanyType))
-					{
-						<span class="type-badge type-badge--@flag.ToString().ToLowerInvariant()">@flag</span>
-					}
+				<TemplateColumn Title="@T.Common.Type">
+					<div class="cluster">
+						@foreach (var flag in GetTypeFlags(context.CompanyType))
+						{
+							<span class="badge badge-neutral" @key="flag">@T.Enums.CompanyRole(flag)</span>
+						}
+					</div>
 				</TemplateColumn>
 
-				<TemplateColumn Title="Created" Sortable="false">
+				<TemplateColumn Title="@T.Common.Created">
 					<HeaderTemplate>
-						<button class="@SortHelper.GetHeaderClass(_sortState, "created")" @onclick='() => CycleSort("created")'>
-							Created <span class="sort-indicator">@SortHelper.GetIndicator(_sortState, "created")</span>
-						</button>
+						<SortHeader Title="@T.Common.Created" Key="created" State="_sortState" OnSort="CycleSort" />
 					</HeaderTemplate>
 					<ChildContent>
-						@FormatCreated(context.Created)
+						@if (context.Created == DateTime.MinValue)
+						{
+							<span class="muted">@Texts.Dash</span>
+						}
+						else
+						{
+							<span class="tabular nowrap">@T.FormatDate(context.Created)</span>
+						}
 					</ChildContent>
 				</TemplateColumn>
 
-				<TemplateColumn Title="Status" Sortable="false">
-					@if (context.IsActive)
-					{
-						<span class="status-badge status-active">Active</span>
-					}
-					else
-					{
-						<span class="status-badge status-inactive">Inactive</span>
-					}
+				<TemplateColumn Title="@T.Common.Status">
+					<span class="@StatusTone.Of(context.IsActive).Badge()">@(context.IsActive ? T.Companies.Active : T.Companies.Inactive)</span>
 				</TemplateColumn>
 
-				<TemplateColumn Title="Security Level" Sortable="false">
-					@{
-						var clearance = context.SecurityClearanceLevel;
-					}
-					<span class="level-badge level-badge--@clearance.ToString().ToLowerInvariant()">@clearance</span>
+				<TemplateColumn Title="@T.Security.Short">
+					<span class="badge badge-neutral">@T.Enums.SecurityLevel(context.SecurityClearanceLevel)</span>
 				</TemplateColumn>
 
-				<TemplateColumn Title="Actions" Sortable="false">
-					<ActionsDropdown Title="Действия" MenuHeight="180">
-						<button class="btn-action" @onclick="() => OnToggleActive.InvokeAsync((context.Id, !context.IsActive))">
-							@(context.IsActive ? "🚫 Deactivate" : "✅ Activate")
+				<TemplateColumn Title="@T.Common.Actions" Align="Align.End">
+					<ActionsDropdown MenuHeight="170">
+						<button type="button" class="menu-item" @onclick="() => OnToggleActive.InvokeAsync((context.Id, !context.IsActive))">
+							<Icon Name="@(context.IsActive ? IconName.Ban : IconName.Check)" />
+							@(context.IsActive ? T.Companies.Deactivate : T.Companies.Activate)
 						</button>
-						<button class="btn-action" @onclick="() => OnEditCompany.InvokeAsync(context)">
-							✏️ Edit
+						<button type="button" class="menu-item" @onclick="() => OnEditCompany.InvokeAsync(context)">
+							<Icon Name="IconName.Edit" />
+							@T.Common.Edit
 						</button>
-						<button class="btn-action" @onclick="() => OnEditSecurityLevel.InvokeAsync(context)" title="View or change data security level for this company">
-							🔐 Security
+						<button type="button" class="menu-item" @onclick="() => OnEditSecurityLevel.InvokeAsync(context)">
+							<Icon Name="IconName.Shield" />
+							@T.Security.Short
 						</button>
-						<button class="btn-action" @onclick="() => OnDeleteCompany.InvokeAsync(context)" title="Soft delete company (cascades to producers, vehicles, drivers, users)">
-							🗑️ Delete
+						<div class="menu-separator" role="separator"></div>
+						<button type="button" class="menu-item menu-item-danger" @onclick="() => OnDeleteCompany.InvokeAsync(context)">
+							<Icon Name="IconName.Delete" />
+							@T.Common.Delete
 						</button>
 					</ActionsDropdown>
 				</TemplateColumn>
 			</QuickGrid>
 		</div>
-
-		<div class="data-grid-pagination">
-			<CustomPaginator State="@_pagination" />
+		<CustomPaginator State="@_pagination" />
+	}
+	else if (Companies.Count == 0)
+	{
+		<div class="empty">
+			<Icon Name="IconName.Companies" />
+			<p class="empty-title">@T.Companies.Empty</p>
+			<p class="empty-hint">@T.Companies.EmptyHint</p>
 		</div>
 	}
 	else
 	{
-		<div class="empty-state">
-			<p>No companies available</p>
+		<div class="empty">
+			<Icon Name="IconName.Search" />
+			<p class="empty-title">@T.Common.NothingFound</p>
+			<p class="empty-hint">@T.Common.NothingFoundHint</p>
 		</div>
 	}
 </div>

@@ -1,39 +1,35 @@
-@using WebWasm.Models
+<ModalShell IsOpen="IsOpen && _loaded" ContainerClass="modal-sm" Title="@T.Security.Title" OnClose="CloseModal" OnSubmit="HandleSubmit">
+	<ChildContent>
+		@if (!string.IsNullOrEmpty(EntityLabel))
+		{
+			<p class="strong">@EntityLabel</p>
+		}
 
-<ModalShell IsOpen="IsOpen && _loaded" OnClose="CloseModal" OnSubmit="HandleSubmit">
-	<div class="modal-header">
-		<h2>Security Level</h2>
-		<button class="btn-close" @onclick="CloseModal">×</button>
-	</div>
-
-	<div class="modal-body">
-		<p class="entity-label">@EntityLabel</p>
-
-		<div class="form-group">
-			<label>Security Level *</label>
-			<select class="form-control" @bind="_selectedLevel">
+		<div class="field">
+			<label for="security-level">@T.Security.Level</label>
+			<select id="security-level" @bind="_selectedLevel">
 				@foreach (var level in _levels)
 				{
-					<option value="@level">@level</option>
+					<option value="@level" @key="level">@T.Enums.SecurityLevel(level)</option>
 				}
 			</select>
 		</div>
 
-		<div class="form-section">
-			<h3>What this means</h3>
-			<p class="level-description">@GetDescription(_selectedLevel)</p>
+		<div>
+			<h3 class="section-title">@T.Security.WhatItMeans</h3>
+			<p class="muted">@T.Security.Description(_selectedLevel)</p>
 		</div>
 
 		@if (_selectedLevel != _currentLevel)
 		{
-			<div class="form-section form-section-warn">
-				<p>Current level is <strong>@_currentLevel</strong>. Saving will change it to <strong>@_selectedLevel</strong>.</p>
-			</div>
+			<p class="change-note" role="status">
+				<Icon Name="IconName.Info" />
+				<span>@T.Security.Change(T.Enums.SecurityLevel(_currentLevel), T.Enums.SecurityLevel(_selectedLevel))</span>
+			</p>
 		}
-	</div>
-
-	<div class="modal-footer">
-		<button class="btn-secondary" @onclick="CloseModal">Cancel</button>
-		<button class="btn-primary" @onclick="HandleSubmit" disabled="@(_selectedLevel == _currentLevel)">Save</button>
-	</div>
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseModal">@T.Common.Cancel</button>
+		<button type="button" class="btn btn-primary" @onclick="HandleSubmit" disabled="@(_selectedLevel == _currentLevel)">@T.Common.Save</button>
+	</Footer>
 </ModalShell>

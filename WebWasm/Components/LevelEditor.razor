@@ -1,104 +1,94 @@
-@using WebWasm.Models
-
-@* S5: Enter = Create Level. В режиме редактирования success-path кнопки в футере нет
-   (только Close и локальный «Update Prices»), поэтому Enter там не навешиваем. *@
-<ModalShell IsOpen="IsOpen" ContainerClass="modal-fullscreen" OnClose="CloseEditor" OnSubmit="@(IsEditMode ? EventCallback.Empty : EventCallback.Factory.Create(this, HandleSubmit))">
-			<div class="modal-header">
-				<h2>@(IsEditMode ? "Edit Level" : "Add New Level")</h2>
-				<button class="btn-close" @onclick="CloseEditor">×</button>
-			</div>
-
-			<div class="modal-body level-editor-body">
-				<div class="editor-grid">
-					<!-- Left Panel: Configuration -->
-					<div class="config-panel">
-						<h3>Configuration</h3>
-
-						<div class="form-group">
-							<label>Level Type *</label>
-							<div class="radio-group">
-								@foreach (var type in Enum.GetValues<LevelType>())
-								{
-									<label class="radio-label">
-										<input type="radio" @onchange="e => _levelType = type" checked="@(_levelType == type)" />
-										<span>@type</span>
-									</label>
-								}
-							</div>
-						</div>
-
-						<div class="form-group">
-							<label>Calculation Algorithm *</label>
-							<div class="radio-group">
-								<label class="radio-label">
-									<input type="radio" @onchange="e => _algorithm = 1" checked="@(_algorithm == 1)" />
-									<span>Algorithm 1 (Price per km)</span>
-								</label>
-								<label class="radio-label">
-									<input type="radio" @onchange="e => _algorithm = 2" checked="@(_algorithm == 2)" />
-									<span>Algorithm 2 (Price per hour)</span>
-								</label>
-							</div>
-						</div>
-
-						<div class="section-divider"></div>
-
-						<h3>Price Information</h3>
-						<PriceInfoEditor @key="@GetPriceEditorKey()" @ref="_priceEditor" ExistingPrices="@_priceInfo" />
-
-						@if (IsEditMode)
+@* S5: Enter = create the level. In edit mode the footer has no success button (only Close and the local
+   «Save prices» / «Save boundary»), so Enter does nothing there. *@
+<ModalShell IsOpen="IsOpen" ContainerClass="modal-fullscreen" Title="@(IsEditMode ? T.Regions.EditLevelTitle : T.Regions.AddLevelTitle)"
+			OnClose="CloseEditor" OnSubmit="@(IsEditMode ? EventCallback.Empty : EventCallback.Factory.Create(this, HandleSubmit))">
+	<ChildContent>
+		<div class="editor-grid">
+			<div class="config-panel stack">
+				<div class="field">
+					<span class="field-label">@T.Regions.LevelType</span>
+					<div class="segmented" role="group" aria-label="@T.Regions.LevelType">
+						@foreach (var type in Enum.GetValues<LevelType>())
 						{
-							<div class="panel-actions">
-								<button class="btn-primary" @onclick="HandleSubmitPrices" disabled="@(_priceEditor?.IsValid != true)">
-									💰 Update Prices
-								</button>
-							</div>
-						}
-					</div>
-
-					<!-- Right Panel: Map -->
-					<div class="map-panel">
-						@if (_showDrawer)
-						{
-							<PolygonDrawer InitialPoints="@_points"
-										   OnCancel="@CancelDrawer"
-										   OnConfirm="@HandleDrawerConfirm" />
-						}
-						else
-						{
-							<div class="drawer-placeholder">
-								<div class="placeholder-content">
-									<p>👇🏻 Click below to draw polygon</p>
-								</div>
-								<button class="btn-start-drawing" @onclick="OpenDrawer">
-									🎨 Start Drawing
-								</button>
-								@if (IsEditMode && _points.Count >= 3)
-								{
-									<button class="btn-start-drawing" @onclick="HandleSubmitGeometry">
-										🗺️ Update Geometry
-									</button>
-								}
-							</div>
+							<button type="button" aria-pressed="@Aria.State(_levelType == type)" @onclick="() => _levelType = type" @key="type">
+								@T.Enums.LevelType(type)
+							</button>
 						}
 					</div>
 				</div>
 
-				@if (!string.IsNullOrEmpty(_errorMessage))
+				<div class="field">
+					<span class="field-label">@T.Regions.Algorithm</span>
+					<div class="segmented" role="group" aria-label="@T.Regions.Algorithm">
+						@foreach (var algorithm in Algorithms)
+						{
+							<button type="button" aria-pressed="@Aria.State(_algorithm == algorithm)" @onclick="() => _algorithm = algorithm" @key="algorithm">
+								@T.Regions.AlgorithmName(algorithm)
+							</button>
+						}
+					</div>
+				</div>
+
+				<h3 class="section-title">@T.Regions.Prices</h3>
+				<PriceInfoEditor @key="@GetPriceEditorKey()" @ref="_priceEditor" ExistingPrices="@_priceInfo" />
+
+				@if (IsEditMode)
 				{
-					<div class="error-message">
-						🌋 @_errorMessage
+					<div>
+						<button type="button" class="btn" @onclick="HandleSubmitPrices" disabled="@(_priceEditor?.IsValid != true)">
+							<Icon Name="IconName.Save" />
+							@T.Regions.SavePrices
+						</button>
 					</div>
 				}
 			</div>
 
-			<div class="modal-footer">
-				<button class="btn-secondary" @onclick="CloseEditor">@(IsEditMode ? "Close" : "Cancel")</button>
-				@if (!IsEditMode)
+			<div class="map-panel">
+				@if (_showDrawer)
 				{
-					<button class="btn-primary" @onclick="HandleSubmit" disabled="@(!CanSubmit)">
-						Create Level
-					</button>
+					<PolygonDrawer InitialPoints="@_points"
+								   OnCancel="@CancelDrawer"
+								   OnConfirm="@HandleDrawerConfirm" />
+				}
+				else
+				{
+					<div class="empty">
+						<Icon Name="IconName.Hexagon" />
+						<p class="empty-title">@(_points.Count >= 3 ? T.Regions.BoundaryPoints(_points.Count) : T.Regions.NoBoundary)</p>
+						@if (_points.Count == 0)
+						{
+							<p class="empty-hint">@T.Regions.DrawHint</p>
+						}
+						<div class="cluster">
+							<button type="button" class="btn" @onclick="OpenDrawer">
+								<Icon Name="IconName.Edit" />
+								@(_points.Count > 0 ? T.Regions.EditBoundary : T.Regions.DrawBoundary)
+							</button>
+							@if (IsEditMode && _points.Count >= 3)
+							{
+								<button type="button" class="btn" @onclick="HandleSubmitGeometry">
+									<Icon Name="IconName.Save" />
+									@T.Regions.SaveBoundary
+								</button>
+							}
+						</div>
+					</div>
 				}
 			</div>
+		</div>
+
+		@if (!string.IsNullOrEmpty(_errorMessage))
+		{
+			<p class="field-error" role="alert">@_errorMessage</p>
+		}
+	</ChildContent>
+	<Footer>
+		<button type="button" class="btn" @onclick="CloseEditor">@(IsEditMode ? T.Common.Close : T.Common.Cancel)</button>
+		@if (!IsEditMode)
+		{
+			<button type="button" class="btn btn-primary" @onclick="HandleSubmit" disabled="@(!CanSubmit)">
+				@T.Common.Create
+			</button>
+		}
+	</Footer>
 </ModalShell>

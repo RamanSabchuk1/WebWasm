@@ -23,8 +23,10 @@ public partial class TriangleMap : LeafletMapBase
 			point3 = new { lat = t.Point3.Latitude, lng = t.Point3.Longitude }
 		}).ToList();
 
-		var color = LevelType == LevelType.Neighborhood ? "#1565C0" : "#E65100";
+		// Design token, the module reads its value: the colour follows the theme.
+		// Orange is for actions only (design code, section 2): city levels take the warning tone.
+		var colorVar = LevelType == LevelType.Neighborhood ? "--info" : "--warning";
 
-		return ("initMap", [triangleData, color]);
+		return ("initMap", [triangleData, colorVar, T.Maps.Triangle]);
 	}
 }

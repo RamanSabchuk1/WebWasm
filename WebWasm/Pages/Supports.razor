@@ -1,16 +1,14 @@
 @page "/supports"
-@using WebWasm.Components
 
-<PageTitle>Support</PageTitle>
+<AppTitle Text="@T.Shell.Support" />
 
-<div class="page-header">
-	<h1>⚙️ Support</h1>
-	<p class="page-subtitle">Manage support tickets and inquiries</p>
-</div>
-
-<div class="content-card">
-	<div class="card-header">
-		<h3>Suggestion List</h3>
+<div class="page">
+	<div class="page-header">
+		<div>
+			<h1>@T.Shell.Support</h1>
+			<p class="page-subtitle">@T.Support.Subtitle</p>
+		</div>
 	</div>
+
 	<SuggestionsTable Suggestions="@_suggestions" OnApply="@HandleApply" />
 </div>

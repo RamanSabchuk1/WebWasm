@@ -6,7 +6,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Payments : ComponentBase
+public partial class Payments
 {
 	private const string SearchKey = "search_payments";
 	private const string SortKey = "sort_payments";

@@ -5,7 +5,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Pages;
 
-public partial class Devices : ComponentBase
+public partial class Devices
 {
 	[Inject] private CashService CashService { get; set; } = default!;
 	[Inject] private ApiClient ApiClient { get; set; } = default!;
@@ -39,9 +39,9 @@ public partial class Devices : ComponentBase
 		{
 			var (deviceTokenId, userInfoId) = @event;
 			await ApiClient.Delete($"DeviceTokens/{deviceTokenId}?userInfoId={userInfoId}");
-			ToastService.ShowSuccess("Device unbound successfully!");
+			ToastService.ShowSuccess(T.Devices.Unbound);
 			await LoadDevices(false);
-		}, "Failed to unbind device: ");
+		}, T.Devices.UnbindFailed);
 	}
 
 	// Batch-endpoint'а нет (owner, 2026-08-27): N последовательных single DELETE — приемлемо для admin-объёмов.
@@ -64,11 +64,11 @@ public partial class Devices : ComponentBase
 
 			if (failed == 0)
 			{
-				ToastService.ShowSuccess($"Unbound {tokens.Count} device(s) successfully!");
+				ToastService.ShowSuccess(T.Devices.UnboundMany(tokens.Count));
 			}
 			else
 			{
-				ToastService.ShowError($"Unbound {tokens.Count - failed} of {tokens.Count} device(s); {failed} failed.");
+				ToastService.ShowError(T.Devices.UnboundPartly(tokens.Count - failed, tokens.Count, failed));
 			}
 
 			await LoadDevices(false);
@@ -78,5 +78,5 @@ public partial class Devices : ComponentBase
 
 public record DeviceTokenWithUser(DeviceToken DeviceToken, User? User)
 {
-	public string GetUserName() => User.ShortName;
+	public string GetUserName() => User.ShortName ?? string.Empty;
 }

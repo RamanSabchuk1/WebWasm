@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -11,11 +10,12 @@ namespace WebWasm.Components;
 /// <summary>
 /// График калькулятора цен: X — доля пути по городу (0 — весь путь за городом, цена по км и таблице пригорода;
 /// 100 % — весь по городу, цена по времени и таблице города), Y — цена. Линия = тоннаж грузовика × тип покупателя
-/// при весе заказа с ползунка; цвет — тоннаж, пунктир — покупатель без компании, золотая со звёздами — заказ из разных грузовиков.
+/// при весе заказа с ползунка; цвет — тоннаж, пунктир — покупатель без компании, толстая со звёздами — заказ из разных грузовиков.
 /// Подсказка при наведении (на телефоне — касанием) показывает значения видимых линий в этой точке, по убыванию.
 /// Рисуется SVG без JS-библиотек; JS нужен только чтобы узнать размер и положение графика.
+/// Цвета линий — CSS-классы pc-c0…pc-c6 и pc-custom (токены темы), элементы рисуются currentColor.
 /// </summary>
-public partial class PriceChart : ComponentBase
+public partial class PriceChart
 {
 	[Inject] private IJSRuntime JS { get; set; } = default!;
 
@@ -40,10 +40,8 @@ public partial class PriceChart : ComponentBase
 	private const double Mt = 16;
 	private const double Mb = 44;
 	private const int MaxTipRows = 8;
-	private const string CustomColor = "#C9A227";
-
-	private static readonly string[] Palette =
-		["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b", "#e377c2", "#17becf", "#bcbd22", "#7f7f7f"];
+	private const string CustomColor = "pc-custom";
+	private const int PaletteSize = 7;
 
 	private static readonly double[] XTicks = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
@@ -64,13 +62,16 @@ public partial class PriceChart : ComponentBase
 	private int? _pinnedIndex;
 	private double? _cursorY;
 
+	/// <summary>Color — CSS-класс цвета линии.</summary>
 	private sealed record SeriesView(string Key, PricingSimulationSeries Series, string Label, string Color, double StrokeWidth, string? Dash, bool Visible);
 
-	private sealed record PathView(string D, string Color, double Width, string? Dash, double Opacity);
+	private sealed record PathView(string Key, string D, string Color, double Width, string? Dash, double Opacity);
 
-	private sealed record TextView(double X, double Y, string Text, string Color, string Anchor = "start");
+	private sealed record TextView(string Key, double X, double Y, string Text, string Color, string Anchor = "start");
 
-	private sealed record TipRow(string Color, string Label, string Text, decimal Value, double Y, bool Highlight);
+	private sealed record StarView(string Key, double X, double Y);
+
+	private sealed record TipRow(string Key, string Color, string Label, string Text, decimal Value, double Y, bool Highlight);
 
 	private sealed class BoundingBox
 	{
@@ -84,7 +85,7 @@ public partial class PriceChart : ComponentBase
 	private List<string> _bandPolygons = [];
 	private List<string> _bandColors = [];
 	private List<TextView> _labels = [];
-	private List<(double X, double Y)> _stars = [];
+	private List<StarView> _stars = [];
 	private List<TipRow> _tipRows = [];
 	private double[] _yTicks = [];
 	private double _yMax = 1;
@@ -137,24 +138,23 @@ public partial class PriceChart : ComponentBase
 		}
 	}
 
-	private static string BuyerName(bool hasCompany) => hasCompany ? "с компанией" : "без компании";
-
-	private static string WeightName(uint weight) => weight == 0 ? "★ свой заказ" : Tons(weight);
-
-	private static string Num(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+	private string WeightName(uint weight) => weight == 0 ? T.PriceChart.CustomOrder : T.Pricing.KgAsTons(weight);
 
 	private static string SeriesKey(PricingSimulationSeries s) => $"{s.WeightKg}|{s.BuyerHasCompany}";
 
+	// Ключи элементов SVG уникальны среди всех детей <svg>: у полос, линий, подписей и звёзд свои префиксы.
+	private static string BandKey(int index) => $"band|{index}";
+
 	private string WeightColor(uint weight) => weight == 0
 		? CustomColor
-		: Palette[Math.Max(0, Array.IndexOf(Weights, weight)) % Palette.Length];
+		: $"pc-c{Math.Max(0, Array.IndexOf(Weights, weight)) % PaletteSize}";
 
 	private string SeriesLabel(PricingSimulationSeries s)
 	{
 		var trucks = s.WeightKg == 0
-			? $"★ свой заказ: {s.Deliveries} дост., {Num(s.Tons)} т"
-			: $"{Tons(s.WeightKg)} × {s.Deliveries} = {Num(s.Tons)} т";
-		return $"{trucks} · {BuyerName(s.BuyerHasCompany)}";
+			? T.PriceChart.CustomSeries(s.Deliveries, T.Pricing.Tons(s.Tons))
+			: $"{T.Pricing.KgAsTons(s.WeightKg)} × {s.Deliveries} = {T.Pricing.Tons(s.Tons)}";
+		return $"{trucks} · {T.Pricing.Buyer(s.BuyerHasCompany)}";
 	}
 
 	private double TModeAt(int index) => Result?.Series.FirstOrDefault(s => s.Points.Length > index)?.Points[index].TMode ?? 0;
@@ -232,18 +232,18 @@ public partial class PriceChart : ComponentBase
 					_bandColors.Add(s.Color);
 				}
 
-				_paths.Add(new PathView(Polyline(points, p => PerTon(p.Total, tons)), s.Color, s.StrokeWidth, s.Dash, 1));
+				_paths.Add(new PathView($"path|{s.Key}|total", Polyline(points, p => PerTon(p.Total, tons)), s.Color, s.StrokeWidth, s.Dash, 1));
 				break;
 
 			case ViewMode.Parts:
-				_paths.Add(new PathView(Polyline(points, p => PerTon(p.Total, tons)), s.Color, 1, null, 0.3));
-				_paths.Add(new PathView(Polyline(points, p => PerTon(p.Material, tons)), s.Color, s.StrokeWidth, "2 4", 1));
-				_paths.Add(new PathView(Polyline(points, p => PerTon(DeliveryOf(p), tons)), s.Color, s.StrokeWidth, "10 5", 1));
-				_paths.Add(new PathView(Polyline(points, p => PerTon(CommissionOf(p), tons)), s.Color, s.StrokeWidth, null, 1));
+				_paths.Add(new PathView($"path|{s.Key}|total", Polyline(points, p => PerTon(p.Total, tons)), s.Color, 1, null, 0.3));
+				_paths.Add(new PathView($"path|{s.Key}|material", Polyline(points, p => PerTon(p.Material, tons)), s.Color, s.StrokeWidth, "2 4", 1));
+				_paths.Add(new PathView($"path|{s.Key}|delivery", Polyline(points, p => PerTon(DeliveryOf(p), tons)), s.Color, s.StrokeWidth, "10 5", 1));
+				_paths.Add(new PathView($"path|{s.Key}|commission", Polyline(points, p => PerTon(CommissionOf(p), tons)), s.Color, s.StrokeWidth, null, 1));
 				var last = points[^1];
-				_labels.Add(new TextView(X(last.TMode) - 4, Y(PerTon(last.Material, tons)) - 8, "М", s.Color, "end"));
-				_labels.Add(new TextView(X(last.TMode) - 4, Y(PerTon(DeliveryOf(last), tons)) - 8, "Д", s.Color, "end"));
-				_labels.Add(new TextView(X(last.TMode) - 4, Y(PerTon(CommissionOf(last), tons)) - 8, "К", s.Color, "end"));
+				_labels.Add(new TextView($"label|{s.Key}|material", X(last.TMode) - 4, Y(PerTon(last.Material, tons)) - 8, T.PriceChart.MaterialShort, s.Color, "end"));
+				_labels.Add(new TextView($"label|{s.Key}|delivery", X(last.TMode) - 4, Y(PerTon(DeliveryOf(last), tons)) - 8, T.PriceChart.DeliveryShort, s.Color, "end"));
+				_labels.Add(new TextView($"label|{s.Key}|commission", X(last.TMode) - 4, Y(PerTon(CommissionOf(last), tons)) - 8, T.PriceChart.CommissionShort, s.Color, "end"));
 				break;
 		}
 
@@ -251,7 +251,7 @@ public partial class PriceChart : ComponentBase
 		{
 			for (var i = 0; i < points.Length; i += 2)
 			{
-				_stars.Add((X(points[i].TMode), Y(PerTon(points[i].Total, tons))));
+				_stars.Add(new StarView($"star|{s.Key}|{i}", X(points[i].TMode), Y(PerTon(points[i].Total, tons))));
 			}
 		}
 	}
@@ -299,19 +299,21 @@ public partial class PriceChart : ComponentBase
 			return;
 		}
 
-		var unit = _perTon ? " за т" : string.Empty;
+		var unit = _perTon ? T.PriceChart.PerTonSuffix : string.Empty;
 		var rows = new List<TipRow>();
 		foreach (var s in _series.Where(s => s.Visible && s.Series.Points.Length > index))
 		{
 			var p = s.Series.Points[index];
 			var tons = s.Series.Tons;
 			var total = PerTon(p.Total, tons);
+			var totalText = T.Pricing.Money(total) + unit;
 			var text = _mode switch
 			{
-				ViewMode.Parts => $"{Money(total)}{unit}: М {Money(PerTon(p.Material, tons))} · Д {Money(PerTon(DeliveryOf(p), tons))} · К {Money(PerTon(CommissionOf(p), tons))}",
-				_ => $"{Money(total)}{unit} (от {Money(PerTon(p.TotalLow, tons))} до {Money(PerTon(p.TotalHigh, tons))})",
+				ViewMode.Parts => T.PriceChart.TipParts(totalText, T.Pricing.Money(PerTon(p.Material, tons)),
+					T.Pricing.Money(PerTon(DeliveryOf(p), tons)), T.Pricing.Money(PerTon(CommissionOf(p), tons))),
+				_ => T.PriceChart.TipTotal(totalText, T.Pricing.Money(PerTon(p.TotalLow, tons)), T.Pricing.Money(PerTon(p.TotalHigh, tons))),
 			};
-			rows.Add(new TipRow(s.Color, s.Label, text, total, Y(total), false));
+			rows.Add(new TipRow(s.Key, s.Color, s.Label, text, total, Y(total), false));
 		}
 
 		rows.Sort((a, b) => b.Value.CompareTo(a.Value));
@@ -405,7 +407,7 @@ public partial class PriceChart : ComponentBase
 		Rebuild();
 	}
 
-	private void Toggle<T>(HashSet<T> set, T value)
+	private void Toggle<TItem>(HashSet<TItem> set, TItem value)
 	{
 		if (!set.Remove(value))
 		{

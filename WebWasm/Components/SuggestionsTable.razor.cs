@@ -7,7 +7,7 @@ using WebWasm.Services;
 
 namespace WebWasm.Components;
 
-public partial class SuggestionsTable : ComponentBase
+public partial class SuggestionsTable
 {
 	private const string SearchKey = "search_supports";
 	private const string SortKey = "sort_suggestions";
